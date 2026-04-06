@@ -192,8 +192,8 @@ const Audit = () => {
       <div className="border-t border-border bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto max-w-2xl px-4 py-4">
           {completed ? (
-            <Button variant="hero" className="w-full" onClick={() => navigate("/dashboard")}>
-              View your dashboard <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="hero" className="w-full" onClick={() => navigate("/report")}>
+              View your Strategic Report <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
             <div className="flex gap-2">
