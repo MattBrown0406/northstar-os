@@ -85,6 +85,11 @@ const Dashboard = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
+            {auditCompleted && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/report")}>
+                <FileText className="h-4 w-4 mr-1" /> Report
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
