@@ -14,7 +14,176 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      baseline_audits: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_question: number | null
+          current_section: number | null
+          id: string
+          responses: Json | null
+          scores: Json | null
+          status: Database["public"]["Enums"]["audit_status"] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_question?: number | null
+          current_section?: number | null
+          id?: string
+          responses?: Json | null
+          scores?: Json | null
+          status?: Database["public"]["Enums"]["audit_status"] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_question?: number | null
+          current_section?: number | null
+          id?: string
+          responses?: Json | null
+          scores?: Json | null
+          status?: Database["public"]["Enums"]["audit_status"] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      check_ins: {
+        Row: {
+          ai_response: Json | null
+          blockers: string[] | null
+          commitments: string[] | null
+          created_at: string
+          drift_detected: boolean | null
+          energy_score: number | null
+          id: string
+          mood_score: number | null
+          user_id: string
+          wins: string[] | null
+        }
+        Insert: {
+          ai_response?: Json | null
+          blockers?: string[] | null
+          commitments?: string[] | null
+          created_at?: string
+          drift_detected?: boolean | null
+          energy_score?: number | null
+          id?: string
+          mood_score?: number | null
+          user_id: string
+          wins?: string[] | null
+        }
+        Update: {
+          ai_response?: Json | null
+          blockers?: string[] | null
+          commitments?: string[] | null
+          created_at?: string
+          drift_detected?: boolean | null
+          energy_score?: number | null
+          id?: string
+          mood_score?: number | null
+          user_id?: string
+          wins?: string[] | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          check_in_cadence:
+            | Database["public"]["Enums"]["check_in_cadence"]
+            | null
+          coaching_tone: Database["public"]["Enums"]["coaching_tone"] | null
+          created_at: string
+          display_name: string | null
+          id: string
+          onboarding_completed: boolean | null
+          plan_tier: Database["public"]["Enums"]["plan_tier"] | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_in_cadence?:
+            | Database["public"]["Enums"]["check_in_cadence"]
+            | null
+          coaching_tone?: Database["public"]["Enums"]["coaching_tone"] | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          plan_tier?: Database["public"]["Enums"]["plan_tier"] | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_in_cadence?:
+            | Database["public"]["Enums"]["check_in_cadence"]
+            | null
+          coaching_tone?: Database["public"]["Enums"]["coaching_tone"] | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          plan_tier?: Database["public"]["Enums"]["plan_tier"] | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      strategic_reports: {
+        Row: {
+          audit_id: string | null
+          contradictions: Json | null
+          created_at: string
+          forced_choice: string | null
+          id: string
+          ninety_day_plan: Json | null
+          north_star_focus: string | null
+          pattern_analysis: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audit_id?: string | null
+          contradictions?: Json | null
+          created_at?: string
+          forced_choice?: string | null
+          id?: string
+          ninety_day_plan?: Json | null
+          north_star_focus?: string | null
+          pattern_analysis?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audit_id?: string | null
+          contradictions?: Json | null
+          created_at?: string
+          forced_choice?: string | null
+          id?: string
+          ninety_day_plan?: Json | null
+          north_star_focus?: string | null
+          pattern_analysis?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_reports_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "baseline_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +192,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      audit_status: "in_progress" | "completed"
+      check_in_cadence: "daily" | "every_other_day" | "weekly"
+      coaching_tone: "direct" | "supportive" | "balanced"
+      plan_tier: "free" | "pro" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +322,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      audit_status: ["in_progress", "completed"],
+      check_in_cadence: ["daily", "every_other_day", "weekly"],
+      coaching_tone: ["direct", "supportive", "balanced"],
+      plan_tier: ["free", "pro", "premium"],
+    },
   },
 } as const
