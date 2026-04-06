@@ -21,7 +21,7 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await createClient(
       supabaseUrl,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
     ).auth.getUser(token);
     if (userError || !user) throw new Error("Unauthorized");
 
