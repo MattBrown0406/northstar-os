@@ -1,0 +1,329 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Compass, ArrowLeft, Printer, Target, AlertTriangle,
+  Crosshair, Star, Calendar, TrendingUp, Eye, Zap, CheckCircle
+} from "lucide-react";
+
+interface PatternAnalysis {
+  themes: { title: string; description: string; areas_affected: string[] }[];
+  strengths: string[];
+  blind_spots: string[];
+}
+
+interface Contradiction {
+  stated: string;
+  actual: string;
+  impact: string;
+}
+
+interface Phase {
+  title: string;
+  actions: string[];
+}
+
+interface NinetyDayPlan {
+  phase_1: Phase;
+  phase_2: Phase;
+  phase_3: Phase;
+}
+
+interface StrategicReport {
+  id: string;
+  created_at: string;
+  pattern_analysis: PatternAnalysis;
+  contradictions: Contradiction[];
+  forced_choice: string;
+  north_star_focus: string;
+  ninety_day_plan: NinetyDayPlan;
+}
+
+const Report = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const [report, setReport] = useState<StrategicReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadReport = async () => {
+      const reportId = searchParams.get("id");
+
+      if (reportId) {
+        const { data } = await supabase
+          .from("strategic_reports")
+          .select("*")
+          .eq("id", reportId)
+          .eq("user_id", user.id)
+          .single();
+        if (data) setReport(data as any);
+        setLoading(false);
+        return;
+      }
+
+      // Load latest report
+      const { data } = await supabase
+        .from("strategic_reports")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setReport(data[0] as any);
+        setLoading(false);
+        return;
+      }
+
+      // No report exists — try to generate one
+      const { data: audit } = await supabase
+        .from("baseline_audits")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (audit && audit.length > 0) {
+        setGenerating(true);
+        setLoading(false);
+        try {
+          const { data: fnData, error: fnError } = await supabase.functions.invoke("generate-report", {
+            body: { audit_id: audit[0].id },
+          });
+          if (fnError) throw fnError;
+
+          // Reload report
+          const { data: newReport } = await supabase
+            .from("strategic_reports")
+            .select("*")
+            .eq("id", fnData.report_id)
+            .single();
+          if (newReport) setReport(newReport as any);
+        } catch (e: any) {
+          toast({ title: "Error generating report", description: e.message, variant: "destructive" });
+        } finally {
+          setGenerating(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+    loadReport();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (generating) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+          <h2 className="font-heading text-xl font-bold text-foreground">Generating your Strategic Report…</h2>
+          <p className="text-muted-foreground text-sm max-w-md">Our AI is analyzing your audit responses for patterns, contradictions, and building your 90-day plan. This may take 30–60 seconds.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="font-heading text-xl font-bold text-foreground">No report yet</h2>
+          <p className="text-muted-foreground">Complete your baseline audit first to generate a strategic report.</p>
+          <Button variant="hero" onClick={() => navigate("/audit")}>Start Audit</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { pattern_analysis, contradictions, forced_choice, north_star_focus, ninety_day_plan } = report;
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Nav - hidden in print */}
+      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 print:hidden">
+        <div className="container mx-auto flex items-center justify-between h-14 px-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-gradient-primary rounded-lg p-1.5">
+              <Compass className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="font-heading text-lg font-bold text-foreground">Strategic Report</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Dashboard
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Printer className="h-4 w-4 mr-1" /> Print / PDF
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="container mx-auto px-4 py-8 max-w-3xl print:max-w-none print:py-0">
+        {/* Print header */}
+        <div className="hidden print:block mb-8 pt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Compass className="h-6 w-6" />
+            <span className="font-heading text-2xl font-bold">Northstar OS — Strategic Report</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Generated {new Date(report.created_at).toLocaleDateString()}</p>
+        </div>
+
+        {/* North Star Focus */}
+        <section className="mb-8">
+          <div className="bg-gradient-subtle rounded-2xl p-8 border border-primary/20 text-center print:border print:border-foreground/20">
+            <Star className="h-8 w-8 text-accent mx-auto mb-3" />
+            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Your North Star</h2>
+            <p className="font-heading text-2xl font-bold text-foreground leading-relaxed">{north_star_focus}</p>
+          </div>
+        </section>
+
+        {/* Pattern Analysis */}
+        <section className="mb-8 print:break-inside-avoid">
+          <h2 className="font-heading text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" /> Pattern Analysis
+          </h2>
+
+          {/* Themes */}
+          <div className="space-y-4 mb-6">
+            {pattern_analysis.themes.map((theme, i) => (
+              <div key={i} className="bg-card rounded-xl border border-border p-5 print:break-inside-avoid">
+                <h3 className="font-heading font-bold text-foreground mb-1">{theme.title}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{theme.description}</p>
+                <div className="flex flex-wrap gap-1">
+                  {theme.areas_affected.map((area) => (
+                    <span key={area} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{area}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Strengths & Blind Spots */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h3 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Zap className="h-4 w-4 text-accent" /> Strengths
+              </h3>
+              <ul className="space-y-2">
+                {pattern_analysis.strengths.map((s, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <span className="text-foreground">{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h3 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Eye className="h-4 w-4 text-accent" /> Blind Spots
+              </h3>
+              <ul className="space-y-2">
+                {pattern_analysis.blind_spots.map((b, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <AlertTriangle className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+                    <span className="text-foreground">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Contradictions */}
+        <section className="mb-8 print:break-inside-avoid">
+          <h2 className="font-heading text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-accent" /> Contradictions
+          </h2>
+          <div className="space-y-4">
+            {contradictions.map((c, i) => (
+              <div key={i} className="bg-card rounded-xl border border-border p-5 print:break-inside-avoid">
+                <div className="grid md:grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">What you say</p>
+                    <p className="text-sm text-foreground font-medium">"{c.stated}"</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">What you do</p>
+                    <p className="text-sm text-foreground font-medium">"{c.actual}"</p>
+                  </div>
+                </div>
+                <p className="text-sm text-accent font-medium">Impact: {c.impact}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Forced Choice */}
+        <section className="mb-8 print:break-inside-avoid">
+          <h2 className="font-heading text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <Crosshair className="h-5 w-5 text-primary" /> The Forced Choice
+          </h2>
+          <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 print:border print:border-foreground/20">
+            <p className="text-foreground leading-relaxed">{forced_choice}</p>
+          </div>
+        </section>
+
+        {/* 90-Day Plan */}
+        <section className="mb-8 print:break-inside-avoid">
+          <h2 className="font-heading text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" /> 90-Day Plan
+          </h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { phase: ninety_day_plan.phase_1, label: "Days 1–30", color: "primary" },
+              { phase: ninety_day_plan.phase_2, label: "Days 31–60", color: "primary" },
+              { phase: ninety_day_plan.phase_3, label: "Days 61–90", color: "primary" },
+            ].map(({ phase, label }) => (
+              <div key={label} className="bg-card rounded-xl border border-border p-5 print:break-inside-avoid">
+                <p className="text-xs text-primary uppercase tracking-wider font-semibold mb-1">{label}</p>
+                <h3 className="font-heading font-bold text-foreground mb-3">{phase.title}</h3>
+                <ul className="space-y-2">
+                  {phase.actions.map((a, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Target className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <span className="text-foreground">{a}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Disclaimer */}
+        <section className="mb-8 text-center print:break-inside-avoid">
+          <p className="text-xs text-muted-foreground">
+            This report is AI-generated coaching guidance, not professional medical, legal, or financial advice.
+            Always consult qualified professionals for critical decisions.
+          </p>
+        </section>
+
+        {/* CTA - hidden in print */}
+        <div className="text-center pb-8 print:hidden">
+          <Button variant="hero" size="lg" onClick={() => navigate("/dashboard")}>
+            Back to Dashboard <ArrowLeft className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Report;

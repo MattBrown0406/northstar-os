@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Compass, LogOut, Target, TrendingUp, Flame, Calendar,
-  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock
+  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock, FileText
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
@@ -85,6 +85,11 @@ const Dashboard = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
+            {auditCompleted && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/report")}>
+                <FileText className="h-4 w-4 mr-1" /> Report
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
@@ -100,7 +105,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick action banner */}
-        {!auditCompleted && (
+        {!auditCompleted ? (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
             <div>
               <h3 className="font-heading font-bold text-foreground">Complete your Baseline Audit</h3>
@@ -108,6 +113,16 @@ const Dashboard = () => {
             </div>
             <Button variant="hero" onClick={() => navigate("/audit")}>
               Start audit <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-foreground">Your Strategic Report is ready</h3>
+              <p className="text-sm text-muted-foreground">View your patterns, contradictions, and 90-day plan</p>
+            </div>
+            <Button variant="hero" onClick={() => navigate("/report")}>
+              View report <FileText className="ml-2 h-4 w-4" />
             </Button>
           </div>
         )}
