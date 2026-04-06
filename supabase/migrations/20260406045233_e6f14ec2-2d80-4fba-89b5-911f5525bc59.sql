@@ -1,0 +1,1 @@
+DELETE FROM public.strategic_reports WHERE user_id = '90ee49fd-f390-4ab1-9f16-0bd793aafb95';
