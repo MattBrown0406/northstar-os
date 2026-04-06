@@ -12,6 +12,7 @@ import Onboarding from "./pages/Onboarding";
 import Audit from "./pages/Audit";
 import Dashboard from "./pages/Dashboard";
 import CheckIn from "./pages/CheckIn";
+import Report from "./pages/Report";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
