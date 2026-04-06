@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Compass, LogOut, Target, TrendingUp, Flame, Calendar,
-  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock
+  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock, FileText
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
