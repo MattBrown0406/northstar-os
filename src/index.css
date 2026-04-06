@@ -127,3 +127,21 @@
     box-shadow: var(--shadow-glow);
   }
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+  }
+}
