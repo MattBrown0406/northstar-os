@@ -17,8 +17,8 @@ const Navbar = () => {
           <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm">Log in</Button>
-          <Button variant="hero" size="sm">Start Free</Button>
+          <a href="/auth"><Button variant="ghost" size="sm">Log in</Button></a>
+          <a href="/auth"><Button variant="hero" size="sm">Start Free</Button></a>
         </div>
       </div>
     </nav>
