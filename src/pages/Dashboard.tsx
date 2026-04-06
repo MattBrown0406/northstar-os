@@ -105,7 +105,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick action banner */}
-        {!auditCompleted && (
+        {!auditCompleted ? (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
             <div>
               <h3 className="font-heading font-bold text-foreground">Complete your Baseline Audit</h3>
@@ -113,6 +113,16 @@ const Dashboard = () => {
             </div>
             <Button variant="hero" onClick={() => navigate("/audit")}>
               Start audit <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
+            <div>
+              <h3 className="font-heading font-bold text-foreground">Your Strategic Report is ready</h3>
+              <p className="text-sm text-muted-foreground">View your patterns, contradictions, and 90-day plan</p>
+            </div>
+            <Button variant="hero" onClick={() => navigate("/report")}>
+              View report <FileText className="ml-2 h-4 w-4" />
             </Button>
           </div>
         )}
