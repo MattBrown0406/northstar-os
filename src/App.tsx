@@ -17,6 +17,7 @@ import CoachDashboard from "./pages/CoachDashboard";
 import CoachClientReport from "./pages/CoachClientReport";
 import CoachClientAudit from "./pages/CoachClientAudit";
 import CoachClientCheckIns from "./pages/CoachClientCheckIns";
+import BrandedAuth from "./pages/BrandedAuth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/coach/client/:clientId/report" element={<ProtectedRoute><CoachClientReport /></ProtectedRoute>} />
             <Route path="/coach/client/:clientId/audit" element={<ProtectedRoute><CoachClientAudit /></ProtectedRoute>} />
             <Route path="/coach/client/:clientId/check-ins" element={<ProtectedRoute><CoachClientCheckIns /></ProtectedRoute>} />
+            <Route path="/c/:slug" element={<BrandedAuth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

@@ -16,26 +16,48 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { invite_code, client_user_id } = await req.json();
+    const { invite_code, client_user_id, coach_user_id: directCoachId } = await req.json();
 
-    if (!invite_code || !client_user_id) {
-      return new Response(JSON.stringify({ error: "invite_code and client_user_id are required" }), {
+    if (!client_user_id) {
+      return new Response(JSON.stringify({ error: "client_user_id is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Look up invite link
-    const { data: invite, error: inviteError } = await supabase
-      .from("coach_invite_links")
-      .select("*")
-      .eq("invite_code", invite_code)
-      .eq("is_active", true)
-      .single();
+    let coachUserId: string;
+    let assignedTier = "free";
 
-    if (inviteError || !invite) {
-      return new Response(JSON.stringify({ error: "Invalid or expired invite link" }), {
-        status: 404,
+    if (invite_code && invite_code !== "__branded__") {
+      // Standard invite link flow
+      const { data: invite, error: inviteError } = await supabase
+        .from("coach_invite_links")
+        .select("*")
+        .eq("invite_code", invite_code)
+        .eq("is_active", true)
+        .single();
+
+      if (inviteError || !invite) {
+        return new Response(JSON.stringify({ error: "Invalid or expired invite link" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      coachUserId = invite.coach_user_id;
+      assignedTier = invite.assigned_tier;
+
+      // Increment uses count
+      await supabase
+        .from("coach_invite_links")
+        .update({ uses_count: invite.uses_count + 1 })
+        .eq("id", invite.id);
+    } else if (directCoachId) {
+      // Branded page flow — link directly to coach
+      coachUserId = directCoachId;
+    } else {
+      return new Response(JSON.stringify({ error: "invite_code or coach_user_id required" }), {
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -44,7 +66,7 @@ serve(async (req) => {
     const { data: existing } = await supabase
       .from("coach_clients")
       .select("id")
-      .eq("coach_user_id", invite.coach_user_id)
+      .eq("coach_user_id", coachUserId)
       .eq("client_user_id", client_user_id)
       .single();
 
@@ -57,30 +79,20 @@ serve(async (req) => {
 
     // Create coach-client relationship
     const { error: linkError } = await supabase.from("coach_clients").insert({
-      coach_user_id: invite.coach_user_id,
+      coach_user_id: coachUserId,
       client_user_id,
-      assigned_tier: invite.assigned_tier,
+      assigned_tier: assignedTier,
     });
 
     if (linkError) throw linkError;
 
     // Update client's plan tier
-    const { error: profileError } = await supabase
+    await supabase
       .from("profiles")
-      .update({ plan_tier: invite.assigned_tier })
+      .update({ plan_tier: assignedTier })
       .eq("user_id", client_user_id);
 
-    if (profileError) {
-      console.error("Profile tier update error:", profileError);
-    }
-
-    // Increment uses count
-    await supabase
-      .from("coach_invite_links")
-      .update({ uses_count: invite.uses_count + 1 })
-      .eq("id", invite.id);
-
-    return new Response(JSON.stringify({ success: true, coach_user_id: invite.coach_user_id }), {
+    return new Response(JSON.stringify({ success: true, coach_user_id: coachUserId }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

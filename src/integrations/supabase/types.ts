@@ -92,6 +92,54 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_branding: {
+        Row: {
+          brand_foreground: string | null
+          brand_primary: string | null
+          brand_secondary: string | null
+          coach_user_id: string
+          company_name: string | null
+          created_at: string
+          headshot_url: string | null
+          id: string
+          logo_url: string | null
+          slug: string
+          tagline: string | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          brand_foreground?: string | null
+          brand_primary?: string | null
+          brand_secondary?: string | null
+          coach_user_id: string
+          company_name?: string | null
+          created_at?: string
+          headshot_url?: string | null
+          id?: string
+          logo_url?: string | null
+          slug: string
+          tagline?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          brand_foreground?: string | null
+          brand_primary?: string | null
+          brand_secondary?: string | null
+          coach_user_id?: string
+          company_name?: string | null
+          created_at?: string
+          headshot_url?: string | null
+          id?: string
+          logo_url?: string | null
+          slug?: string
+          tagline?: string | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       coach_clients: {
         Row: {
           assigned_tier: Database["public"]["Enums"]["plan_tier"]

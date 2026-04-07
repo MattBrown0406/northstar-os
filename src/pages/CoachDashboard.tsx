@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CoachBrandingSettings from "@/components/coach/CoachBrandingSettings";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -366,6 +367,11 @@ const CoachDashboard = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Branding Settings */}
+        <div className="mt-8">
+          <CoachBrandingSettings />
         </div>
       </div>
     </div>
