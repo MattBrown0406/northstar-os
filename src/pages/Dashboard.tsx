@@ -80,7 +80,7 @@ const Dashboard = () => {
             <div className="bg-gradient-primary rounded-lg p-1.5">
               <Compass className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold text-foreground">Northstar OS</span>
+            <span className="font-heading text-lg font-bold text-foreground">Intentus</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
@@ -101,15 +101,15 @@ const Dashboard = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">
             Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
           </h1>
-          <p className="text-muted-foreground">Here's your operating snapshot.</p>
+          <p className="text-muted-foreground">Here’s your leadership operating snapshot.</p>
         </div>
 
         {/* Quick action banner */}
         {!auditCompleted ? (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
             <div>
-              <h3 className="font-heading font-bold text-foreground">Complete your Baseline Audit</h3>
-              <p className="text-sm text-muted-foreground">Get your strategic report and 90-day plan</p>
+              <h3 className="font-heading font-bold text-foreground">Complete your Leadership Audit</h3>
+              <p className="text-sm text-muted-foreground">Get your strategic report, priority focus, and 90-day plan</p>
             </div>
             <Button variant="hero" onClick={() => navigate("/audit")}>
               Start audit <ArrowRight className="ml-2 h-4 w-4" />
@@ -119,7 +119,7 @@ const Dashboard = () => {
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
             <div>
               <h3 className="font-heading font-bold text-foreground">Your Strategic Report is ready</h3>
-              <p className="text-sm text-muted-foreground">View your patterns, contradictions, and 90-day plan</p>
+              <p className="text-sm text-muted-foreground">Review your patterns, blind spots, and 90-day operating plan</p>
             </div>
             <Button variant="hero" onClick={() => navigate("/report")}>
               View report <FileText className="ml-2 h-4 w-4" />

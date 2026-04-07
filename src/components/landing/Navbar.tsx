@@ -9,16 +9,16 @@ const Navbar = () => {
           <div className="bg-gradient-primary rounded-lg p-1.5">
             <Compass className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-heading text-xl font-bold text-foreground">Northstar OS</span>
+          <span className="font-heading text-xl font-bold text-foreground">Intentus</span>
         </div>
         <div className="hidden md:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How it works</a>
-          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+          <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Platform</a>
           <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
         </div>
         <div className="flex items-center gap-3">
           <a href="/auth"><Button variant="ghost" size="sm">Log in</Button></a>
-          <a href="/auth"><Button variant="hero" size="sm">Start Free</Button></a>
+          <a href="/auth"><Button variant="hero" size="sm">Start assessment</Button></a>
         </div>
       </div>
     </nav>

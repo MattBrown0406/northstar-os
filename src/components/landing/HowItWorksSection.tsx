@@ -1,9 +1,9 @@
 const steps = [
-  { number: "01", title: "Audit", desc: "20–45 minutes. Pause and resume anytime.", color: "bg-primary/10 text-primary" },
-  { number: "02", title: "Mirror", desc: "Contradictions surfaced. You resolve them.", color: "bg-accent/10 text-accent" },
-  { number: "03", title: "Plan", desc: "Forced choice + 90-day execution plan.", color: "bg-primary/10 text-primary" },
-  { number: "04", title: "Check-in", desc: "2–5 minutes on your schedule.", color: "bg-accent/10 text-accent" },
-  { number: "05", title: "Adjust", desc: "Commitments evolve with reality.", color: "bg-primary/10 text-primary" },
+  { number: "01", title: "Assess", desc: "Complete an evidence-based leadership audit in 20–45 minutes.", color: "bg-primary/10 text-primary" },
+  { number: "02", title: "Expose", desc: "Intentus surfaces patterns, contradictions, blind spots, and hidden strengths.", color: "bg-accent/10 text-accent" },
+  { number: "03", title: "Prioritize", desc: "Select the metrics and operating priorities that define the next 90 days.", color: "bg-primary/10 text-primary" },
+  { number: "04", title: "Check in", desc: "Get daily or weekly coaching on adherence, drift, and recent wins or misses.", color: "bg-accent/10 text-accent" },
+  { number: "05", title: "Adjust", desc: "Refine commitments as reality changes without losing the plot.", color: "bg-primary/10 text-primary" },
 ];
 
 const HowItWorksSection = () => {
@@ -12,10 +12,10 @@ const HowItWorksSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            How it works
+            How Intentus works
           </h2>
           <p className="text-lg text-muted-foreground">
-            From audit to alignment in five steps.
+            From honest assessment to disciplined execution in five steps.
           </p>
         </div>
         <div className="max-w-3xl mx-auto space-y-0">

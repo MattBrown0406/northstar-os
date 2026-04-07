@@ -3,47 +3,48 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Free",
+    name: "Starter",
     price: "$0",
-    desc: "Explore the system and get initial clarity.",
+    desc: "Get initial clarity on where you stand and what needs attention.",
     features: [
-      "Baseline Audit (Lite)",
-      "Strategic Report (Lite)",
-      "1 check-in per week",
-      "Last 10 check-ins stored",
+      "Leadership Audit (Lite)",
+      "90-Day Plan snapshot",
+      "1 accountability check-in per week",
+      "Recent check-in history",
     ],
-    cta: "Start Free",
+    cta: "Start assessment",
     featured: false,
   },
   {
-    name: "Pro",
+    name: "Executive",
     price: "$29",
     period: "/mo",
-    desc: "Execution becomes automatic.",
+    desc: "For leaders who want consistent operating discipline.",
     features: [
-      "Full Baseline Audit",
-      "Full printable Strategic Report",
-      "Custom check-in cadence",
+      "Full leadership audit",
+      "Full strengths, blind spots, and contradictions report",
+      "Custom daily or weekly check-ins",
       "Unlimited history",
-      "Drift + adherence trends",
-      "Pattern + obstacle dashboards",
-      "Export report + data",
+      "Drift vs adherence tracking",
+      "Metric-focused accountability",
+      "Exportable report + plan",
     ],
-    cta: "Upgrade to Pro",
+    cta: "Choose Executive",
     featured: true,
   },
   {
-    name: "Premium",
+    name: "Advisor",
     price: "$99",
     period: "/mo",
-    desc: "A stricter mirror and faster course correction.",
+    desc: "For stricter accountability and coach-led client programs.",
     features: [
-      "Everything in Pro",
-      "Mirror Mode (harder call-outs)",
-      "Quarterly Re-Audit",
-      "Plan Refresh (AI-updated plan)",
+      "Everything in Executive",
+      "Quarterly re-assessment",
+      "AI plan refreshes",
+      "Enhanced call-outs on drift",
+      "White-label support for professional coaches",
     ],
-    cta: "Upgrade to Premium",
+    cta: "Choose Advisor",
     featured: false,
   },
 ];
@@ -54,10 +55,10 @@ const PricingSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Pick the level of accountability you want
+            Pricing for the level of accountability you want
           </h2>
           <p className="text-lg text-muted-foreground">
-            Free gets you clarity. Pro gets you consistency. Premium gets you correction under pressure.
+            Start with clarity. Upgrade for consistency. Scale it for yourself or your clients.
           </p>
         </div>
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -81,10 +82,7 @@ const PricingSection = () => {
                 {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
               </div>
               <p className="text-sm text-muted-foreground mb-6">{plan.desc}</p>
-              <Button
-                variant={plan.featured ? "hero" : "hero-outline"}
-                className="w-full mb-6"
-              >
+              <Button variant={plan.featured ? "hero" : "hero-outline"} className="w-full mb-6">
                 {plan.cta}
               </Button>
               <ul className="space-y-3">

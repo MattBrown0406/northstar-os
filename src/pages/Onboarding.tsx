@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Compass, ArrowRight, Clock, MessageCircle, Calendar, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,15 +13,15 @@ const TIMEZONES = [
 ];
 
 const TONES = [
-  { value: "direct" as const, label: "Direct", desc: "No sugarcoating. Tell me what I need to hear.", icon: "🎯" },
-  { value: "supportive" as const, label: "Supportive", desc: "Encouraging but honest. Firm and warm.", icon: "🤝" },
-  { value: "balanced" as const, label: "Balanced", desc: "A mix of both. Context-aware nudges.", icon: "⚖️" },
+  { value: "direct" as const, label: "Direct", desc: "No fluff. Call the issue clearly and fast.", icon: "🎯" },
+  { value: "supportive" as const, label: "Supportive", desc: "Encouraging, grounded, and still honest.", icon: "🤝" },
+  { value: "balanced" as const, label: "Balanced", desc: "Straightforward coaching with context-aware pressure.", icon: "⚖️" },
 ];
 
 const CADENCES = [
-  { value: "daily" as const, label: "Daily", desc: "Maximum accountability" },
-  { value: "every_other_day" as const, label: "Every other day", desc: "Balanced rhythm" },
-  { value: "weekly" as const, label: "Weekly", desc: "Big-picture check-ins" },
+  { value: "daily" as const, label: "Daily", desc: "Best for aggressive execution and fast correction" },
+  { value: "every_other_day" as const, label: "Every other day", desc: "A steady accountability rhythm" },
+  { value: "weekly" as const, label: "Weekly", desc: "Best for strategic reviews and leadership resets" },
 ];
 
 const Onboarding = () => {
@@ -56,18 +55,16 @@ const Onboarding = () => {
   };
 
   const steps = [
-    // Step 0: Welcome
     <div key="welcome" className="text-center space-y-6">
       <div className="inline-flex bg-gradient-primary rounded-2xl p-4">
         <Compass className="h-12 w-12 text-primary-foreground" />
       </div>
-      <h1 className="font-heading text-3xl font-bold text-foreground">Welcome to Northstar OS</h1>
+      <h1 className="font-heading text-3xl font-bold text-foreground">Welcome to Intentus</h1>
       <p className="text-muted-foreground max-w-md mx-auto">
-        You're about to get brutally clear on what's driving your results — and your drift.
-        Let's set up your coaching environment.
+        You are about to audit how you actually operate, identify the metrics that matter most, and set up the coaching rhythm that keeps your 90-day plan from slipping.
       </p>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-        ⚠️ This product provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
+        ⚠️ Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
         If you are in crisis, contact local emergency services.
       </p>
       <Button variant="hero" size="lg" onClick={() => setStep(1)}>
@@ -75,13 +72,12 @@ const Onboarding = () => {
       </Button>
     </div>,
 
-    // Step 1: Timezone
     <div key="timezone" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><Clock className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Your timezone</h2>
-          <p className="text-sm text-muted-foreground">So check-ins arrive at the right time</p>
+          <p className="text-sm text-muted-foreground">So your accountability cadence lands when it can actually help</p>
         </div>
       </div>
       <div className="grid gap-2">
@@ -104,13 +100,12 @@ const Onboarding = () => {
       </Button>
     </div>,
 
-    // Step 2: Coaching tone
     <div key="tone" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><MessageCircle className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Coaching style</h2>
-          <p className="text-sm text-muted-foreground">How should your AI coach talk to you?</p>
+          <p className="text-sm text-muted-foreground">How should Intentus deliver feedback when you are off track?</p>
         </div>
       </div>
       <div className="grid gap-3">
@@ -139,13 +134,12 @@ const Onboarding = () => {
       </Button>
     </div>,
 
-    // Step 3: Check-in cadence
     <div key="cadence" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><Calendar className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Check-in cadence</h2>
-          <p className="text-sm text-muted-foreground">How often should we check in?</p>
+          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing adherence, drift, and key metrics</p>
         </div>
       </div>
       <div className="grid gap-3">
@@ -165,9 +159,9 @@ const Onboarding = () => {
         ))}
       </div>
       <Button variant="hero" className="w-full" onClick={handleComplete} disabled={loading}>
-        {loading ? "Saving..." : (
-          <>Start my audit <CheckCircle className="ml-2 h-4 w-4" /></>
-        )}
+        {loading ? "Saving..." : <>
+          Start my assessment <CheckCircle className="ml-2 h-4 w-4" />
+        </>}
       </Button>
     </div>,
   ];

@@ -40,7 +40,7 @@ const ResetPassword = () => {
           <div className="bg-gradient-primary rounded-lg p-2">
             <Compass className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-heading text-2xl font-bold text-foreground">Northstar OS</span>
+          <span className="font-heading text-2xl font-bold text-foreground">Intentus</span>
         </div>
         <div className="bg-card rounded-2xl shadow-medium p-8 border border-border">
           <h2 className="font-heading text-xl font-bold text-foreground mb-4 text-center">Set new password</h2>

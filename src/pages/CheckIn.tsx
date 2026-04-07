@@ -109,8 +109,8 @@ const CheckIn = () => {
           <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
           <p className="text-muted-foreground">
             {mood <= 4
-              ? "Looks like things are tough right now. That's okay — awareness is the first step."
-              : "You're on track. Keep the momentum going."}
+              ? "Looks like things are heavy right now. Useful signal — catch the drift early and reset your next move."
+              : "You’re on track. Keep the operating rhythm tight and the momentum moving."}
           </p>
           <Button variant="hero" onClick={() => navigate("/dashboard")}>
             Back to dashboard <ArrowRight className="ml-2 h-4 w-4" />
@@ -121,13 +121,13 @@ const CheckIn = () => {
   }
 
   const steps = [
-    <ScaleSelector key="mood" value={mood} onChange={setMood} label="How's your mood right now?"
+    <ScaleSelector key="mood" value={mood} onChange={setMood} label="How are you showing up right now?"
       emoji={["😔 Rough day", "😐 Hanging in there", "😊 Feeling good"]} />,
-    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What's your energy level?"
+    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What’s your energy level?"
       emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />,
-    <ListInput key="wins" label="What wins did you have?" items={wins} setter={setWins} placeholder="Add a win..." />,
-    <ListInput key="blockers" label="Any blockers or friction?" items={blockers} setter={setBlockers} placeholder="Add a blocker..." />,
-    <ListInput key="commitments" label="What do you commit to next?" items={commitments} setter={setCommitments} placeholder="Add a commitment..." />,
+    <ListInput key="wins" label="What moved forward since your last check-in?" items={wins} setter={setWins} placeholder="Add a win..." />,
+    <ListInput key="blockers" label="Where are you hitting resistance or friction?" items={blockers} setter={setBlockers} placeholder="Add a blocker..." />,
+    <ListInput key="commitments" label="What are your next commitments?" items={commitments} setter={setCommitments} placeholder="Add a commitment..." />,
   ];
 
   return (
