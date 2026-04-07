@@ -16,7 +16,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { email, display_name, plan_tier } = await req.json();
+    const { email, display_name, plan_tier, coach_user_id, coach_name } = await req.json();
 
     if (!email || !display_name) {
       return new Response(JSON.stringify({ error: "email and display_name are required" }), {
@@ -27,7 +27,11 @@ serve(async (req) => {
 
     // Invite the user - this sends them an email with a link to set their password
     const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { display_name },
+      data: {
+        display_name,
+        ...(coach_user_id ? { coach_user_id } : {}),
+        ...(coach_name ? { invited_by: coach_name } : {}),
+      },
       redirectTo: `${req.headers.get("origin") || "https://truenorthos.lovable.app"}/onboarding`,
     });
 
@@ -47,6 +51,18 @@ serve(async (req) => {
 
     if (profileError) {
       console.error("Profile creation error:", profileError);
+    }
+
+    // If this is a coach invite, create the coach-client relationship
+    if (coach_user_id) {
+      const { error: linkError } = await supabase.from("coach_clients").insert({
+        coach_user_id,
+        client_user_id: userId,
+        assigned_tier: plan_tier || "free",
+      });
+      if (linkError) {
+        console.error("Coach-client link error:", linkError);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
