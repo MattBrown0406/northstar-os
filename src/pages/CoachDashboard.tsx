@@ -367,6 +367,11 @@ const CoachDashboard = () => {
             </div>
           )}
         </div>
+
+        {/* Branding Settings */}
+        <div className="mt-8">
+          <CoachBrandingSettings />
+        </div>
       </div>
     </div>
   );
