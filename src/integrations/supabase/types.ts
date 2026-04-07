@@ -195,7 +195,7 @@ export type Database = {
       audit_status: "in_progress" | "completed"
       check_in_cadence: "daily" | "every_other_day" | "weekly"
       coaching_tone: "direct" | "supportive" | "balanced"
-      plan_tier: "free" | "pro" | "premium"
+      plan_tier: "free" | "pro" | "premium" | "coach"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -326,7 +326,7 @@ export const Constants = {
       audit_status: ["in_progress", "completed"],
       check_in_cadence: ["daily", "every_other_day", "weekly"],
       coaching_tone: ["direct", "supportive", "balanced"],
-      plan_tier: ["free", "pro", "premium"],
+      plan_tier: ["free", "pro", "premium", "coach"],
     },
   },
 } as const
