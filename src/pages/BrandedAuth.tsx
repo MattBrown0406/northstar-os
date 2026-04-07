@@ -1,0 +1,303 @@
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
+
+interface Branding {
+  coach_user_id: string;
+  slug: string;
+  company_name: string | null;
+  logo_url: string | null;
+  headshot_url: string | null;
+  brand_primary: string;
+  brand_secondary: string;
+  brand_foreground: string;
+  tagline: string | null;
+}
+
+const BrandedAuth = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const [branding, setBranding] = useState<Branding | null>(null);
+  const [coachName, setCoachName] = useState("");
+  const [loadingBranding, setLoadingBranding] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  const [isLogin, setIsLogin] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+
+  useEffect(() => {
+    if (!slug) return;
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("coach_branding")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+      if (error || !data) {
+        setNotFound(true);
+        setLoadingBranding(false);
+        return;
+      }
+
+      const b = data as any;
+      setBranding(b);
+
+      // Get coach display name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", b.coach_user_id)
+        .single();
+
+      if (profile) setCoachName((profile as any).display_name || "");
+      setLoadingBranding(false);
+    };
+    load();
+  }, [slug]);
+
+  if (user) return <Navigate to="/onboarding" replace />;
+
+  if (loadingBranding) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <h2 className="font-heading text-xl font-bold text-foreground">Coach not found</h2>
+          <p className="text-muted-foreground">This coaching page doesn't exist.</p>
+          <Button variant="hero" onClick={() => navigate("/auth")}>Go to main login</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!branding) return null;
+
+  const primary = branding.brand_primary;
+  const secondary = branding.brand_secondary;
+  const foreground = branding.brand_foreground;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    if (showReset) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setLoading(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Check your email", description: "We sent you a password reset link." });
+        setShowReset(false);
+      }
+      return;
+    }
+
+    if (isLogin) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) {
+        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      } else {
+        navigate("/dashboard");
+      }
+    } else {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { display_name: displayName, coach_slug: slug },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      setLoading(false);
+      if (error) {
+        toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+      } else {
+        // Link client to coach
+        if (data.user) {
+          try {
+            await supabase.functions.invoke("process-coach-invite", {
+              body: {
+                invite_code: "__branded__",
+                client_user_id: data.user.id,
+                coach_user_id: branding.coach_user_id,
+              },
+            });
+          } catch (e) {
+            console.error("Failed to link to coach:", e);
+          }
+        }
+        toast({
+          title: "Check your email",
+          description: "We sent you a confirmation link. Please verify your email to continue.",
+        });
+      }
+    }
+  };
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background: `linear-gradient(135deg, ${primary}08, ${secondary}05, ${primary}03)`,
+      }}
+    >
+      <div className="w-full max-w-md">
+        {/* Coach branding header */}
+        <div className="flex flex-col items-center gap-3 mb-8">
+          {branding.logo_url && (
+            <img src={branding.logo_url} alt={branding.company_name || "Logo"} className="max-h-12 object-contain" />
+          )}
+          {branding.headshot_url && (
+            <img
+              src={branding.headshot_url}
+              alt={coachName}
+              className="h-16 w-16 rounded-full object-cover border-3"
+              style={{ borderColor: primary }}
+            />
+          )}
+          <div className="text-center">
+            <h1 className="font-heading text-2xl font-bold" style={{ color: primary }}>
+              {branding.company_name || "Welcome"}
+            </h1>
+            {branding.tagline && (
+              <p className="text-sm text-muted-foreground mt-1">{branding.tagline}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-card rounded-2xl shadow-medium p-8 border border-border">
+          <h2 className="font-heading text-xl font-bold text-foreground mb-1 text-center">
+            {showReset ? "Reset password" : isLogin ? "Welcome back" : "Get started"}
+          </h2>
+          <p className="text-sm text-muted-foreground text-center mb-6">
+            {showReset
+              ? "Enter your email and we'll send you a reset link"
+              : isLogin
+              ? "Sign in to continue"
+              : coachName
+              ? `${coachName} has invited you to begin your journey`
+              : "Create your account to begin"}
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && !showReset && (
+              <div>
+                <Label htmlFor="name">Your name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+            {!showReset && (
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+              </div>
+            )}
+            <Button
+              type="submit"
+              className="w-full font-semibold"
+              style={{ backgroundColor: primary, color: foreground }}
+              disabled={loading}
+            >
+              {loading
+                ? "Loading..."
+                : showReset
+                ? "Send reset link"
+                : isLogin
+                ? "Sign in"
+                : "Create account"}
+            </Button>
+          </form>
+
+          <div className="mt-4 text-center space-y-2">
+            {!showReset && isLogin && (
+              <button
+                onClick={() => setShowReset(true)}
+                className="text-sm hover:underline"
+                style={{ color: primary }}
+              >
+                Forgot password?
+              </button>
+            )}
+            <p className="text-sm text-muted-foreground">
+              {showReset ? (
+                <button onClick={() => setShowReset(false)} className="hover:underline" style={{ color: primary }}>
+                  Back to sign in
+                </button>
+              ) : isLogin ? (
+                <>
+                  Don't have an account?{" "}
+                  <button onClick={() => setIsLogin(false)} className="hover:underline" style={{ color: primary }}>
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button onClick={() => setIsLogin(true)} className="hover:underline" style={{ color: primary }}>
+                    Sign in
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground text-center mt-6">
+          Powered by Northstar OS • Coaching and self-reflection tools, not medical advice.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default BrandedAuth;
