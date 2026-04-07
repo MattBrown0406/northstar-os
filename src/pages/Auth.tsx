@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,13 @@ const Auth = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteCode = searchParams.get("invite");
+
+  // If there's an invite code, default to signup mode
+  useEffect(() => {
+    if (inviteCode) setIsLogin(false);
+  }, [inviteCode]);
 
   if (user) return <Navigate to="/onboarding" replace />;
 
@@ -49,11 +56,11 @@ const Auth = () => {
         navigate("/dashboard");
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { display_name: displayName },
+          data: { display_name: displayName, invite_code: inviteCode || undefined },
           emailRedirectTo: window.location.origin,
         },
       });
@@ -61,6 +68,16 @@ const Auth = () => {
       if (error) {
         toast({ title: "Signup failed", description: error.message, variant: "destructive" });
       } else {
+        // If invite code is present and user is confirmed (auto-confirm), process the link
+        if (inviteCode && data.user) {
+          try {
+            await supabase.functions.invoke("process-coach-invite", {
+              body: { invite_code: inviteCode, client_user_id: data.user.id },
+            });
+          } catch (e) {
+            console.error("Failed to process coach invite:", e);
+          }
+        }
         toast({
           title: "Check your email",
           description: "We sent you a confirmation link. Please verify your email to continue.",
@@ -78,6 +95,12 @@ const Auth = () => {
           </div>
           <span className="font-heading text-2xl font-bold text-foreground">Northstar OS</span>
         </div>
+
+        {inviteCode && !isLogin && (
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 mb-4 text-center">
+            <p className="text-sm text-primary font-medium">You've been invited by a coach! Create your account to get started.</p>
+          </div>
+        )}
 
         <div className="bg-card rounded-2xl shadow-medium p-8 border border-border">
           <h2 className="font-heading text-xl font-bold text-foreground mb-1 text-center">

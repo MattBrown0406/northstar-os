@@ -46,6 +46,23 @@ const plans = [
     cta: "Upgrade to Premium",
     featured: false,
   },
+  {
+    name: "Coach",
+    price: "$399",
+    period: "/mo",
+    desc: "Professional coaches — manage unlimited clients.",
+    features: [
+      "Everything in Premium",
+      "Unlimited client accounts",
+      "Assign clients to any tier",
+      "View client audits & reports",
+      "Edit client 90-day plans",
+      "Track client check-in progress",
+      "Shareable invite links",
+    ],
+    cta: "Apply for Coach Access",
+    featured: false,
+  },
 ];
 
 const PricingSection = () => {
@@ -60,7 +77,7 @@ const PricingSection = () => {
             Free gets you clarity. Pro gets you consistency. Premium gets you correction under pressure.
           </p>
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan) => (
             <div
               key={plan.name}

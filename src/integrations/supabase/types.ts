@@ -92,6 +92,63 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_clients: {
+        Row: {
+          assigned_tier: Database["public"]["Enums"]["plan_tier"]
+          client_user_id: string
+          coach_user_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          assigned_tier?: Database["public"]["Enums"]["plan_tier"]
+          client_user_id: string
+          coach_user_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          assigned_tier?: Database["public"]["Enums"]["plan_tier"]
+          client_user_id?: string
+          coach_user_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      coach_invite_links: {
+        Row: {
+          assigned_tier: Database["public"]["Enums"]["plan_tier"]
+          coach_user_id: string
+          created_at: string
+          id: string
+          invite_code: string
+          is_active: boolean
+          label: string | null
+          uses_count: number
+        }
+        Insert: {
+          assigned_tier?: Database["public"]["Enums"]["plan_tier"]
+          coach_user_id: string
+          created_at?: string
+          id?: string
+          invite_code?: string
+          is_active?: boolean
+          label?: string | null
+          uses_count?: number
+        }
+        Update: {
+          assigned_tier?: Database["public"]["Enums"]["plan_tier"]
+          coach_user_id?: string
+          created_at?: string
+          id?: string
+          invite_code?: string
+          is_active?: boolean
+          label?: string | null
+          uses_count?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           check_in_cadence:
@@ -189,13 +246,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_client_of: {
+        Args: { _client_id: string; _coach_id: string }
+        Returns: boolean
+      }
+      is_coach: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       audit_status: "in_progress" | "completed"
       check_in_cadence: "daily" | "every_other_day" | "weekly"
       coaching_tone: "direct" | "supportive" | "balanced"
-      plan_tier: "free" | "pro" | "premium"
+      plan_tier: "free" | "pro" | "premium" | "coach"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -326,7 +387,7 @@ export const Constants = {
       audit_status: ["in_progress", "completed"],
       check_in_cadence: ["daily", "every_other_day", "weekly"],
       coaching_tone: ["direct", "supportive", "balanced"],
-      plan_tier: ["free", "pro", "premium"],
+      plan_tier: ["free", "pro", "premium", "coach"],
     },
   },
 } as const

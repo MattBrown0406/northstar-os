@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Compass, LogOut, Target, TrendingUp, Flame, Calendar,
-  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock, FileText
+  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock, FileText, Users
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
@@ -83,6 +83,11 @@ const Dashboard = () => {
             <span className="font-heading text-lg font-bold text-foreground">Northstar OS</span>
           </div>
           <div className="flex items-center gap-2">
+            {profile?.plan_tier === "coach" && (
+              <Button variant="outline" size="sm" onClick={() => navigate("/coach")} className="border-primary text-primary">
+                <Users className="h-4 w-4 mr-1" /> Coach Portal
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
             {auditCompleted && (
