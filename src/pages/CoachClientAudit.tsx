@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Compass, ArrowLeft, ClipboardList } from "lucide-react";
-import { SECTIONS } from "@/lib/audit-questions";
+import { AUDIT_SECTIONS, AUDIT_QUESTIONS } from "@/lib/audit-questions";
 
 const CoachClientAudit = () => {
   const { clientId } = useParams<{ clientId: string }>();
