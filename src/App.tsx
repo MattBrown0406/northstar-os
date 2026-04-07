@@ -17,6 +17,7 @@ import CoachDashboard from "./pages/CoachDashboard";
 import CoachClientReport from "./pages/CoachClientReport";
 import CoachClientAudit from "./pages/CoachClientAudit";
 import CoachClientCheckIns from "./pages/CoachClientCheckIns";
+import BrandedAuth from "./pages/BrandedAuth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
