@@ -70,9 +70,9 @@ const CoachClientAudit = () => {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         {/* Section Scores */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
-          {SECTIONS.map((section, i) => (
+          {AUDIT_SECTIONS.map((section, i) => (
             <div key={i} className="bg-card rounded-xl border border-border p-4 text-center">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{section.title}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{section}</p>
               <p className="font-heading text-2xl font-bold text-primary">{scores[i] ?? "—"}</p>
             </div>
           ))}
@@ -80,31 +80,34 @@ const CoachClientAudit = () => {
 
         {/* Responses */}
         <div className="space-y-6">
-          {SECTIONS.map((section, sIdx) => (
-            <div key={sIdx} className="bg-card rounded-2xl border border-border p-6">
-              <h2 className="font-heading text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-primary" /> {section.title}
-              </h2>
-              <div className="space-y-4">
-                {section.questions.map((q, qIdx) => {
-                  const key = `${sIdx}-${qIdx}`;
-                  const answer = responses[key];
-                  return (
-                    <div key={key}>
-                      <p className="text-sm font-medium text-foreground mb-1">{q.text}</p>
-                      <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
-                        {answer
-                          ? typeof answer === "object"
-                            ? JSON.stringify(answer)
-                            : String(answer)
-                          : "No response"}
-                      </p>
-                    </div>
-                  );
-                })}
+          {AUDIT_SECTIONS.map((sectionName, sIdx) => {
+            const sectionQuestions = AUDIT_QUESTIONS.filter(q => q.sectionIndex === sIdx);
+            return (
+              <div key={sIdx} className="bg-card rounded-2xl border border-border p-6">
+                <h2 className="font-heading text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-primary" /> {sectionName}
+                </h2>
+                <div className="space-y-4">
+                  {sectionQuestions.map((q) => {
+                    const key = `${q.sectionIndex}-${q.questionIndex}`;
+                    const answer = responses[key];
+                    return (
+                      <div key={key}>
+                        <p className="text-sm font-medium text-foreground mb-1">{q.text}</p>
+                        <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                          {answer
+                            ? typeof answer === "object"
+                              ? JSON.stringify(answer)
+                              : String(answer)
+                            : "No response"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-8 pb-8">
