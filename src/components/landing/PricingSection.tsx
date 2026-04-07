@@ -46,6 +46,23 @@ const plans = [
     cta: "Upgrade to Premium",
     featured: false,
   },
+  {
+    name: "Coach",
+    price: "$399",
+    period: "/mo",
+    desc: "Professional coaches — manage unlimited clients.",
+    features: [
+      "Everything in Premium",
+      "Unlimited client accounts",
+      "Assign clients to any tier",
+      "View client audits & reports",
+      "Edit client 90-day plans",
+      "Track client check-in progress",
+      "Shareable invite links",
+    ],
+    cta: "Apply for Coach Access",
+    featured: false,
+  },
 ];
 
 const PricingSection = () => {
