@@ -7,6 +7,54 @@ import { Input } from "@/components/ui/input";
 import { Compass, Plus, X, ArrowRight, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const ScaleSelector = ({ value, onChange, label, emoji }: {
+  value: number; onChange: (n: number) => void; label: string; emoji: string[];
+}) => (
+  <div className="space-y-4">
+    <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+    <div className="flex gap-1">
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+        <button
+          key={n}
+          onClick={() => onChange(n)}
+          className={`flex-1 h-12 rounded-lg border text-sm font-medium transition-all ${
+            n === value
+              ? "bg-primary text-primary-foreground border-primary scale-110"
+              : n <= value
+              ? "bg-primary/10 border-primary/30 text-primary"
+              : "border-border text-muted-foreground hover:border-primary/50"
+          }`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+    <p className="text-sm text-muted-foreground text-center">{emoji[Math.min(Math.floor(value / 3), 2)]}</p>
+  </div>
+);
+
+const ListInput = ({ label, items, onAdd, onRemove, inputVal, setInputVal, placeholder }: {
+  label: string; items: string[]; onAdd: () => void; onRemove: (index: number) => void;
+  inputVal: string; setInputVal: (v: string) => void; placeholder: string;
+}) => (
+  <div className="space-y-4">
+    <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+    <div className="flex gap-2">
+      <Input value={inputVal} onChange={(e) => setInputVal(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onAdd()} placeholder={placeholder} className="flex-1" />
+      <Button variant="outline" size="icon" onClick={onAdd}><Plus className="h-4 w-4" /></Button>
+    </div>
+    <ul className="space-y-2">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+          <span className="flex-1">{item}</span>
+          <button onClick={() => onRemove(i)}><X className="h-4 w-4 text-muted-foreground hover:text-destructive" /></button>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 const CheckIn = () => {
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(5);
