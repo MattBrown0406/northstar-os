@@ -101,15 +101,15 @@ const Dashboard = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">
             Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
           </h1>
-          <p className="text-muted-foreground">Here’s your leadership operating snapshot.</p>
+          <p className="text-muted-foreground">Here’s your operating snapshot.</p>
         </div>
 
         {/* Quick action banner */}
         {!auditCompleted ? (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
             <div>
-              <h3 className="font-heading font-bold text-foreground">Complete your Leadership Audit</h3>
-              <p className="text-sm text-muted-foreground">Get your strategic report, priority focus, and 90-day plan</p>
+              <h3 className="font-heading font-bold text-foreground">Complete your Operating Audit</h3>
+              <p className="text-sm text-muted-foreground">Get your operating report, priority focus, and 90-day plan</p>
             </div>
             <Button variant="hero" onClick={() => navigate("/audit")}>
               Start audit <ArrowRight className="ml-2 h-4 w-4" />
@@ -118,7 +118,7 @@ const Dashboard = () => {
         ) : (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between">
             <div>
-              <h3 className="font-heading font-bold text-foreground">Your Strategic Report is ready</h3>
+              <h3 className="font-heading font-bold text-foreground">Your Operating Report is ready</h3>
               <p className="text-sm text-muted-foreground">Review your patterns, blind spots, and 90-day operating plan</p>
             </div>
             <Button variant="hero" onClick={() => navigate("/report")}>
@@ -130,9 +130,9 @@ const Dashboard = () => {
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard icon={<Flame className="h-5 w-5 text-accent" />} label="Streak" value={`${streak} days`} />
-          <StatCard icon={<TrendingUp className="h-5 w-5 text-primary" />} label="Avg Mood" value={avgMood} />
-          <StatCard icon={<BarChart3 className="h-5 w-5 text-primary" />} label="Avg Energy" value={avgEnergy} />
-          <StatCard icon={<AlertTriangle className="h-5 w-5 text-accent" />} label="Drift alerts" value={String(driftCount)} />
+          <StatCard icon={<TrendingUp className="h-5 w-5 text-primary" />} label="Avg focus" value={avgMood} />
+          <StatCard icon={<BarChart3 className="h-5 w-5 text-primary" />} label="Avg energy" value={avgEnergy} />
+          <StatCard icon={<AlertTriangle className="h-5 w-5 text-accent" />} label="Drift flags" value={String(driftCount)} />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -166,7 +166,7 @@ const Dashboard = () => {
                   <li key={c.id} className="flex items-center justify-between text-sm border-b border-border pb-2 last:border-0">
                     <span className="text-muted-foreground">{format(new Date(c.created_at), "MMM d, h:mm a")}</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-foreground">Mood: {c.mood_score ?? "—"}</span>
+                      <span className="text-foreground">Focus: {c.mood_score ?? "—"}</span>
                       <span className="text-foreground">Energy: {c.energy_score ?? "—"}</span>
                       {c.drift_detected && <AlertTriangle className="h-4 w-4 text-accent" />}
                     </div>

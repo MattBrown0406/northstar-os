@@ -109,7 +109,7 @@ const CheckIn = () => {
           <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
           <p className="text-muted-foreground">
             {mood <= 4
-              ? "Looks like things are heavy right now. Useful signal — catch the drift early and reset your next move."
+              ? "Your self-rating shows some drift. Useful signal — reset the next move before a soft week turns into a lost one."
               : "You’re on track. Keep the operating rhythm tight and the momentum moving."}
           </p>
           <Button variant="hero" onClick={() => navigate("/dashboard")}>
@@ -121,13 +121,13 @@ const CheckIn = () => {
   }
 
   const steps = [
-    <ScaleSelector key="mood" value={mood} onChange={setMood} label="How are you showing up right now?"
-      emoji={["😔 Rough day", "😐 Hanging in there", "😊 Feeling good"]} />,
-    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What’s your energy level?"
+    <ScaleSelector key="mood" value={mood} onChange={setMood} label="How focused and steady are you right now?"
+      emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />,
+    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What’s your execution energy level?"
       emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />,
     <ListInput key="wins" label="What moved forward since your last check-in?" items={wins} setter={setWins} placeholder="Add a win..." />,
     <ListInput key="blockers" label="Where are you hitting resistance or friction?" items={blockers} setter={setBlockers} placeholder="Add a blocker..." />,
-    <ListInput key="commitments" label="What are your next commitments?" items={commitments} setter={setCommitments} placeholder="Add a commitment..." />,
+    <ListInput key="commitments" label="What commitments will you keep before the next check-in?" items={commitments} setter={setCommitments} placeholder="Add a commitment..." />,
   ];
 
   return (

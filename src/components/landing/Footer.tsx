@@ -12,7 +12,7 @@ const Footer = () => {
             <span className="font-heading text-lg font-bold text-foreground">Intentus</span>
           </div>
           <p className="text-xs text-muted-foreground text-center max-w-xl leading-relaxed">
-            Intentus provides coaching and self-reflection tools for leadership development and execution accountability. It is not medical advice or mental health treatment. If you are in crisis, contact local emergency services.
+            Intentus provides coaching and self-reflection tools for operating discipline and execution accountability. It is not medical advice or mental health treatment. If you are in crisis, contact local emergency services.
           </p>
           <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Intentus</p>
         </div>

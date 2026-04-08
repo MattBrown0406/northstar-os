@@ -1,8 +1,8 @@
 const steps = [
-  { number: "01", title: "Assess", desc: "Complete an evidence-based leadership audit in 20–45 minutes.", color: "bg-primary/10 text-primary" },
+  { number: "01", title: "Audit", desc: "Complete an evidence-based operating audit in 20–45 minutes.", color: "bg-primary/10 text-primary" },
   { number: "02", title: "Expose", desc: "Intentus surfaces patterns, contradictions, blind spots, and hidden strengths.", color: "bg-accent/10 text-accent" },
-  { number: "03", title: "Prioritize", desc: "Select the metrics and operating priorities that define the next 90 days.", color: "bg-primary/10 text-primary" },
-  { number: "04", title: "Check in", desc: "Get daily or weekly coaching on adherence, drift, and recent wins or misses.", color: "bg-accent/10 text-accent" },
+  { number: "03", title: "Prioritize", desc: "Lock in the scoreboard metrics and operating priorities that define the next 90 days.", color: "bg-primary/10 text-primary" },
+  { number: "04", title: "Check in", desc: "Get daily or weekly coaching on commitments kept, drift detected, and recent wins or misses.", color: "bg-accent/10 text-accent" },
   { number: "05", title: "Adjust", desc: "Refine commitments as reality changes without losing the plot.", color: "bg-primary/10 text-primary" },
 ];
 

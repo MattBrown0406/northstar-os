@@ -12,7 +12,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 relative">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 animate-fade-up">
-            AI operating coach for executives, owners, and rising leaders
+            AI operating coach for founders, executives, and coaches running accountability programs
           </div>
           <h1 className="font-heading text-5xl md:text-7xl font-bold tracking-tight mb-6 animate-fade-up" style={{ animationDelay: "0.1s" }}>
             <span className="text-foreground">See the truth.</span>
@@ -20,18 +20,22 @@ const HeroSection = () => {
             <span className="text-gradient-primary">Lead with intent.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            Intentus audits the metrics and behaviors that actually drive your performance, gives you honest feedback on strengths, weaknesses, and blind spots, then turns it into a focused 90-day plan with daily or weekly accountability check-ins.
+            Intentus gives high-performing operators an honest operating audit, surfaces the few metrics and behaviors that matter most, and turns that into a focused 90-day plan with daily or weekly accountability check-ins.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up" style={{ animationDelay: "0.3s" }}>
-            <Button variant="hero" size="lg" className="text-base px-8 py-6">
-              Start assessment <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-            <Button variant="hero-outline" size="lg" className="text-base px-8 py-6">
-              See how it works
-            </Button>
+            <a href="/auth">
+              <Button variant="hero" size="lg" className="text-base px-8 py-6">
+                Start audit <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </a>
+            <a href="#how-it-works">
+              <Button variant="hero-outline" size="lg" className="text-base px-8 py-6">
+                See how it works
+              </Button>
+            </a>
           </div>
           <p className="text-xs text-muted-foreground mt-4 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-            Private by design · Built for execution · White-label ready for professional coaches
+            Private by design · Built for execution · White-label ready for coach-led client programs
           </p>
         </div>
 

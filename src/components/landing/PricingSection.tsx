@@ -7,8 +7,8 @@ const plans = [
     price: "$0",
     desc: "Get initial clarity on where you stand and what needs attention.",
     features: [
-      "Leadership Audit (Lite)",
-      "90-Day Plan snapshot",
+      "Operating audit (lite)",
+      "90-day plan snapshot",
       "1 accountability check-in per week",
       "Recent check-in history",
     ],
@@ -19,9 +19,9 @@ const plans = [
     name: "Executive",
     price: "$29",
     period: "/mo",
-    desc: "For leaders who want consistent operating discipline.",
+    desc: "For operators who want a tighter execution rhythm around the numbers that matter.",
     features: [
-      "Full leadership audit",
+      "Full operating audit",
       "Full strengths, blind spots, and contradictions report",
       "Custom daily or weekly check-ins",
       "Unlimited history",
@@ -33,18 +33,18 @@ const plans = [
     featured: true,
   },
   {
-    name: "Advisor",
+    name: "Coach",
     price: "$99",
     period: "/mo",
-    desc: "For stricter accountability and coach-led client programs.",
+    desc: "For coaches who want to run a branded accountability layer for clients.",
     features: [
       "Everything in Executive",
-      "Quarterly re-assessment",
+      "Quarterly re-audits",
       "AI plan refreshes",
-      "Enhanced call-outs on drift",
-      "White-label support for professional coaches",
+      "Enhanced drift call-outs",
+      "White-label support for coach-led client programs",
     ],
-    cta: "Choose Advisor",
+    cta: "Choose Coach",
     featured: false,
   },
 ];
@@ -58,7 +58,7 @@ const PricingSection = () => {
             Pricing for the level of accountability you want
           </h2>
           <p className="text-lg text-muted-foreground">
-            Start with clarity. Upgrade for consistency. Scale it for yourself or your clients.
+            Start with clarity. Upgrade for consistency. Scale it for yourself or for client accountability programs.
           </p>
         </div>
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">

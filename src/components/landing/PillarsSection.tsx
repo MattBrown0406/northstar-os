@@ -3,9 +3,9 @@ import { ClipboardCheck, FileText, MessageCircle } from "lucide-react";
 const pillars = [
   {
     icon: ClipboardCheck,
-    title: "Leadership Audit",
+    title: "Operating Audit",
     subtitle: "Metrics, habits, pressure points, reality",
-    description: "A guided assessment that digs into recent performance, key business numbers, decision quality, energy, relationships, and execution systems. It is designed to surface signal, not flattering narratives.",
+    description: "A guided assessment that digs into recent performance, key business numbers, decision quality, relationships, and execution systems. It is designed to surface signal, not flattering narratives.",
   },
   {
     icon: FileText,
@@ -17,7 +17,7 @@ const pillars = [
     icon: MessageCircle,
     title: "Accountability Check-ins",
     subtitle: "Daily or weekly feedback against your plan",
-    description: "Intentus checks for drift versus adherence, tracks progress against your chosen metrics, and tightens your next commitments before another week disappears.",
+    description: "Intentus checks for drift versus adherence, tracks progress against your chosen scoreboard metrics, and tightens your next commitments before another week disappears.",
   },
 ];
 

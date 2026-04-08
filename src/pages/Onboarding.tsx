@@ -61,7 +61,7 @@ const Onboarding = () => {
       </div>
       <h1 className="font-heading text-3xl font-bold text-foreground">Welcome to Intentus</h1>
       <p className="text-muted-foreground max-w-md mx-auto">
-        You are about to audit how you actually operate, identify the metrics that matter most, and set up the coaching rhythm that keeps your 90-day plan from slipping.
+        You are about to audit how you actually operate, identify the metrics that matter most, and set up the accountability rhythm that keeps your 90-day plan from slipping.
       </p>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
         ⚠️ Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
@@ -104,7 +104,7 @@ const Onboarding = () => {
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><MessageCircle className="h-6 w-6 text-primary" /></div>
         <div>
-          <h2 className="font-heading text-xl font-bold text-foreground">Coaching style</h2>
+          <h2 className="font-heading text-xl font-bold text-foreground">Feedback style</h2>
           <p className="text-sm text-muted-foreground">How should Intentus deliver feedback when you are off track?</p>
         </div>
       </div>
@@ -139,7 +139,7 @@ const Onboarding = () => {
         <div className="bg-primary/10 rounded-xl p-3"><Calendar className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Check-in cadence</h2>
-          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing adherence, drift, and key metrics</p>
+          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing commitments, drift, and key metrics</p>
         </div>
       </div>
       <div className="grid gap-3">
@@ -160,7 +160,7 @@ const Onboarding = () => {
       </div>
       <Button variant="hero" className="w-full" onClick={handleComplete} disabled={loading}>
         {loading ? "Saving..." : <>
-          Start my assessment <CheckCircle className="ml-2 h-4 w-4" />
+          Start my audit <CheckCircle className="ml-2 h-4 w-4" />
         </>}
       </Button>
     </div>,

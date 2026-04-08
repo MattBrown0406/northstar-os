@@ -4,7 +4,7 @@ const items = [
   { icon: Target, text: "Tracks the metrics and behaviors that define real leadership performance" },
   { icon: Filter, text: "Turns vague ambition into concrete operating priorities and decision filters" },
   { icon: Shield, text: "Uses recurring check-ins to catch drift before a quarter gets away from you" },
-  { icon: RotateCcw, text: "Can be white-labeled by professional coaches for client accountability programs" },
+  { icon: RotateCcw, text: "Can be white-labeled by coaches who want a branded client accountability program" },
 ];
 
 const DifferentiatorsSection = () => {
@@ -17,7 +17,7 @@ const DifferentiatorsSection = () => {
               Why leaders choose Intentus
             </h2>
             <p className="text-lg text-muted-foreground">
-              Most productivity tools track tasks. Intentus coaches the operator behind the outcomes.
+              Most productivity tools track tasks. Intentus coaches the operator behind the outcomes—and can extend that same rhythm to coach-led client programs.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

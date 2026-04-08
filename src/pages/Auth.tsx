@@ -87,7 +87,7 @@ const Auth = () => {
               ? "Enter your email and we'll send you a reset link"
               : isLogin
               ? "Sign in to review your plan, metrics, and check-ins"
-              : "Start your leadership assessment and build your 90-day plan"}
+              : "Start your operating audit and build your 90-day plan"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

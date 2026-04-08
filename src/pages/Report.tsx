@@ -132,7 +132,7 @@ const Report = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
-          <h2 className="font-heading text-xl font-bold text-foreground">Generating your Strategic Report…</h2>
+          <h2 className="font-heading text-xl font-bold text-foreground">Generating your Operating Report…</h2>
           <p className="text-muted-foreground text-sm max-w-md">Intentus is analyzing your audit responses for patterns, contradictions, and your next 90-day operating plan. This may take 30–60 seconds.</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ const Report = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <h2 className="font-heading text-xl font-bold text-foreground">No report yet</h2>
-          <p className="text-muted-foreground">Complete your leadership audit first to generate a strategic report.</p>
+          <p className="text-muted-foreground">Complete your operating audit first to generate your report.</p>
           <Button variant="hero" onClick={() => navigate("/audit")}>Start Audit</Button>
         </div>
       </div>
@@ -162,7 +162,7 @@ const Report = () => {
             <div className="bg-gradient-primary rounded-lg p-1.5">
               <Compass className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold text-foreground">Strategic Report</span>
+            <span className="font-heading text-lg font-bold text-foreground">Operating Report</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -180,7 +180,7 @@ const Report = () => {
         <div className="hidden print:block mb-8 pt-4">
           <div className="flex items-center gap-2 mb-2">
             <Compass className="h-6 w-6" />
-            <span className="font-heading text-2xl font-bold">Intentus — Strategic Report</span>
+            <span className="font-heading text-2xl font-bold">Intentus — Operating Report</span>
           </div>
           <p className="text-sm text-muted-foreground">Generated {new Date(report.created_at).toLocaleDateString()}</p>
         </div>
@@ -189,7 +189,7 @@ const Report = () => {
         <section className="mb-8">
           <div className="bg-gradient-subtle rounded-2xl p-8 border border-primary/20 text-center print:border print:border-foreground/20">
             <Star className="h-8 w-8 text-accent mx-auto mb-3" />
-            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Your Strategic Focus</h2>
+            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Your Operating Focus</h2>
             <p className="font-heading text-2xl font-bold text-foreground leading-relaxed">{north_star_focus}</p>
           </div>
         </section>
