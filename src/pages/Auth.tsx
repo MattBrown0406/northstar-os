@@ -93,7 +93,7 @@ const Auth = () => {
           <div className="bg-gradient-primary rounded-lg p-2">
             <Compass className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-heading text-2xl font-bold text-foreground">Northstar OS</span>
+          <span className="font-heading text-2xl font-bold text-foreground">Intentus</span>
         </div>
 
         {inviteCode && !isLogin && (
@@ -104,14 +104,14 @@ const Auth = () => {
 
         <div className="bg-card rounded-2xl shadow-medium p-8 border border-border">
           <h2 className="font-heading text-xl font-bold text-foreground mb-1 text-center">
-            {showReset ? "Reset password" : isLogin ? "Welcome back" : "Create your account"}
+            {showReset ? "Reset password" : isLogin ? "Welcome back" : "Create your Intentus account"}
           </h2>
           <p className="text-sm text-muted-foreground text-center mb-6">
             {showReset
               ? "Enter your email and we'll send you a reset link"
               : isLogin
-              ? "Sign in to continue your journey"
-              : "Start your alignment journey today"}
+              ? "Sign in to review your plan, metrics, and check-ins"
+              : "Start your operating audit and build your 90-day plan"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -198,7 +198,7 @@ const Auth = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          This product provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
+          Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
         </p>
       </div>
     </div>

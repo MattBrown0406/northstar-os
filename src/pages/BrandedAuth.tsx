@@ -293,7 +293,7 @@ const BrandedAuth = () => {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-6">
-          Powered by Northstar OS • Coaching and self-reflection tools, not medical advice.
+          Powered by Intentus • Coaching and self-reflection tools, not medical advice.
         </p>
       </div>
     </div>

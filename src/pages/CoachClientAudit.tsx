@@ -41,7 +41,7 @@ const CoachClientAudit = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <h2 className="font-heading text-xl font-bold text-foreground">No completed audit</h2>
-          <p className="text-muted-foreground">This client hasn't completed their baseline audit yet.</p>
+          <p className="text-muted-foreground">This client hasn't completed their operating audit yet.</p>
           <Button variant="hero" onClick={() => navigate("/coach")}>Back to Coach Dashboard</Button>
         </div>
       </div>

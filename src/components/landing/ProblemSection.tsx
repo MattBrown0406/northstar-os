@@ -1,10 +1,10 @@
 import { AlertTriangle, Brain, Repeat, Zap } from "lucide-react";
 
 const problems = [
-  { icon: Brain, text: "Can think clearly, but overthink at the moment of commitment" },
-  { icon: Repeat, text: "Start strong, then drift when stress rises" },
-  { icon: AlertTriangle, text: "Stay \"busy\" while avoiding the one move that matters" },
-  { icon: Zap, text: "Keep upgrading strategy instead of fixing execution" },
+  { icon: Brain, text: "Know what matters, but still avoid the highest-leverage decision" },
+  { icon: Repeat, text: "Start each quarter with focus, then drift when pressure and noise pile up" },
+  { icon: AlertTriangle, text: "Track a lot of activity, but lack one honest operating scoreboard" },
+  { icon: Zap, text: "Need sharper feedback on where you're strong, weak, and fooling yourself" },
 ];
 
 const ProblemSection = () => {
@@ -13,10 +13,10 @@ const ProblemSection = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            You don't have an information problem
+            High performers rarely need more advice
           </h2>
           <p className="text-lg text-muted-foreground">
-            You have a consistency, focus, and decision-quality problem under pressure. Northstar OS is built for people who:
+            They need a clearer mirror, better operating discipline, and a tighter link between what they say matters and what their calendar, metrics, and habits prove. Intentus is built for leaders who:
           </p>
         </div>
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">

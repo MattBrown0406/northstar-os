@@ -1,10 +1,10 @@
 import { Filter, Shield, RotateCcw, Target } from "lucide-react";
 
 const items = [
-  { icon: Target, text: "Tracks your operating system—not just habits" },
-  { icon: Filter, text: "Decision filters: what to say yes/no to" },
-  { icon: Shield, text: "Constraints that prevent self-sabotage" },
-  { icon: RotateCcw, text: "Relapse prevention for old defaults under stress" },
+  { icon: Target, text: "Tracks the metrics and behaviors that define real leadership performance" },
+  { icon: Filter, text: "Turns vague ambition into concrete operating priorities and decision filters" },
+  { icon: Shield, text: "Uses recurring check-ins to catch drift before a quarter gets away from you" },
+  { icon: RotateCcw, text: "Can be white-labeled by coaches who want a branded client accountability program" },
 ];
 
 const DifferentiatorsSection = () => {
@@ -14,10 +14,10 @@ const DifferentiatorsSection = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why founders choose Northstar
+              Why leaders choose Intentus
             </h2>
             <p className="text-lg text-muted-foreground">
-              Most tools track habits. We track your operating system.
+              Most productivity tools track tasks. Intentus coaches the operator behind the outcomes—and can extend that same rhythm to coach-led client programs.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -30,7 +30,7 @@ const DifferentiatorsSection = () => {
           </div>
           <div className="mt-12 text-center">
             <blockquote className="text-xl md:text-2xl font-heading font-semibold text-gradient-primary italic">
-              "Strategy isn't your bottleneck. Drift is."
+              "You do not need more motivation. You need a more honest operating rhythm."
             </blockquote>
           </div>
         </div>

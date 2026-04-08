@@ -3,21 +3,21 @@ import { ClipboardCheck, FileText, MessageCircle } from "lucide-react";
 const pillars = [
   {
     icon: ClipboardCheck,
-    title: "Baseline Audit",
-    subtitle: "High-truth, one question at a time",
-    description: "A guided interview that forces specifics: last 7–30 days, numbers, time, money, decisions. If you give the polished version, it calls it out.",
+    title: "Operating Audit",
+    subtitle: "Metrics, habits, pressure points, reality",
+    description: "A guided assessment that digs into recent performance, key business numbers, decision quality, relationships, and execution systems. It is designed to surface signal, not flattering narratives.",
   },
   {
     icon: FileText,
-    title: "Strategic Report",
-    subtitle: "Printable & actionable",
-    description: "Uncomfortable truth, trajectory, contradictions, pattern engine, forced choice, and a 90-day execution plan you can actually use.",
+    title: "90-Day Operating Plan",
+    subtitle: "Honest, specific, usable",
+    description: "Get a practical report with strengths, weaknesses, blind spots, contradictions, a priority focus, and a 90-day plan you can actually run with measurable targets.",
   },
   {
     icon: MessageCircle,
-    title: "Coaching Check-ins",
-    subtitle: "Stay aligned, catch drift early",
-    description: "Pick your cadence. Each check-in references your baseline + plan + history to tighten commitments and keep the next 24 hours obvious.",
+    title: "Accountability Check-ins",
+    subtitle: "Daily or weekly feedback against your plan",
+    description: "Intentus checks for drift versus adherence, tracks progress against your chosen scoreboard metrics, and tightens your next commitments before another week disappears.",
   },
 ];
 
@@ -27,10 +27,10 @@ const PillarsSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Three pillars. One operating system.
+            Audit. Align. Execute.
           </h2>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            Less reflection. More traction. Turn insight into a 90-day plan—and stay on it.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            One platform for seeing where you stand, deciding what matters next, and staying accountable long enough for results to compound.
           </p>
         </div>
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">

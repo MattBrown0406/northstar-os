@@ -9,12 +9,12 @@ const Footer = () => {
             <div className="bg-gradient-primary rounded-lg p-1.5">
               <Compass className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold text-foreground">Northstar OS</span>
+            <span className="font-heading text-lg font-bold text-foreground">Intentus</span>
           </div>
           <p className="text-xs text-muted-foreground text-center max-w-xl leading-relaxed">
-            This product provides coaching and self-reflection tools. It is not medical advice or mental health treatment. If you are in crisis, contact local emergency services.
+            Intentus provides coaching and self-reflection tools for operating discipline and execution accountability. It is not medical advice or mental health treatment. If you are in crisis, contact local emergency services.
           </p>
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Northstar OS</p>
+          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Intentus</p>
         </div>
       </div>
     </footer>

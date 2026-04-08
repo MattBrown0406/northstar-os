@@ -80,7 +80,7 @@ const CoachClientCheckIns = () => {
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-card rounded-2xl border border-border p-4 text-center">
             <TrendingUp className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-xs text-muted-foreground">Avg Mood</p>
+            <p className="text-xs text-muted-foreground">Avg Focus</p>
             <p className="font-heading text-2xl font-bold text-foreground">{avgMood}</p>
           </div>
           <div className="bg-card rounded-2xl border border-border p-4 text-center">
@@ -90,7 +90,7 @@ const CoachClientCheckIns = () => {
           </div>
           <div className="bg-card rounded-2xl border border-border p-4 text-center">
             <AlertTriangle className="h-5 w-5 text-accent mx-auto mb-1" />
-            <p className="text-xs text-muted-foreground">Drift Alerts</p>
+            <p className="text-xs text-muted-foreground">Drift Flags</p>
             <p className="font-heading text-2xl font-bold text-foreground">{driftCount}</p>
           </div>
         </div>

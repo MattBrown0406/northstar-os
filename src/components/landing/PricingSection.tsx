@@ -3,54 +3,54 @@ import { Check } from "lucide-react";
 
 const plans = [
   {
-    name: "Free",
+    name: "Starter",
     price: "$0",
-    desc: "Explore the system and get initial clarity.",
+    desc: "Get initial clarity on where you stand and what needs attention.",
     features: [
-      "Baseline Audit (Lite)",
-      "Strategic Report (Lite)",
-      "1 check-in per week",
-      "Last 10 check-ins stored",
+      "Operating audit (lite)",
+      "90-day plan snapshot",
+      "1 accountability check-in per week",
+      "Recent check-in history",
     ],
-    cta: "Start Free",
+    cta: "Start assessment",
     featured: false,
   },
   {
-    name: "Pro",
+    name: "Executive",
     price: "$29",
     period: "/mo",
-    desc: "Execution becomes automatic.",
+    desc: "For operators who want a tighter execution rhythm around the numbers that matter.",
     features: [
-      "Full Baseline Audit",
-      "Full printable Strategic Report",
-      "Custom check-in cadence",
+      "Full operating audit",
+      "Full strengths, blind spots, and contradictions report",
+      "Custom daily or weekly check-ins",
       "Unlimited history",
-      "Drift + adherence trends",
-      "Pattern + obstacle dashboards",
-      "Export report + data",
+      "Drift vs adherence tracking",
+      "Metric-focused accountability",
+      "Exportable report + plan",
     ],
-    cta: "Upgrade to Pro",
+    cta: "Choose Executive",
     featured: true,
   },
   {
     name: "Premium",
     price: "$99",
     period: "/mo",
-    desc: "A stricter mirror and faster course correction.",
+    desc: "A stricter mirror and faster course correction for serious operators.",
     features: [
-      "Everything in Pro",
+      "Everything in Executive",
       "Mirror Mode (harder call-outs)",
-      "Quarterly Re-Audit",
-      "Plan Refresh (AI-updated plan)",
+      "Quarterly re-audits",
+      "AI plan refreshes",
     ],
-    cta: "Upgrade to Premium",
+    cta: "Choose Premium",
     featured: false,
   },
   {
     name: "Coach",
     price: "$399",
     period: "/mo",
-    desc: "Professional coaches — manage unlimited clients.",
+    desc: "For professional coaches running a branded accountability layer for clients.",
     features: [
       "Everything in Premium",
       "Unlimited client accounts",
@@ -58,7 +58,7 @@ const plans = [
       "View client audits & reports",
       "Edit client 90-day plans",
       "Track client check-in progress",
-      "Shareable invite links",
+      "White-label support + shareable invite links",
     ],
     cta: "Apply for Coach Access",
     featured: false,
@@ -71,10 +71,10 @@ const PricingSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Pick the level of accountability you want
+            Pricing for the level of accountability you want
           </h2>
           <p className="text-lg text-muted-foreground">
-            Free gets you clarity. Pro gets you consistency. Premium gets you correction under pressure.
+            Start with clarity. Upgrade for consistency. Scale it for yourself or for client accountability programs.
           </p>
         </div>
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

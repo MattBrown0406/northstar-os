@@ -177,7 +177,7 @@ const Audit = () => {
 
         if (completedAudit && completedAudit.length > 0) {
           setCompleted(true);
-          setMessages([{ role: "system", text: "✅ Your baseline audit is already complete. View your strategic report or start a new audit." }]);
+          setMessages([{ role: "system", text: "✅ Your operating audit is already complete. View your report or start a fresh assessment." }]);
           return;
         }
 
@@ -251,13 +251,13 @@ const Audit = () => {
             setMessages((prev) => {
               const updated = [...prev];
               updated[updated.length - 1] = { role: "coach", text: coachText };
-              return [...updated, { role: "system", text: "✅ Your baseline audit is complete. Let's build your strategic report." }];
+              return [...updated, { role: "system", text: "✅ Your operating audit is complete. Let’s build your report." }];
             });
             setCoachStreaming(false);
           },
         });
       } catch {
-        setMessages((prev) => [...prev, { role: "system", text: "✅ Your baseline audit is complete. Let's build your strategic report." }]);
+        setMessages((prev) => [...prev, { role: "system", text: "✅ Your operating audit is complete. Let’s build your report." }]);
         setCoachStreaming(false);
       }
       return;
@@ -346,7 +346,7 @@ const Audit = () => {
             <div className="bg-gradient-primary rounded-lg p-1.5">
               <Compass className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-heading text-lg font-bold text-foreground">Baseline Audit</span>
+            <span className="font-heading text-lg font-bold text-foreground">Operating Audit</span>
           </div>
           <div className="text-sm text-muted-foreground">
             {AUDIT_SECTIONS[currentSection]}
@@ -412,7 +412,7 @@ const Audit = () => {
         <div className="container mx-auto max-w-2xl px-4 py-4">
           {completed ? (
             <Button variant="hero" className="w-full" onClick={() => navigate("/report")}>
-              View your Strategic Report <ArrowRight className="ml-2 h-4 w-4" />
+              View your Operating Report <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : coachStreaming ? (
             <div className="flex items-center justify-center py-2">
@@ -422,7 +422,7 @@ const Audit = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "150ms" }} />
                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
-                Coach is reflecting…
+                Intentus is reflecting…
               </div>
             </div>
           ) : (
@@ -445,7 +445,7 @@ const Audit = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                    placeholder="Type your answer..."
+                    placeholder="Type your response..."
                     className="flex-1"
                   />
                   <Button onClick={handleSend} disabled={!input.trim()} variant="hero" size="icon">
