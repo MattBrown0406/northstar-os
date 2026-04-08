@@ -56,7 +56,7 @@ serve(async (req) => {
 
     if (report) {
       userContext += `--- STRATEGIC REPORT ---\n`;
-      if (report.north_star_focus) userContext += `North Star Focus: ${report.north_star_focus}\n`;
+      if (report.north_star_focus) userContext += `Operating Focus: ${report.north_star_focus}\n`;
       if (report.forced_choice) userContext += `Forced Choice: ${report.forced_choice}\n`;
       if (report.contradictions) userContext += `Key Contradictions: ${JSON.stringify(report.contradictions)}\n`;
       if (report.pattern_analysis) userContext += `Patterns: ${JSON.stringify(report.pattern_analysis)}\n`;
@@ -100,7 +100,7 @@ ${userContext}
 Based on this check-in and their history, provide a personalized coaching debrief:
 
 1. **Pattern Recognition**: What trends do you see across their recent check-ins? Is mood/energy improving or declining?
-2. **Alignment Check**: Are their wins and commitments aligned with their North Star and 90-day plan?
+2. **Alignment Check**: Are their wins and commitments aligned with their operating focus and 90-day plan?
 3. **Drift Analysis**: If drift was detected, what might be causing it? Reference specific data.
 4. **Actionable Insight**: Give ONE specific, actionable piece of advice for the next 24 hours.
 5. **Accountability**: Reference their previous commitments — did their wins reflect follow-through?
@@ -116,7 +116,7 @@ You have full access to their baseline audit data, strategic report, and check-i
 
 Your approach:
 - Reference their specific data, scores, patterns, and stated goals
-- Connect current concerns back to their North Star focus and 90-day plan
+- Connect current concerns back to their operating focus and 90-day plan
 - Point out contradictions between what they say they want and what their data shows
 - Give actionable, specific advice — never generic platitudes
 - Challenge them when appropriate; celebrate genuine progress
