@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   Compass, ArrowLeft, Save, Target, AlertTriangle,
-  Crosshair, Star, Calendar, TrendingUp, Eye, Zap, CheckCircle,
+  Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle,
   Pencil, X
 } from "lucide-react";
 
@@ -197,8 +197,8 @@ const CoachClientReport = () => {
         {/* Operating Focus */}
         <section className="mb-8">
           <div className="bg-gradient-subtle rounded-2xl p-8 border border-primary/20 text-center">
-            <Star className="h-8 w-8 text-accent mx-auto mb-3" />
-            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Operating Focus</h2>
+            <Crosshair className="h-8 w-8 text-accent mx-auto mb-3" />
+            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Current Priority</h2>
             {editing ? (
               <Textarea
                 value={editNorthStar}

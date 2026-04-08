@@ -24,7 +24,7 @@ const commitments = [
 ];
 
 const coachingSignals = [
-  { label: "North Star clarity", value: "Strong" },
+  { label: "Decision clarity", value: "Strong" },
   { label: "Check-in cadence", value: "Weekly" },
   { label: "Primary risk", value: "Reactive calendar creep" },
 ];
@@ -140,8 +140,8 @@ const HeroDashboardMock = () => {
                     <div className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">1 open risk</div>
                   </div>
                   <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 p-3">
-                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">North star focus</p>
-                    <p className="mt-1 text-sm font-medium text-foreground">Build an operating system that scales without founder bottlenecks.</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Current operating focus</p>
+                    <p className="mt-1 text-sm font-medium text-foreground">Build an operating rhythm that scales without founder bottlenecks.</p>
                   </div>
                   <div className="space-y-3">
                     {coachingSignals.map((signal) => (

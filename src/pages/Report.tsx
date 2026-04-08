@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Compass, ArrowLeft, Printer, Target, AlertTriangle,
-  Crosshair, Star, Calendar, TrendingUp, Eye, Zap, CheckCircle
+  Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle
 } from "lucide-react";
 
 interface PatternAnalysis {
@@ -188,8 +188,8 @@ const Report = () => {
         {/* Strategic Focus */}
         <section className="mb-8">
           <div className="bg-gradient-subtle rounded-2xl p-8 border border-primary/20 text-center print:border print:border-foreground/20">
-            <Star className="h-8 w-8 text-accent mx-auto mb-3" />
-            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Your Operating Focus</h2>
+            <Crosshair className="h-8 w-8 text-accent mx-auto mb-3" />
+            <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Your Current Priority</h2>
             <p className="font-heading text-2xl font-bold text-foreground leading-relaxed">{north_star_focus}</p>
           </div>
         </section>
