@@ -123,6 +123,12 @@ const Audit = () => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const isShallowResponse = (value: string) => {
+    const trimmed = value.trim();
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    return trimmed.length < 18 || words.length < 4;
+  };
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -190,7 +196,13 @@ const Audit = () => {
 
         if (newAudit) {
           setAuditId(newAudit.id);
-          setMessages([{ role: "system", text: AUDIT_QUESTIONS[0].text }]);
+          setMessages([
+            {
+              role: "system",
+              text: "Before you start: do this when you can be fully present. Not distracted, not multitasking, not squeezing this in between other things. Honest, thoughtful answers are required or the audit loses its value.",
+            },
+            { role: "system", text: AUDIT_QUESTIONS[0].text },
+          ]);
         }
       }
     };
@@ -326,6 +338,16 @@ const Audit = () => {
 
   const handleSend = async () => {
     if (!input.trim() || coachStreaming) return;
+    if (AUDIT_QUESTIONS[currentQ]?.type === "text" && isShallowResponse(input)) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "coach",
+          text: "That answer feels rushed or guarded. Intentus works best when you're specific and fully here. If you can't give this question a real answer right now, step away and come back when you can.",
+        },
+      ]);
+      return;
+    }
     await processAnswer(input.trim());
   };
 
@@ -376,6 +398,10 @@ const Audit = () => {
                 {s}
               </span>
             ))}
+          </div>
+
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+            Give real answers, not polished ones. Brief honesty beats impressive nonsense.
           </div>
 
           {/* Messages */}
@@ -445,7 +471,7 @@ const Audit = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                    placeholder="Type your response..."
+                    placeholder="Answer directly and specifically..."
                     className="flex-1"
                   />
                   <Button onClick={handleSend} disabled={!input.trim()} variant="hero" size="icon">

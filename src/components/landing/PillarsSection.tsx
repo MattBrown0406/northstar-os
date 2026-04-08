@@ -4,20 +4,20 @@ const pillars = [
   {
     icon: ClipboardCheck,
     title: "Operating Audit",
-    subtitle: "Metrics, habits, pressure points, reality",
-    description: "A guided assessment that digs into recent performance, key business numbers, decision quality, relationships, and execution systems. It is designed to surface signal, not flattering narratives.",
+    subtitle: "Reality, patterns, decision clarity",
+    description: "A guided assessment that digs into recent performance, key business numbers, decision quality, relationships, and operating systems. It is built to surface signal, not flattering narratives.",
   },
   {
     icon: FileText,
     title: "90-Day Operating Plan",
-    subtitle: "Honest, specific, usable",
-    description: "Get a practical report with strengths, weaknesses, blind spots, contradictions, a priority focus, and a 90-day plan you can actually run with measurable targets.",
+    subtitle: "Honest, prioritized, usable",
+    description: "Get a practical report with strengths, weaknesses, blind spots, contradictions, a forced choice, a current priority, and a 90-day plan you can actually run.",
   },
   {
     icon: MessageCircle,
     title: "Accountability Check-ins",
-    subtitle: "Daily or weekly feedback against your plan",
-    description: "Intentus checks for drift versus adherence, tracks progress against your chosen scoreboard metrics, and tightens your next commitments before another week disappears.",
+    subtitle: "Daily or weekly drift correction",
+    description: "Intentus uses check-ins to catch drift versus adherence, thin self-reporting, vague language, and rationalization before another week disappears.",
   },
 ];
 
@@ -30,7 +30,7 @@ const PillarsSection = () => {
             Audit. Align. Execute.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            One platform for seeing where you stand, deciding what matters next, and staying accountable long enough for results to compound.
+            One platform for seeing where you stand, deciding what matters now, and staying disciplined long enough for results to compound.
           </p>
         </div>
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">

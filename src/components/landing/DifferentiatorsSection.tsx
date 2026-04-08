@@ -1,9 +1,9 @@
 import { Filter, Shield, RotateCcw, Target } from "lucide-react";
 
 const items = [
-  { icon: Target, text: "Tracks the metrics and behaviors that define real leadership performance" },
-  { icon: Filter, text: "Turns vague ambition into concrete operating priorities and decision filters" },
-  { icon: Shield, text: "Uses recurring check-ins to catch drift before a quarter gets away from you" },
+  { icon: Target, text: "Starts with the operating system beneath performance instead of just tracking tasks" },
+  { icon: Filter, text: "Turns vague ambition into decisive priorities, decision filters, and honest tradeoffs" },
+  { icon: Shield, text: "Uses recurring check-ins to catch drift, pat answers, and rationalization early" },
   { icon: RotateCcw, text: "Can be white-labeled by coaches who want a branded client accountability program" },
 ];
 
@@ -17,7 +17,7 @@ const DifferentiatorsSection = () => {
               Why leaders choose Intentus
             </h2>
             <p className="text-lg text-muted-foreground">
-              Most productivity tools track tasks. Intentus coaches the operator behind the outcomes—and can extend that same rhythm to coach-led client programs.
+              Most productivity tools track tasks. Intentus coaches the operator behind the outcomes — and can extend that same rhythm to coach-led client programs.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -30,7 +30,7 @@ const DifferentiatorsSection = () => {
           </div>
           <div className="mt-12 text-center">
             <blockquote className="text-xl md:text-2xl font-heading font-semibold text-gradient-primary italic">
-              "You do not need more motivation. You need a more honest operating rhythm."
+              "You do not need more motivation. You need a clearer operating rhythm and less tolerance for drift."
             </blockquote>
           </div>
         </div>

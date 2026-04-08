@@ -125,14 +125,14 @@ const Dashboard = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">
             Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
           </h1>
-          <p className="text-muted-foreground">Here’s your operating snapshot.</p>
+          <p className="text-muted-foreground">Here's your operating snapshot — current rhythm, current signal, current priority.</p>
         </div>
 
         {!auditCompleted ? (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between gap-4">
             <div>
               <h3 className="font-heading font-bold text-foreground">Complete your Operating Audit</h3>
-              <p className="text-sm text-muted-foreground">Get your operating report, priority focus, and 90-day plan</p>
+              <p className="text-sm text-muted-foreground">Get clarity on your strengths, weaknesses, blind spots, and the 90-day plan worth agreeing to</p>
             </div>
             <Button variant="hero" onClick={() => navigate("/audit")}>
               Start audit <ArrowRight className="ml-2 h-4 w-4" />
@@ -142,7 +142,7 @@ const Dashboard = () => {
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between gap-4">
             <div>
               <h3 className="font-heading font-bold text-foreground">Your Operating Report is ready</h3>
-              <p className="text-sm text-muted-foreground">Review your patterns, blind spots, and 90-day operating plan</p>
+              <p className="text-sm text-muted-foreground">Review your patterns, blind spots, forced choice, and 90-day operating plan</p>
             </div>
             <Button variant="hero" onClick={() => navigate("/report")}>
               View report <FileText className="ml-2 h-4 w-4" />
@@ -168,7 +168,7 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">
                     {hasTrendData
                       ? `Showing your last ${trendData.length} check-ins based on your ${tierSummary.label} tier.`
-                      : "Complete a few check-ins to unlock a real trendline."}
+                      : "Complete a few honest check-ins to unlock a real trendline."}
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
@@ -198,7 +198,7 @@ const Dashboard = () => {
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
-                  Your trend view will populate from real check-ins. For now, start one check-in and the dashboard will begin plotting focus and energy over time.
+                  Your trend view populates from real check-ins, not filler data. Start one focused check-in and the dashboard will begin plotting your operating rhythm over time.
                 </div>
               )}
 
@@ -228,7 +228,7 @@ const Dashboard = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">No commitments yet. Complete a check-in to set them.</p>
+                <p className="text-sm text-muted-foreground">No commitments yet. Complete a check-in to set your next disciplined actions.</p>
               )}
             </div>
           </div>
@@ -238,7 +238,7 @@ const Dashboard = () => {
               <h3 className="font-heading font-bold text-foreground mb-3 flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-primary" /> Tier Access
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">Your dashboard mirrors what’s available on your current plan without faking data that doesn’t exist.</p>
+              <p className="text-sm text-muted-foreground mb-4">Your dashboard mirrors what your current plan actually includes without inventing signal that doesn't exist.</p>
               <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 mb-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -279,7 +279,7 @@ const Dashboard = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">No check-ins yet.</p>
+                <p className="text-sm text-muted-foreground">No check-ins yet. Start one when you can answer honestly.</p>
               )}
             </div>
           </div>

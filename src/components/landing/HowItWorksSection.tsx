@@ -1,9 +1,9 @@
 const steps = [
-  { number: "01", title: "Audit", desc: "Complete an evidence-based operating audit in 20–45 minutes.", color: "bg-primary/10 text-primary" },
-  { number: "02", title: "Expose", desc: "Intentus surfaces patterns, contradictions, blind spots, and hidden strengths.", color: "bg-accent/10 text-accent" },
-  { number: "03", title: "Prioritize", desc: "Lock in the scoreboard metrics and operating priorities that define the next 90 days.", color: "bg-primary/10 text-primary" },
-  { number: "04", title: "Check in", desc: "Get daily or weekly coaching on commitments kept, drift detected, and recent wins or misses.", color: "bg-accent/10 text-accent" },
-  { number: "05", title: "Adjust", desc: "Refine commitments as reality changes without losing the plot.", color: "bg-primary/10 text-primary" },
+  { number: "01", title: "Arrive", desc: "Start only when you can answer thoughtfully, without multitasking or rushing.", color: "bg-primary/10 text-primary" },
+  { number: "02", title: "Audit", desc: "Complete a clear-eyed operating audit that favors truth over polished self-description.", color: "bg-accent/10 text-accent" },
+  { number: "03", title: "Expose", desc: "Intentus identifies strengths briefly, weaknesses clearly, and blind spots without flinching.", color: "bg-primary/10 text-primary" },
+  { number: "04", title: "Commit", desc: "Agree to a prioritized 90-day plan built around decision clarity and disciplined action.", color: "bg-accent/10 text-accent" },
+  { number: "05", title: "Correct", desc: "Use check-ins to catch drift, vague language, rationalization, and softened priorities early.", color: "bg-primary/10 text-primary" },
 ];
 
 const HowItWorksSection = () => {
@@ -15,7 +15,7 @@ const HowItWorksSection = () => {
             How Intentus works
           </h2>
           <p className="text-lg text-muted-foreground">
-            From honest assessment to disciplined execution in five steps.
+            From honest assessment to drift correction in five steps.
           </p>
         </div>
         <div className="max-w-3xl mx-auto space-y-0">

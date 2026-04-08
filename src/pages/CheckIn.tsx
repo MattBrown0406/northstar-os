@@ -71,6 +71,17 @@ const CheckIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const hasThinCheckIn = () => {
+    const totalItems = wins.length + blockers.length + commitments.length;
+    const totalWords = [...wins, ...blockers, ...commitments]
+      .join(" ")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+    return totalItems < 3 || totalWords < 12;
+  };
+
   const addItem = (setter: typeof setWins) => {
     if (inputVal.trim()) {
       setter((prev) => [...prev, inputVal.trim()]);
@@ -138,6 +149,14 @@ const CheckIn = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
+    if (hasThinCheckIn()) {
+      toast({
+        title: "Come back when you're present",
+        description: "This check-in looks thin. Intentus is meant for honest reflection, not box-checking while distracted or rushing.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.from("check_ins").insert({
       user_id: user.id,
@@ -166,6 +185,7 @@ const CheckIn = () => {
               <CheckCircle className="h-12 w-12 text-primary" />
             </div>
             <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
+            <p className="text-sm text-muted-foreground">Clear signal in, clear coaching back.</p>
           </div>
 
           {/* AI Debrief */}
@@ -179,15 +199,15 @@ const CheckIn = () => {
             {aiLoading && !aiDebrief ? (
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Reviewing your check-in against your operating rhythm...
+                Reviewing your check-in for drift, clarity, and follow-through...
               </div>
             ) : aiDebrief ? (
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{aiDebrief}</p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {mood <= 4
-                  ? "Your self-rating shows some drift. Useful signal — reset the next move before a soft week turns into a lost one."
-                  : "You’re on track. Keep the operating rhythm tight and the momentum moving."}
+                  ? "Your self-rating shows drift. Useful signal — reset the next move before a vague week turns into avoidable damage."
+                  : "You're on track. Keep the operating rhythm tight and the next move decisive."}
               </p>
             )}
           </div>
@@ -208,15 +228,15 @@ const CheckIn = () => {
   const steps = [
     <ScaleSelector key="mood" value={mood} onChange={setMood} label="How focused and steady are you right now?"
       emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />,
-    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What’s your execution energy level?"
+    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What's your disciplined execution energy level?"
       emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />,
-    <ListInput key="wins" label="What moved forward since your last check-in?" items={wins}
+    <ListInput key="wins" label="What moved forward since your last check-in? Be concrete." items={wins}
       onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
       inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />,
-    <ListInput key="blockers" label="Where are you hitting resistance or friction?" items={blockers}
+    <ListInput key="blockers" label="Where are you drifting, rationalizing, or hitting real resistance?" items={blockers}
       onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
       inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />,
-    <ListInput key="commitments" label="What commitments will you keep before the next check-in?" items={commitments}
+    <ListInput key="commitments" label="What commitments will you keep before the next check-in? Write what you will actually do." items={commitments}
       onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
       inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />,
   ];
@@ -239,7 +259,12 @@ const CheckIn = () => {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg">{steps[step]}</div>
+        <div className="w-full max-w-lg space-y-4">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+            Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.
+          </div>
+          {steps[step]}
+        </div>
       </div>
 
       <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">

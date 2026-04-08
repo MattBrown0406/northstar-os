@@ -14,15 +14,15 @@ const TIMEZONES = [
 ];
 
 const TONES = [
-  { value: "direct" as const, label: "Direct", desc: "No fluff. Call the issue clearly and fast.", icon: "🎯" },
-  { value: "supportive" as const, label: "Supportive", desc: "Encouraging, grounded, and still honest.", icon: "🤝" },
-  { value: "balanced" as const, label: "Balanced", desc: "Straightforward coaching with context-aware pressure.", icon: "⚖️" },
+  { value: "direct" as const, label: "Direct", desc: "Clear, firm, and willing to name avoidance without dressing it up.", icon: "🎯" },
+  { value: "supportive" as const, label: "Supportive", desc: "Warm, grounded, emotionally intelligent, and still unwilling to let drift slide.", icon: "🤝" },
+  { value: "balanced" as const, label: "Balanced", desc: "Direct because the outcome matters, warm because you matter.", icon: "⚖️" },
 ];
 
 const CADENCES = [
-  { value: "daily" as const, label: "Daily", desc: "Best for aggressive execution and fast correction" },
-  { value: "every_other_day" as const, label: "Every other day", desc: "A steady accountability rhythm" },
-  { value: "weekly" as const, label: "Weekly", desc: "Best for strategic reviews and leadership resets" },
+  { value: "daily" as const, label: "Daily", desc: "Best for disciplined execution and fast drift correction" },
+  { value: "every_other_day" as const, label: "Every other day", desc: "A steady operating rhythm with room to adjust" },
+  { value: "weekly" as const, label: "Weekly", desc: "Best for strategic review, honest reflection, and resets" },
 ];
 
 const Onboarding = () => {
@@ -63,8 +63,14 @@ const Onboarding = () => {
       </div>
       <h1 className="font-heading text-3xl font-bold text-foreground">Welcome to Intentus</h1>
       <p className="text-muted-foreground max-w-md mx-auto">
-        You are about to audit how you actually operate, identify the metrics that matter most, and set up the accountability rhythm that keeps your 90-day plan from slipping.
+        Intentus is your AI operating coach. You are about to look at how you actually operate, surface the few patterns that matter, and build a disciplined rhythm that keeps drift from quietly taking over.
       </p>
+      <div className="max-w-md mx-auto rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-left">
+        <p className="text-sm font-medium text-foreground">Do this when you can actually think.</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Not while driving, multitasking, half-working, or rushing. Focused, honest answers are required or the audit becomes theater.
+        </p>
+      </div>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
         ⚠️ Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
         If you are in crisis, contact local emergency services.
@@ -80,7 +86,7 @@ const Onboarding = () => {
         <div className="bg-primary/10 rounded-xl p-3"><Clock className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Your timezone</h2>
-          <p className="text-sm text-muted-foreground">So your accountability cadence lands when it can actually help</p>
+          <p className="text-sm text-muted-foreground">So your check-ins land when they can actually help instead of adding noise</p>
         </div>
       </div>
       <div className="grid gap-2">
@@ -109,7 +115,7 @@ const Onboarding = () => {
         <div className="bg-primary/10 rounded-xl p-3"><MessageCircle className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Feedback style</h2>
-          <p className="text-sm text-muted-foreground">How should Intentus deliver feedback when you are off track?</p>
+          <p className="text-sm text-muted-foreground">How should Intentus coach you when your standards slip or your priorities blur?</p>
         </div>
       </div>
       <div className="grid gap-3">
@@ -144,7 +150,7 @@ const Onboarding = () => {
         <div className="bg-primary/10 rounded-xl p-3"><Calendar className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Check-in cadence</h2>
-          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing commitments, drift, and key metrics</p>
+          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing disciplined action, drift, and decision clarity</p>
         </div>
       </div>
       <div className="grid gap-3">

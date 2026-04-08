@@ -133,7 +133,7 @@ const Report = () => {
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
           <h2 className="font-heading text-xl font-bold text-foreground">Generating your Operating Report…</h2>
-          <p className="text-muted-foreground text-sm max-w-md">Intentus is analyzing your audit responses for patterns, contradictions, and your next 90-day operating plan. This may take 30–60 seconds.</p>
+          <p className="text-muted-foreground text-sm max-w-md">Intentus is analyzing your audit responses for strengths, weaknesses, blind spots, contradictions, and your next 90-day operating plan. This may take 30–60 seconds.</p>
         </div>
       </div>
     );
@@ -191,6 +191,7 @@ const Report = () => {
             <Crosshair className="h-8 w-8 text-accent mx-auto mb-3" />
             <h2 className="font-heading text-sm font-semibold text-primary uppercase tracking-wider mb-2">Your Current Priority</h2>
             <p className="font-heading text-2xl font-bold text-foreground leading-relaxed">{north_star_focus}</p>
+            <p className="mt-3 text-sm text-muted-foreground">Protect this priority. Drift usually starts when secondary concerns start sounding equally urgent.</p>
           </div>
         </section>
 
@@ -277,6 +278,7 @@ const Report = () => {
           </h2>
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 print:border print:border-foreground/20">
             <p className="text-foreground leading-relaxed">{forced_choice}</p>
+            <p className="text-sm text-muted-foreground mt-4">Don't soften this for comfort. Agreement matters because this is the tradeoff your next quarter will actually be built on.</p>
           </div>
         </section>
 

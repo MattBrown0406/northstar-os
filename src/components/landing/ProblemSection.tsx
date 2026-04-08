@@ -1,10 +1,10 @@
 import { AlertTriangle, Brain, Repeat, Zap } from "lucide-react";
 
 const problems = [
-  { icon: Brain, text: "Know what matters, but still avoid the highest-leverage decision" },
-  { icon: Repeat, text: "Start each quarter with focus, then drift when pressure and noise pile up" },
+  { icon: Brain, text: "Know what matters, but still avoid the highest-leverage decision because clarity would force action" },
+  { icon: Repeat, text: "Start with intention, then drift when pressure, comfort, and noise pile up" },
   { icon: AlertTriangle, text: "Track a lot of activity, but lack one honest operating scoreboard" },
-  { icon: Zap, text: "Need sharper feedback on where you're strong, weak, and fooling yourself" },
+  { icon: Zap, text: "Need sharper feedback on strengths, weaknesses, blind spots, and self-protection" },
 ];
 
 const ProblemSection = () => {
@@ -13,7 +13,7 @@ const ProblemSection = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            High performers rarely need more advice
+            High performers rarely need more motivation
           </h2>
           <p className="text-lg text-muted-foreground">
             They need a clearer mirror, better operating discipline, and a tighter link between what they say matters and what their calendar, metrics, and habits prove. Intentus is built for leaders who:

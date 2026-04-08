@@ -15,10 +15,10 @@ interface Message {
 }
 
 const quickPrompts = [
-  { icon: <TrendingUp className="h-4 w-4" />, label: "How am I trending?", prompt: "Based on my recent check-ins, how am I trending? Are things getting better or worse?" },
-  { icon: <AlertTriangle className="h-4 w-4" />, label: "Am I drifting?", prompt: "Am I drifting from my operating focus and 90-day plan? Be honest with me." },
-  { icon: <Target className="h-4 w-4" />, label: "What should I focus on?", prompt: "What's the single most important thing I should focus on this week based on everything you know about me?" },
-  { icon: <Sparkles className="h-4 w-4" />, label: "Challenge me", prompt: "Challenge my assumptions. What contradiction or blind spot should I be confronting right now?" },
+  { icon: <TrendingUp className="h-4 w-4" />, label: "How am I trending?", prompt: "Based on my recent check-ins, how am I trending? Where is my operating rhythm tightening or slipping?" },
+  { icon: <AlertTriangle className="h-4 w-4" />, label: "Am I drifting?", prompt: "Am I drifting from my operating focus and 90-day plan? Be direct and use evidence." },
+  { icon: <Target className="h-4 w-4" />, label: "What should I focus on?", prompt: "What's the single highest-priority move I should focus on this week based on everything you know about me?" },
+  { icon: <Sparkles className="h-4 w-4" />, label: "Challenge me", prompt: "Challenge my assumptions. What contradiction, self-protection, or blind spot should I confront right now?" },
 ];
 
 const Coaching = () => {
@@ -134,7 +134,7 @@ const Coaching = () => {
               <span className="font-heading text-lg font-bold text-foreground">AI Coach</span>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Strategic advisor · Not therapy</p>
+          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy</p>
         </div>
       </nav>
 
@@ -147,10 +147,10 @@ const Coaching = () => {
                 <div className="inline-flex bg-primary/10 rounded-2xl p-4">
                   <MessageSquare className="h-8 w-8 text-primary" />
                 </div>
-                <h2 className="font-heading text-xl font-bold text-foreground">Your AI Coach</h2>
+                <h2 className="font-heading text-xl font-bold text-foreground">Your AI Operating Coach</h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   I have access to your audit, strategic report, and all your check-ins.
-                  Ask me anything about your progress, patterns, or what to do next.
+                  Ask me about your progress, drift, decision clarity, blind spots, or what the next move should be.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -206,7 +206,7 @@ const Coaching = () => {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask your coach anything..."
+              placeholder="Ask for clarity, challenge, or the next priority..."
               disabled={isStreaming}
               className="flex-1"
             />

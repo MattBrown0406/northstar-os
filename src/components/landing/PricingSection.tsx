@@ -5,10 +5,10 @@ const plans = [
   {
     name: "Starter",
     price: "$0",
-    desc: "Get initial clarity on where you stand and what needs attention.",
+    desc: "Get initial clarity on how you operate and what needs attention now.",
     features: [
       "Operating audit (lite)",
-      "90-day plan snapshot",
+      "90-day priority snapshot",
       "1 accountability check-in per week",
       "Recent check-in history",
     ],
@@ -19,14 +19,14 @@ const plans = [
     name: "Executive",
     price: "$29",
     period: "/mo",
-    desc: "For operators who want a tighter execution rhythm around the numbers that matter.",
+    desc: "For operators who want a tighter execution rhythm around the priorities and numbers that matter.",
     features: [
       "Full operating audit",
       "Full strengths, blind spots, and contradictions report",
       "Custom daily or weekly check-ins",
       "Unlimited history",
       "Drift vs adherence tracking",
-      "Metric-focused accountability",
+      "Decision- and metric-focused accountability",
       "Exportable report + plan",
     ],
     cta: "Choose Executive",
@@ -36,7 +36,7 @@ const plans = [
     name: "Premium",
     price: "$99",
     period: "/mo",
-    desc: "A stricter mirror and faster course correction for serious operators.",
+    desc: "A stricter mirror and faster drift correction for serious operators.",
     features: [
       "Everything in Executive",
       "Mirror Mode (harder call-outs)",
@@ -71,10 +71,10 @@ const PricingSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Pricing for the level of accountability you want
+            Pricing for the level of structure and accountability you want
           </h2>
           <p className="text-lg text-muted-foreground">
-            Start with clarity. Upgrade for consistency. Scale it for yourself or for client accountability programs.
+            Start with clarity. Upgrade for disciplined follow-through. Scale it for yourself or for client accountability programs.
           </p>
         </div>
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
