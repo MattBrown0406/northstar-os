@@ -100,53 +100,6 @@ const CheckIn = () => {
     }
   };
 
-  const ScaleSelector = ({ value, onChange, label, emoji }: {
-    value: number; onChange: (n: number) => void; label: string; emoji: string[];
-  }) => (
-    <div className="space-y-4">
-      <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
-      <div className="flex gap-1">
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-          <button
-            key={n}
-            onClick={() => onChange(n)}
-            className={`flex-1 h-12 rounded-lg border text-sm font-medium transition-all ${
-              n === value
-                ? "bg-primary text-primary-foreground border-primary scale-110"
-                : n <= value
-                ? "bg-primary/10 border-primary/30 text-primary"
-                : "border-border text-muted-foreground hover:border-primary/50"
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-      <p className="text-sm text-muted-foreground text-center">{emoji[Math.min(Math.floor(value / 3), 2)]}</p>
-    </div>
-  );
-
-  const ListInput = ({ label, items, setter, placeholder }: {
-    label: string; items: string[]; setter: typeof setWins; placeholder: string;
-  }) => (
-    <div className="space-y-4">
-      <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
-      <div className="flex gap-2">
-        <Input value={inputVal} onChange={(e) => setInputVal(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addItem(setter)} placeholder={placeholder} className="flex-1" />
-        <Button variant="outline" size="icon" onClick={() => addItem(setter)}><Plus className="h-4 w-4" /></Button>
-      </div>
-      <ul className="space-y-2">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-            <span className="flex-1">{item}</span>
-            <button onClick={() => removeItem(setter, i)}><X className="h-4 w-4 text-muted-foreground hover:text-destructive" /></button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-
   if (done) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -173,9 +126,15 @@ const CheckIn = () => {
       emoji={["😔 Rough day", "😐 Hanging in there", "😊 Feeling good"]} />,
     <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What's your energy level?"
       emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />,
-    <ListInput key="wins" label="What wins did you have?" items={wins} setter={setWins} placeholder="Add a win..." />,
-    <ListInput key="blockers" label="Any blockers or friction?" items={blockers} setter={setBlockers} placeholder="Add a blocker..." />,
-    <ListInput key="commitments" label="What do you commit to next?" items={commitments} setter={setCommitments} placeholder="Add a commitment..." />,
+    <ListInput key="wins" label="What wins did you have?" items={wins}
+      onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
+      inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />,
+    <ListInput key="blockers" label="Any blockers or friction?" items={blockers}
+      onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
+      inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />,
+    <ListInput key="commitments" label="What do you commit to next?" items={commitments}
+      onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
+      inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />,
   ];
 
   return (
