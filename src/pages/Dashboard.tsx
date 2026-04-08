@@ -146,6 +146,12 @@ const Dashboard = () => {
           <StatCard icon={<AlertTriangle className="h-5 w-5 text-accent" />} label="Drift flags" value={String(driftCount)} />
         </div>
 
+        {/* Charts */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <MoodEnergyChart checkIns={checkIns} />
+          <DriftTracker checkIns={checkIns} />
+        </div>
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* Recent commitments */}
           <div className="bg-card rounded-2xl border border-border p-6">
