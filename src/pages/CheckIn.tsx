@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Compass, Plus, X, ArrowRight, CheckCircle } from "lucide-react";
+import { Compass, Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const ScaleSelector = ({ value, onChange, label, emoji }: {
@@ -65,6 +65,8 @@ const CheckIn = () => {
   const [inputVal, setInputVal] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [aiDebrief, setAiDebrief] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -78,6 +80,60 @@ const CheckIn = () => {
 
   const removeItem = (setter: typeof setWins, index: number) => {
     setter((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const streamDebrief = async () => {
+    setAiLoading(true);
+    try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coaching-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ mode: "check-in-debrief", messages: [] }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        setAiLoading(false);
+        return;
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+
+      while (true) {
+        const { done: streamDone, value } = await reader.read();
+        if (streamDone) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              setAiDebrief(fullText);
+            }
+          } catch {}
+        }
+      }
+    } catch (e) {
+      console.error("Debrief error:", e);
+    }
+    setAiLoading(false);
   };
 
   const handleSubmit = async () => {
@@ -97,25 +153,53 @@ const CheckIn = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       setDone(true);
+      streamDebrief();
     }
   };
 
   if (done) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="text-center space-y-6 max-w-md">
-          <div className="inline-flex bg-primary/10 rounded-2xl p-4">
-            <CheckCircle className="h-12 w-12 text-primary" />
+        <div className="w-full max-w-lg space-y-6">
+          <div className="text-center space-y-3">
+            <div className="inline-flex bg-primary/10 rounded-2xl p-4">
+              <CheckCircle className="h-12 w-12 text-primary" />
+            </div>
+            <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
           </div>
-          <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
-          <p className="text-muted-foreground">
-            {mood <= 4
-              ? "Your self-rating shows some drift. Useful signal — reset the next move before a soft week turns into a lost one."
-              : "You’re on track. Keep the operating rhythm tight and the momentum moving."}
-          </p>
-          <Button variant="hero" onClick={() => navigate("/dashboard")}>
-            Back to dashboard <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+
+          {/* AI Debrief */}
+          <div className="bg-card rounded-2xl border border-border p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="bg-primary/10 rounded-lg p-1.5">
+                <MessageSquare className="h-4 w-4 text-primary" />
+              </div>
+              <h3 className="font-heading font-bold text-foreground text-sm">Your Executive Operating Coach</h3>
+            </div>
+            {aiLoading && !aiDebrief ? (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Reviewing your check-in against your operating rhythm...
+              </div>
+            ) : aiDebrief ? (
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{aiDebrief}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {mood <= 4
+                  ? "Your self-rating shows some drift. Useful signal — reset the next move before a soft week turns into a lost one."
+                  : "You’re on track. Keep the operating rhythm tight and the momentum moving."}
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => navigate("/coaching")}>
+              <MessageSquare className="mr-2 h-4 w-4" /> Continue coaching
+            </Button>
+            <Button variant="hero" className="flex-1" onClick={() => navigate("/dashboard")}>
+              Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     );
