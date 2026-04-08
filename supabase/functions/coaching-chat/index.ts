@@ -100,7 +100,7 @@ ${userContext}
 Based on this check-in and their history, provide a personalized coaching debrief:
 
 1. **Pattern Recognition**: What trends do you see across their recent check-ins? Is mood/energy improving or declining?
-2. **Alignment Check**: Are their wins and commitments aligned with their North Star and 90-day plan?
+2. **Alignment Check**: Are their wins and commitments aligned with their operating focus and 90-day plan?
 3. **Drift Analysis**: If drift was detected, what might be causing it? Reference specific data.
 4. **Actionable Insight**: Give ONE specific, actionable piece of advice for the next 24 hours.
 5. **Accountability**: Reference their previous commitments — did their wins reflect follow-through?
