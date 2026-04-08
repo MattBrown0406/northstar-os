@@ -3,9 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Compass, ArrowRight, Clock, MessageCircle, Calendar, CheckCircle } from "lucide-react";
+import { Compass, ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  FOCUS_AREA_OPTIONS,
+  LENS_OPTIONS,
+  PRESSURE_OPTIONS,
+  SUPPORT_MODE_OPTIONS,
+  type AdaptiveLens,
+} from "@/lib/intentus-architecture";
 
 const TIMEZONES = [
   "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
@@ -30,6 +36,11 @@ const Onboarding = () => {
   const [timezone, setTimezone] = useState("America/New_York");
   const [tone, setTone] = useState<"direct" | "supportive" | "balanced">("balanced");
   const [cadence, setCadence] = useState<"daily" | "every_other_day" | "weekly">("daily");
+  const [primaryLens, setPrimaryLens] = useState<AdaptiveLens>("discipline_execution");
+  const [secondaryLens, setSecondaryLens] = useState<AdaptiveLens>("decision_making");
+  const [pressureState, setPressureState] = useState<(typeof PRESSURE_OPTIONS)[number]["value"]>("stretched");
+  const [focusArea, setFocusArea] = useState<(typeof FOCUS_AREA_OPTIONS)[number]["value"]>("self_leadership");
+  const [supportMode, setSupportMode] = useState<(typeof SUPPORT_MODE_OPTIONS)[number]["value"]>("structure");
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +55,13 @@ const Onboarding = () => {
         timezone,
         coaching_tone: tone,
         check_in_cadence: cadence,
+        intent_profile: {
+          primaryLens,
+          secondaryLens,
+          pressureState,
+          focusArea,
+          supportMode,
+        },
         onboarding_completed: true,
       })
       .eq("user_id", user.id);
@@ -55,8 +73,9 @@ const Onboarding = () => {
     }
   };
 
+  const stepCount = 5;
+
   const steps = [
-    // Step 0: Welcome
     <div key="welcome" className="text-center space-y-6">
       <div className="inline-flex bg-gradient-primary rounded-2xl p-4">
         <Compass className="h-12 w-12 text-primary-foreground" />
@@ -71,86 +90,200 @@ const Onboarding = () => {
           Not while driving, multitasking, half-working, or rushing. Focused, honest answers are required or the audit becomes theater.
         </p>
       </div>
+      <div className="max-w-md mx-auto rounded-2xl border border-border bg-card px-4 py-4 text-left space-y-2">
+        <p className="text-xs uppercase tracking-[0.2em] text-primary">How Intentus thinks</p>
+        <p className="text-sm text-foreground">Core anchors stay constant: James Clear, Stephen Covey, Marshall Goldsmith, Annie Duke, Peter Drucker, and Carl Rogers.</p>
+        <p className="text-sm text-muted-foreground">Then the coaching emphasis adapts to your pressure, priorities, and blind spots so the product feels like a serious mirror instead of a generic chatbot.</p>
+      </div>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
         ⚠️ Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
         If you are in crisis, contact local emergency services.
       </p>
       <Button variant="hero" size="lg" onClick={() => setStep(1)}>
-        Let's go <ArrowRight className="ml-2 h-4 w-4" />
+        Let&apos;s go <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,
 
-    // Step 1: Timezone
-    <div key="timezone" className="space-y-6">
+    <div key="timezone-tone" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><Clock className="h-6 w-6 text-primary" /></div>
         <div>
-          <h2 className="font-heading text-xl font-bold text-foreground">Your timezone</h2>
-          <p className="text-sm text-muted-foreground">So your check-ins land when they can actually help instead of adding noise</p>
+          <h2 className="font-heading text-xl font-bold text-foreground">Timing and tone</h2>
+          <p className="text-sm text-muted-foreground">Set the rhythm and feedback style so the coaching lands when it can actually help.</p>
         </div>
       </div>
-      <div className="grid gap-2">
-        {TIMEZONES.map((tz) => (
-          <button
-            key={tz}
-            onClick={() => setTimezone(tz)}
-            className={`text-left px-4 py-3 rounded-xl border transition-all ${
-              timezone === tz
-                ? "border-primary bg-primary/5 text-foreground"
-                : "border-border text-muted-foreground hover:border-primary/50"
-            }`}
-          >
-            {tz.replace(/_/g, " ")}
-          </button>
-        ))}
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">Your timezone</p>
+        <div className="grid gap-2">
+          {TIMEZONES.map((tz) => (
+            <button
+              key={tz}
+              onClick={() => setTimezone(tz)}
+              className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                timezone === tz
+                  ? "border-primary bg-primary/5 text-foreground"
+                  : "border-border text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              {tz.replace(/_/g, " ")}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-4 w-4 text-primary" />
+          <p className="text-sm font-medium text-foreground">Feedback style</p>
+        </div>
+        <div className="grid gap-3">
+          {TONES.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setTone(t.value)}
+              className={`text-left p-4 rounded-xl border transition-all ${
+                tone === t.value
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{t.icon}</span>
+                <div>
+                  <p className="font-semibold text-foreground">{t.label}</p>
+                  <p className="text-sm text-muted-foreground">{t.desc}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Button variant="hero" className="w-full" onClick={() => setStep(2)}>
         Continue <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,
 
-    // Step 2: Coaching tone
-    <div key="tone" className="space-y-6">
+    <div key="lenses" className="space-y-6">
       <div className="flex items-center gap-3">
-        <div className="bg-primary/10 rounded-xl p-3"><MessageCircle className="h-6 w-6 text-primary" /></div>
+        <div className="bg-primary/10 rounded-xl p-3"><Brain className="h-6 w-6 text-primary" /></div>
         <div>
-          <h2 className="font-heading text-xl font-bold text-foreground">Feedback style</h2>
-          <p className="text-sm text-muted-foreground">How should Intentus coach you when your standards slip or your priorities blur?</p>
+          <h2 className="font-heading text-xl font-bold text-foreground">What kind of mirror do you need?</h2>
+          <p className="text-sm text-muted-foreground">This helps Intentus weight its coaching lens without turning the product into a personality test.</p>
         </div>
       </div>
-      <div className="grid gap-3">
-        {TONES.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setTone(t.value)}
-            className={`text-left p-4 rounded-xl border transition-all ${
-              tone === t.value
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{t.icon}</span>
-              <div>
-                <p className="font-semibold text-foreground">{t.label}</p>
-                <p className="text-sm text-muted-foreground">{t.desc}</p>
-              </div>
-            </div>
-          </button>
-        ))}
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">Primary lens</p>
+        <div className="grid gap-3">
+          {LENS_OPTIONS.map((lens) => (
+            <button
+              key={lens.value}
+              onClick={() => {
+                setPrimaryLens(lens.value);
+                if (secondaryLens === lens.value) {
+                  const fallback = LENS_OPTIONS.find((option) => option.value !== lens.value)?.value ?? "decision_making";
+                  setSecondaryLens(fallback);
+                }
+              }}
+              className={`rounded-xl border p-4 text-left transition-all ${primaryLens === lens.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+            >
+              <p className="font-semibold text-foreground">{lens.label}</p>
+              <p className="text-sm text-muted-foreground mt-1">{lens.description}</p>
+            </button>
+          ))}
+        </div>
       </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">Secondary lens</p>
+        <div className="grid gap-3">
+          {LENS_OPTIONS.filter((lens) => lens.value !== primaryLens).map((lens) => (
+            <button
+              key={lens.value}
+              onClick={() => setSecondaryLens(lens.value)}
+              className={`rounded-xl border p-4 text-left transition-all ${secondaryLens === lens.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+            >
+              <p className="font-semibold text-foreground">{lens.label}</p>
+              <p className="text-sm text-muted-foreground mt-1">{lens.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Button variant="hero" className="w-full" onClick={() => setStep(3)}>
         Continue <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,
 
-    // Step 3: Check-in cadence
+    <div key="state" className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="bg-primary/10 rounded-xl p-3"><ShieldCheck className="h-6 w-6 text-primary" /></div>
+        <div>
+          <h2 className="font-heading text-xl font-bold text-foreground">What pressure are you under right now?</h2>
+          <p className="text-sm text-muted-foreground">A few honest choices help the coach frame your report, check-ins, and challenges more intelligently.</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">Current pressure state</p>
+        <div className="grid gap-3">
+          {PRESSURE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setPressureState(option.value)}
+              className={`rounded-xl border p-4 text-left transition-all ${pressureState === option.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+            >
+              <p className="font-semibold text-foreground">{option.label}</p>
+              <p className="text-sm text-muted-foreground mt-1">{option.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">Where do you need traction most?</p>
+        <div className="grid gap-3">
+          {FOCUS_AREA_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setFocusArea(option.value)}
+              className={`rounded-xl border p-4 text-left transition-all ${focusArea === option.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+            >
+              <p className="font-semibold text-foreground">{option.label}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">What would help most from the coach?</p>
+        <div className="grid gap-3">
+          {SUPPORT_MODE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setSupportMode(option.value)}
+              className={`rounded-xl border p-4 text-left transition-all ${supportMode === option.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+            >
+              <p className="font-semibold text-foreground">{option.label}</p>
+              <p className="text-sm text-muted-foreground mt-1">{option.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Button variant="hero" className="w-full" onClick={() => setStep(4)}>
+        Continue <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </div>,
+
     <div key="cadence" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><Calendar className="h-6 w-6 text-primary" /></div>
         <div>
           <h2 className="font-heading text-xl font-bold text-foreground">Check-in cadence</h2>
-          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing disciplined action, drift, and decision clarity</p>
+          <p className="text-sm text-muted-foreground">Choose the rhythm for reviewing disciplined action, drift, decision quality, and follow-through.</p>
         </div>
       </div>
       <div className="grid gap-3">
@@ -169,6 +302,19 @@ const Onboarding = () => {
           </button>
         ))}
       </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Layers className="h-4 w-4 text-primary" />
+          <p className="text-sm font-medium text-foreground">Your starting coaching architecture</p>
+        </div>
+        <div className="grid gap-2 text-sm">
+          <p className="text-foreground">Primary lens: <span className="font-medium">{LENS_OPTIONS.find((lens) => lens.value === primaryLens)?.label}</span></p>
+          <p className="text-foreground">Secondary lens: <span className="font-medium">{LENS_OPTIONS.find((lens) => lens.value === secondaryLens)?.label}</span></p>
+          <p className="text-muted-foreground">Intentus will still use its full core anchor set, but these choices shape which questions get sharpened, which patterns get emphasized, and how your report is framed.</p>
+        </div>
+      </div>
+
       <Button variant="hero" className="w-full" onClick={handleComplete} disabled={loading}>
         {loading ? "Saving..." : (
           <>Start my audit <CheckCircle className="ml-2 h-4 w-4" /></>
@@ -179,10 +325,10 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-2xl">
         {step > 0 && (
           <div className="flex gap-1 mb-8">
-            {[1, 2, 3].map((s) => (
+            {Array.from({ length: stepCount }, (_, index) => index + 1).map((s) => (
               <div
                 key={s}
                 className={`h-1 flex-1 rounded-full transition-all ${

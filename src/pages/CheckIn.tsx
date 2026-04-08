@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Compass, Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatLensLabel, getBlockerPrompt, getCommitmentPrompt, getFocusPrompt, type IntentProfile } from "@/lib/intentus-architecture";
 
 const ScaleSelector = ({ value, onChange, label, emoji }: {
   value: number; onChange: (n: number) => void; label: string; emoji: string[];
@@ -65,11 +66,25 @@ const CheckIn = () => {
   const [inputVal, setInputVal] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
   const [aiDebrief, setAiDebrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) return;
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("intent_profile")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.intent_profile) setIntentProfile(data.intent_profile as IntentProfile);
+    };
+    loadProfile();
+  }, [user]);
 
   const hasThinCheckIn = () => {
     const totalItems = wins.length + blockers.length + commitments.length;
@@ -186,6 +201,9 @@ const CheckIn = () => {
             </div>
             <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
             <p className="text-sm text-muted-foreground">Clear signal in, clear coaching back.</p>
+            {intentProfile?.primaryLens && (
+              <p className="text-xs text-muted-foreground">Adaptive lens: {formatLensLabel(intentProfile.primaryLens)}</p>
+            )}
           </div>
 
           {/* AI Debrief */}
@@ -230,13 +248,13 @@ const CheckIn = () => {
       emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />,
     <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What's your disciplined execution energy level?"
       emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />,
-    <ListInput key="wins" label="What moved forward since your last check-in? Be concrete." items={wins}
+    <ListInput key="wins" label={getFocusPrompt(intentProfile)} items={wins}
       onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
       inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />,
-    <ListInput key="blockers" label="Where are you drifting, rationalizing, or hitting real resistance?" items={blockers}
+    <ListInput key="blockers" label={getBlockerPrompt(intentProfile)} items={blockers}
       onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
       inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />,
-    <ListInput key="commitments" label="What commitments will you keep before the next check-in? Write what you will actually do." items={commitments}
+    <ListInput key="commitments" label={getCommitmentPrompt(intentProfile)} items={commitments}
       onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
       inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />,
   ];
@@ -260,8 +278,11 @@ const CheckIn = () => {
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg space-y-4">
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
-            Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
+            <p>Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.</p>
+            {intentProfile?.primaryLens && (
+              <p className="text-xs text-muted-foreground">This check-in is currently weighted toward {formatLensLabel(intentProfile.primaryLens).toLowerCase()}.</p>
+            )}
           </div>
           {steps[step]}
         </div>

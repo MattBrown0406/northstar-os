@@ -8,6 +8,7 @@ import {
   Compass, Send, ArrowLeft, Loader2, MessageSquare,
   TrendingUp, AlertTriangle, Target, Sparkles
 } from "lucide-react";
+import { formatLensLabel } from "@/lib/intentus-architecture";
 
 interface Message {
   role: "user" | "assistant";
@@ -25,10 +26,25 @@ const Coaching = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [activeLens, setActiveLens] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) return;
+    const loadLens = async () => {
+      const [reportRes, profileRes] = await Promise.all([
+        supabase.from("strategic_reports").select("intent_model").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("profiles").select("intent_profile").eq("user_id", user.id).single(),
+      ]);
+
+      const lens = (reportRes.data?.[0] as any)?.intent_model?.primary_lens || (profileRes.data as any)?.intent_profile?.primaryLens || null;
+      setActiveLens(lens);
+    };
+    loadLens();
+  }, [user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -134,7 +150,7 @@ const Coaching = () => {
               <span className="font-heading text-lg font-bold text-foreground">AI Coach</span>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy</p>
+          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
         </div>
       </nav>
 
@@ -152,6 +168,9 @@ const Coaching = () => {
                   I have access to your audit, strategic report, and all your check-ins.
                   Ask me about your progress, drift, decision clarity, blind spots, or what the next move should be.
                 </p>
+                {activeLens && (
+                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens).toLowerCase()}.</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {quickPrompts.map((qp, i) => (

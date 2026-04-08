@@ -12,13 +12,19 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
 
 interface Profile {
   display_name: string | null;
   coaching_tone: string | null;
   check_in_cadence: string | null;
+  intent_profile?: IntentProfile | null;
   plan_tier: string | null;
   onboarding_completed: boolean | null;
+}
+
+interface StrategicReportSummary {
+  intent_model?: IntentModel | null;
 }
 
 interface CheckIn {
@@ -38,19 +44,22 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [auditCompleted, setAuditCompleted] = useState(false);
+  const [reportSummary, setReportSummary] = useState<StrategicReportSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [profileRes, checkInsRes, auditRes] = await Promise.all([
+      const [profileRes, checkInsRes, auditRes, reportRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
         supabase.from("baseline_audits").select("status").eq("user_id", user.id).eq("status", "completed").limit(1),
+        supabase.from("strategic_reports").select("intent_model").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
       if (profileRes.data) setProfile(profileRes.data as any);
       if (checkInsRes.data) setCheckIns(checkInsRes.data as any);
       setAuditCompleted((auditRes.data?.length ?? 0) > 0);
+      if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as StrategicReportSummary);
       setLoading(false);
     };
     load();
@@ -88,6 +97,7 @@ const Dashboard = () => {
     }));
   const hasTrendData = trendData.some((point) => point.focus !== null || point.energy !== null);
   const tierSummary = getTierSummary(planTier);
+  const activeLens = reportSummary?.intent_model?.primary_lens || profile?.intent_profile?.primaryLens;
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,6 +136,11 @@ const Dashboard = () => {
             Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
           </h1>
           <p className="text-muted-foreground">Here's your operating snapshot — current rhythm, current signal, current priority.</p>
+          {activeLens && (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+              <Sparkles className="h-3.5 w-3.5" /> Active coaching lens: {formatLensLabel(activeLens)}
+            </div>
+          )}
         </div>
 
         {!auditCompleted ? (
@@ -206,6 +221,7 @@ const Dashboard = () => {
                 <TrendCallout label="Trend window" value={tierSummary.windowLabel} tone="primary" />
                 <TrendCallout label="Drift flags" value={driftCount ? `${driftCount} detected` : "None flagged"} tone="accent" />
                 <TrendCallout label="Cadence" value={profile?.check_in_cadence ? capitalize(profile.check_in_cadence) : "Set during onboarding"} tone="neutral" />
+                {activeLens && <TrendCallout label="Adaptive lens" value={formatLensLabel(activeLens)} tone="primary" />}
               </div>
             </div>
 

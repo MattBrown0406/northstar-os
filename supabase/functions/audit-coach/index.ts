@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { responses, current_question, current_section, all_questions, coaching_tone, display_name } = await req.json();
+    const { responses, current_question, current_section, all_questions, coaching_tone, display_name, intent_profile } = await req.json();
 
     if (!responses || !current_question) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -33,6 +34,8 @@ serve(async (req) => {
       }
     }
 
+    const intentSummary = buildIntentProfileSummary(intent_profile);
+
     const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are conducting a baseline audit with ${name}. Your tone setting is ${tone}, but the doctrine always stays the same: direct because the outcome matters, warm because the person matters.
 
 Core philosophy:
@@ -40,6 +43,8 @@ Core philosophy:
 - discipline over motivation
 - accountability matters only after clear structure exists
 - drift is the enemy
+
+${intentSummary}
 
 You are reviewing their answers in real time during the audit. After each answer, provide a brief coaching response (2-4 sentences max).
 
@@ -61,6 +66,7 @@ Rules:
 - never repeat the question back to them
 - never say "great answer" or other generic praise
 - use their actual words when referencing patterns or contradictions
+- subtly weight the response toward the active lens, but never sound formulaic or name-drop the thinkers
 - if they soften priorities for comfort, name that tendency
 - do not use markdown formatting
 - end with a natural transition, not the next question

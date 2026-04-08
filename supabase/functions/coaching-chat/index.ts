@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,7 +42,7 @@ serve(async (req) => {
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("baseline_audits").select("responses, scores, status").eq("user_id", user.id).eq("status", "completed").limit(1),
-      supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+      supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan, intent_model").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
     ]);
 
     const profile = profileRes.data;
@@ -54,6 +55,9 @@ serve(async (req) => {
     // Build rich context
     let userContext = `User: ${name}\nCoaching tone preference: ${tone}\n\n`;
 
+    const intentSummary = buildIntentProfileSummary((profile?.intent_profile as any) || null);
+    userContext += `${intentSummary}\n\n`;
+
     if (report) {
       userContext += `--- STRATEGIC REPORT ---\n`;
       if (report.north_star_focus) userContext += `Operating Focus: ${report.north_star_focus}\n`;
@@ -61,6 +65,7 @@ serve(async (req) => {
       if (report.contradictions) userContext += `Key Contradictions: ${JSON.stringify(report.contradictions)}\n`;
       if (report.pattern_analysis) userContext += `Patterns: ${JSON.stringify(report.pattern_analysis)}\n`;
       if (report.ninety_day_plan) userContext += `90-Day Plan: ${JSON.stringify(report.ninety_day_plan)}\n`;
+      if (report.intent_model) userContext += `Intent Model: ${JSON.stringify(report.intent_model)}\n`;
       userContext += "\n";
     }
 
@@ -111,6 +116,7 @@ Coaching sequence to reflect:
 - reveal blind spots without flinching
 - reinforce the current priority and decisive next action
 - correct drift, vague language, rationalization, pat answers, or self-protection when present
+- let the active lens shape the emphasis: execution, decision quality, blind spots, business value, or responsibility/meaning
 
 Participation standard:
 - if the check-in reads thin, rushed, vague, or guarded, call that out directly and tell them to come back more honestly next time
@@ -138,6 +144,12 @@ Core philosophy:
 - discipline over motivation
 - accountability only matters once clear structure exists
 - drift is the enemy
+
+Knowledge architecture guidance:
+- keep the six core anchors available at all times: James Clear, Stephen Covey, Marshall Goldsmith, Annie Duke, Peter Drucker, Carl Rogers
+- weight the response toward the active adaptive lens from the profile/report intent model
+- use Jordan Peterson, Viktor Frankl, Gabor Maté, Jung, Dalio, or Naval only as subtle background framing when the pattern clearly calls for it
+- never name-drop authors unless the user explicitly asks where the framing comes from
 
 You are not a therapist. You are a grounded, emotionally intelligent operating coach.
 Keep responses focused and conversational. Do not lecture. Do not be permissive.`;

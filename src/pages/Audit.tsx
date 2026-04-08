@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Compass, Send, ArrowRight } from "lucide-react";
 import { AUDIT_QUESTIONS, AUDIT_SECTIONS } from "@/lib/audit-questions";
 import { useToast } from "@/hooks/use-toast";
+import { formatLensLabel, type IntentProfile } from "@/lib/intentus-architecture";
 
 interface ChatMessage {
   role: "system" | "user" | "coach";
@@ -22,6 +23,7 @@ async function streamCoachResponse({
   currentSection,
   coachingTone,
   displayName,
+  intentProfile,
   onDelta,
   onDone,
 }: {
@@ -30,6 +32,7 @@ async function streamCoachResponse({
   currentSection: string;
   coachingTone: string;
   displayName: string;
+  intentProfile?: IntentProfile | null;
   onDelta: (text: string) => void;
   onDone: () => void;
 }) {
@@ -46,6 +49,7 @@ async function streamCoachResponse({
       all_questions: AUDIT_QUESTIONS.map((q) => ({ id: q.id, text: q.text, section: q.section })),
       coaching_tone: coachingTone,
       display_name: displayName,
+      intent_profile: intentProfile,
     }),
   });
 
@@ -114,9 +118,10 @@ const Audit = () => {
   const [auditId, setAuditId] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [coachStreaming, setCoachStreaming] = useState(false);
-  const [profile, setProfile] = useState<{ coaching_tone: string; display_name: string }>({
+  const [profile, setProfile] = useState<{ coaching_tone: string; display_name: string; intent_profile?: IntentProfile | null }>({
     coaching_tone: "balanced",
     display_name: "",
+    intent_profile: null,
   });
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -135,13 +140,14 @@ const Audit = () => {
       // Load profile
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("coaching_tone, display_name")
+        .select("coaching_tone, display_name, intent_profile")
         .eq("user_id", user.id)
         .single();
       if (profileData) {
         setProfile({
           coaching_tone: profileData.coaching_tone || "balanced",
           display_name: profileData.display_name || "",
+          intent_profile: (profileData.intent_profile as IntentProfile | null) || null,
         });
       }
 
@@ -251,6 +257,7 @@ const Audit = () => {
           currentSection: question.section,
           coachingTone: profile.coaching_tone,
           displayName: profile.display_name,
+          intentProfile: profile.intent_profile,
           onDelta: (chunk) => {
             coachText += chunk;
             setMessages((prev) => {
@@ -287,6 +294,7 @@ const Audit = () => {
         currentSection: question.section,
         coachingTone: profile.coaching_tone,
         displayName: profile.display_name,
+        intentProfile: profile.intent_profile,
         onDelta: (chunk) => {
           coachText += chunk;
           setMessages((prev) => {
@@ -400,8 +408,11 @@ const Audit = () => {
             ))}
           </div>
 
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
-            Give real answers, not polished ones. Brief honesty beats impressive nonsense.
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
+            <p>Give real answers, not polished ones. Brief honesty beats impressive nonsense.</p>
+            {profile.intent_profile?.primaryLens && (
+              <p className="text-xs text-muted-foreground">Current adaptive lens: {formatLensLabel(profile.intent_profile.primaryLens)}.</p>
+            )}
           </div>
 
           {/* Messages */}

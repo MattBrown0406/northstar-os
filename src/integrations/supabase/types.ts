@@ -206,6 +206,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          intent_profile: Json
           onboarding_completed: boolean | null
           plan_tier: Database["public"]["Enums"]["plan_tier"] | null
           timezone: string | null
@@ -220,6 +221,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          intent_profile?: Json
           onboarding_completed?: boolean | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"] | null
           timezone?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          intent_profile?: Json
           onboarding_completed?: boolean | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"] | null
           timezone?: string | null
@@ -249,6 +252,7 @@ export type Database = {
           created_at: string
           forced_choice: string | null
           id: string
+          intent_model: Json
           ninety_day_plan: Json | null
           north_star_focus: string | null
           pattern_analysis: Json | null
@@ -261,6 +265,7 @@ export type Database = {
           created_at?: string
           forced_choice?: string | null
           id?: string
+          intent_model?: Json
           ninety_day_plan?: Json | null
           north_star_focus?: string | null
           pattern_analysis?: Json | null
@@ -273,6 +278,7 @@ export type Database = {
           created_at?: string
           forced_choice?: string | null
           id?: string
+          intent_model?: Json
           ninety_day_plan?: Json | null
           north_star_focus?: string | null
           pattern_analysis?: Json | null

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { buildIntentModelInstructions, buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,10 +54,10 @@ serve(async (req) => {
       });
     }
 
-    // Get profile for coaching tone
+    // Get profile for coaching tone + adaptive lens choices
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone")
+      .select("display_name, coaching_tone, intent_profile")
       .eq("user_id", user.id)
       .single();
 
@@ -81,6 +82,8 @@ serve(async (req) => {
 
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
+    const intentSummary = buildIntentProfileSummary((profile?.intent_profile as any) || null);
+    const intentModelInstructions = buildIntentModelInstructions();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -114,7 +117,11 @@ Rules:
 - reference their actual words whenever possible
 - no generic advice, no participation-trophy language, no victim framing
 - show compassion for circumstance without surrendering standards
-- if they are hiding inside complexity, call for simplification and prioritization`;
+- if they are hiding inside complexity, call for simplification and prioritization
+
+${intentSummary}
+
+${intentModelInstructions}`;
 
     const userPrompt = `Here are the baseline audit responses:\n${auditSummary}\n\nGenerate the strategic report.`;
 
@@ -203,8 +210,31 @@ Rules:
                     },
                     required: ["phase_1", "phase_2", "phase_3"],
                   },
+                  intent_model: {
+                    type: "object",
+                    properties: {
+                      primary_lens: { type: "string" },
+                      secondary_lens: { type: "string" },
+                      lens_rationale: { type: "string" },
+                      anchor_emphasis: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            name: { type: "string" },
+                            reason: { type: "string" },
+                          },
+                          required: ["name", "reason"],
+                        },
+                      },
+                      background_threads: { type: "array", items: { type: "string" } },
+                      coaching_posture: { type: "string" },
+                      report_framing: { type: "string" },
+                    },
+                    required: ["primary_lens", "secondary_lens", "lens_rationale", "anchor_emphasis", "background_threads", "coaching_posture", "report_framing"],
+                  },
                 },
-                required: ["pattern_analysis", "contradictions", "forced_choice", "north_star_focus", "ninety_day_plan"],
+                required: ["pattern_analysis", "contradictions", "forced_choice", "north_star_focus", "ninety_day_plan", "intent_model"],
               },
             },
           },
@@ -245,6 +275,7 @@ Rules:
         forced_choice: reportData.forced_choice,
         north_star_focus: reportData.north_star_focus,
         ninety_day_plan: reportData.ninety_day_plan,
+        intent_model: reportData.intent_model,
       })
       .select("id")
       .single();

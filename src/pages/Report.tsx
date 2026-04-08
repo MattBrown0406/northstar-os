@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Compass, ArrowLeft, Printer, Target, AlertTriangle,
-  Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle
+  Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit
 } from "lucide-react";
+import { formatLensLabel, type IntentModel } from "@/lib/intentus-architecture";
 
 interface PatternAnalysis {
   themes: { title: string; description: string; areas_affected: string[] }[];
@@ -40,6 +41,7 @@ interface StrategicReport {
   forced_choice: string;
   north_star_focus: string;
   ninety_day_plan: NinetyDayPlan;
+  intent_model?: IntentModel | null;
 }
 
 const Report = () => {
@@ -151,7 +153,7 @@ const Report = () => {
     );
   }
 
-  const { pattern_analysis, contradictions, forced_choice, north_star_focus, ninety_day_plan } = report;
+  const { pattern_analysis, contradictions, forced_choice, north_star_focus, ninety_day_plan, intent_model } = report;
 
   return (
     <div className="min-h-screen bg-background">
@@ -194,6 +196,46 @@ const Report = () => {
             <p className="mt-3 text-sm text-muted-foreground">Protect this priority. Drift usually starts when secondary concerns start sounding equally urgent.</p>
           </div>
         </section>
+
+        {intent_model && (
+          <section className="mb-8 print:break-inside-avoid">
+            <h2 className="font-heading text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <Layers className="h-5 w-5 text-primary" /> Adaptive Coaching Architecture
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-xs uppercase tracking-wider text-primary mb-2">Active lenses</p>
+                <p className="font-heading text-lg font-bold text-foreground">{formatLensLabel(intent_model.primary_lens)}</p>
+                <p className="text-sm text-muted-foreground mt-1">Supported by {formatLensLabel(intent_model.secondary_lens)}</p>
+                <p className="text-sm text-foreground mt-4">{intent_model.lens_rationale}</p>
+                <p className="text-sm text-muted-foreground mt-4">{intent_model.report_framing}</p>
+              </div>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-xs uppercase tracking-wider text-primary mb-2">Coaching posture</p>
+                <p className="text-sm text-foreground mb-4">{intent_model.coaching_posture}</p>
+                <p className="text-xs uppercase tracking-wider text-primary/80 mb-2">Background threads</p>
+                <div className="flex flex-wrap gap-2">
+                  {intent_model.background_threads?.map((thread) => (
+                    <span key={thread} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs text-primary">{thread}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 bg-card rounded-xl border border-border p-5">
+              <h3 className="font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                <BrainCircuit className="h-4 w-4 text-accent" /> Core anchor emphasis
+              </h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {intent_model.anchor_emphasis?.map((anchor) => (
+                  <div key={anchor.name} className="rounded-xl border border-border/70 bg-background/70 p-4">
+                    <p className="font-medium text-foreground">{anchor.name}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{anchor.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Pattern Analysis */}
         <section className="mb-8 print:break-inside-avoid">
