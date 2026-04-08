@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
-import intentusLogo from "@/assets/intentus-logo.png";
 
 const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-glass">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center">
-          <img src={intentusLogo} alt="Intentus" className="h-9" />
+          <span className="font-heading text-2xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
         </div>
         <div className="hidden md:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How it works</a>
