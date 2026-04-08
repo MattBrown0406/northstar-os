@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import MoodEnergyChart from "@/components/dashboard/MoodEnergyChart";
+import DriftTracker from "@/components/dashboard/DriftTracker";
 import {
   Compass, LogOut, Target, TrendingUp, Flame, Calendar,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
@@ -142,6 +144,12 @@ const Dashboard = () => {
           <StatCard icon={<TrendingUp className="h-5 w-5 text-primary" />} label="Avg focus" value={avgMood} />
           <StatCard icon={<BarChart3 className="h-5 w-5 text-primary" />} label="Avg energy" value={avgEnergy} />
           <StatCard icon={<AlertTriangle className="h-5 w-5 text-accent" />} label="Drift flags" value={String(driftCount)} />
+        </div>
+
+        {/* Charts */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <MoodEnergyChart checkIns={checkIns} />
+          <DriftTracker checkIns={checkIns} />
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
