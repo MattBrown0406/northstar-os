@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Compass, LogOut, Target, TrendingUp, Flame, Calendar,
-  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock, FileText, Users
+  CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock, FileText, Users, MessageSquare
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
@@ -90,6 +90,9 @@ const Dashboard = () => {
             )}
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/coaching")}>
+              <MessageSquare className="h-4 w-4 mr-1" /> Coach
+            </Button>
             {auditCompleted && (
               <Button variant="ghost" size="sm" onClick={() => navigate("/report")}>
                 <FileText className="h-4 w-4 mr-1" /> Report
