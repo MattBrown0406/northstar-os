@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Compass, LogOut, Users, Link2, Plus, Copy, Trash2,
-  Eye, FileText, BarChart3, ArrowRight, CheckCircle, Clock,
-  UserPlus, Settings, ChevronDown, ChevronUp
+  Eye, FileText, BarChart3, CheckCircle, Clock,
+  UserPlus, ChevronDown, ChevronUp, Activity, Crown
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 interface Client {
   id: string;
@@ -147,6 +148,23 @@ const CoachDashboard = () => {
     loadData();
   };
 
+  const tierDistribution = [
+    { name: "Free", value: clients.filter((client) => client.assigned_tier === "free").length },
+    { name: "Pro", value: clients.filter((client) => client.assigned_tier === "pro").length },
+    { name: "Premium", value: clients.filter((client) => client.assigned_tier === "premium").length },
+  ];
+  const activityData = clients
+    .slice()
+    .sort((a, b) => (b.check_in_count ?? 0) - (a.check_in_count ?? 0))
+    .slice(0, 6)
+    .map((client) => ({
+      name: shortName(client.profile?.display_name || "Client"),
+      checkIns: client.check_in_count ?? 0,
+    }));
+  const attentionClients = clients
+    .filter((client) => !client.last_check_in || differenceInDays(new Date(), new Date(client.last_check_in)) >= 7)
+    .slice(0, 3);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -196,6 +214,90 @@ const CoachDashboard = () => {
           <div className="bg-card rounded-2xl border border-border p-4">
             <div className="flex items-center gap-2 mb-2"><Link2 className="h-5 w-5 text-accent" /><span className="text-xs text-muted-foreground">Active Links</span></div>
             <p className="font-heading text-2xl font-bold text-foreground">{inviteLinks.filter(l => l.is_active).length}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 mb-8 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="bg-card rounded-2xl border border-border p-6">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="font-heading text-lg font-bold text-foreground flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" /> Client activity snapshot
+                </h2>
+                <p className="text-sm text-muted-foreground">A quick-glance chart using real client check-in counts already loaded into the portal.</p>
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+                <BarChart3 className="h-3.5 w-3.5" /> Top active clients
+              </div>
+            </div>
+
+            {activityData.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activityData}>
+                    <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} axisLine={false} tickLine={false} width={26} />
+                    <Tooltip
+                      cursor={{ fill: "hsl(var(--muted) / 0.35)" }}
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: "1px solid hsl(var(--border))",
+                        background: "hsl(var(--background))",
+                      }}
+                    />
+                    <Bar dataKey="checkIns" name="Check-ins" fill="hsl(var(--primary))" radius={[10, 10, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
+                Client activity charts will appear once clients begin checking in.
+              </div>
+            )}
+          </div>
+
+          <div className="bg-card rounded-2xl border border-border p-6">
+            <div className="mb-4 flex items-center gap-2">
+              <Crown className="h-5 w-5 text-primary" />
+              <h2 className="font-heading text-lg font-bold text-foreground">Tier mix</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">This mirrors the same scorecard language used in the homepage hero, but with live client assignments.</p>
+            <div className="space-y-4 mb-5">
+              {tierDistribution.map((tier) => {
+                const total = Math.max(clients.length, 1);
+                const width = `${(tier.value / total) * 100}%`;
+                return (
+                  <div key={tier.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-foreground">{tier.name}</span>
+                      <span className="text-muted-foreground">{tier.value}</span>
+                    </div>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-gradient-primary" style={{ width }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="rounded-2xl border border-border/70 bg-background/70 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3">Needs attention</p>
+              {attentionClients.length > 0 ? (
+                <div className="space-y-3">
+                  {attentionClients.map((client) => (
+                    <div key={client.id} className="flex items-center justify-between gap-3 text-sm">
+                      <div>
+                        <p className="font-medium text-foreground">{client.profile?.display_name || "Unnamed Client"}</p>
+                        <p className="text-muted-foreground">{client.last_check_in ? `Last check-in ${format(new Date(client.last_check_in), "MMM d")}` : "No check-ins yet"}</p>
+                      </div>
+                      <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">Follow up</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No clients are currently stale based on the loaded check-in history.</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -377,5 +479,9 @@ const CoachDashboard = () => {
     </div>
   );
 };
+
+function shortName(name: string) {
+  return name.length > 14 ? `${name.slice(0, 14)}…` : name;
+}
 
 export default CoachDashboard;

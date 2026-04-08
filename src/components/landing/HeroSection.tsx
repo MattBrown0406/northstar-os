@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-illustration.jpg";
+import HeroDashboardMock from "@/components/landing/HeroDashboardMock";
 import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
@@ -39,9 +39,9 @@ const HeroSection = () => {
           </p>
         </div>
 
-        <div className="mt-16 max-w-5xl mx-auto animate-fade-up" style={{ animationDelay: "0.5s" }}>
-          <div className="rounded-2xl overflow-hidden shadow-medium animate-float">
-            <img src={heroImage} alt="Intentus leadership coaching dashboard visualization" width={1920} height={1080} className="w-full" />
+        <div className="mt-16 max-w-6xl mx-auto animate-fade-up" style={{ animationDelay: "0.5s" }}>
+          <div className="rounded-[32px] overflow-hidden shadow-medium animate-float border border-white/40 bg-white/40 backdrop-blur-sm">
+            <HeroDashboardMock />
           </div>
         </div>
       </div>
