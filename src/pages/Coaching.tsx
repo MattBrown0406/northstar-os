@@ -143,11 +143,8 @@ const Coaching = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-primary rounded-lg p-1.5">
-                <Compass className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-heading text-lg font-bold text-foreground">AI Coach</span>
+            <div className="flex items-center">
+              <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens as any)}` : ""}</p>
