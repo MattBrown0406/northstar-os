@@ -90,6 +90,9 @@ const Dashboard = () => {
             )}
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/coaching")}>
+              <MessageSquare className="h-4 w-4 mr-1" /> Coach
+            </Button>
             {auditCompleted && (
               <Button variant="ghost" size="sm" onClick={() => navigate("/report")}>
                 <FileText className="h-4 w-4 mr-1" /> Report
