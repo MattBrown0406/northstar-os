@@ -372,9 +372,8 @@ const Audit = () => {
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
-          </div>
             <span className="font-heading text-lg font-bold text-foreground">Operating Audit</span>
           </div>
           <div className="text-sm text-muted-foreground">

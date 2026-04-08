@@ -55,9 +55,8 @@ const CoachClientAudit = () => {
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
-          </div>
             <span className="font-heading text-lg font-bold text-foreground">{clientName}'s Audit</span>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate("/coach")}>

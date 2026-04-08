@@ -8,8 +8,6 @@ const Footer = () => {
           <div className="flex items-center">
             <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
           </div>
-            <span className="font-heading text-lg font-bold text-foreground">Intentus</span>
-          </div>
           <p className="text-xs text-muted-foreground text-center max-w-xl leading-relaxed">
             Intentus provides coaching and self-reflection tools for operating discipline and execution accountability. It is not medical advice or mental health treatment. If you are in crisis, contact local emergency services.
           </p>
