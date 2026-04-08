@@ -56,7 +56,7 @@ serve(async (req) => {
 
     if (report) {
       userContext += `--- STRATEGIC REPORT ---\n`;
-      if (report.north_star_focus) userContext += `North Star Focus: ${report.north_star_focus}\n`;
+      if (report.north_star_focus) userContext += `Operating Focus: ${report.north_star_focus}\n`;
       if (report.forced_choice) userContext += `Forced Choice: ${report.forced_choice}\n`;
       if (report.contradictions) userContext += `Key Contradictions: ${JSON.stringify(report.contradictions)}\n`;
       if (report.pattern_analysis) userContext += `Patterns: ${JSON.stringify(report.pattern_analysis)}\n`;
