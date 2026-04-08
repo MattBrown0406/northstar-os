@@ -1,15 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Compass } from "lucide-react";
+import intentusLogo from "@/assets/intentus-logo.png";
 
 const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-glass">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <div className="flex items-center gap-2">
-          <div className="bg-gradient-primary rounded-lg p-1.5">
-            <Compass className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-heading text-xl font-bold text-foreground">Intentus</span>
+        <div className="flex items-center">
+          <img src={intentusLogo} alt="Intentus" className="h-8 mix-blend-multiply dark:mix-blend-screen" />
         </div>
         <div className="hidden md:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How it works</a>

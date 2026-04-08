@@ -78,10 +78,10 @@ const CheckIn = () => {
     const loadProfile = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("intent_profile")
+        .select("*")
         .eq("user_id", user.id)
         .single();
-      if (data?.intent_profile) setIntentProfile(data.intent_profile as IntentProfile);
+      if ((data as any)?.intent_profile) setIntentProfile((data as any).intent_profile as IntentProfile);
     };
     loadProfile();
   }, [user]);

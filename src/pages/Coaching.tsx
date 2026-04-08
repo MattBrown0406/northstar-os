@@ -150,7 +150,7 @@ const Coaching = () => {
               <span className="font-heading text-lg font-bold text-foreground">AI Coach</span>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
+          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens as any)}` : ""}</p>
         </div>
       </nav>
 
@@ -169,7 +169,7 @@ const Coaching = () => {
                   Ask me about your progress, drift, decision clarity, blind spots, or what the next move should be.
                 </p>
                 {activeLens && (
-                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens).toLowerCase()}.</p>
+                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens as any).toLowerCase()}.</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">

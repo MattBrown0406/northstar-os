@@ -59,7 +59,7 @@ const Dashboard = () => {
       if (profileRes.data) setProfile(profileRes.data as any);
       if (checkInsRes.data) setCheckIns(checkInsRes.data as any);
       setAuditCompleted((auditRes.data?.length ?? 0) > 0);
-      if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as StrategicReportSummary);
+      if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
       setLoading(false);
     };
     load();
