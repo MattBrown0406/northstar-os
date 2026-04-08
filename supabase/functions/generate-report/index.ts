@@ -91,7 +91,7 @@ You must return a JSON object using the tool provided. Analyze the responses dee
 1. Pattern Analysis: recurring themes across all 6 life areas
 2. Contradictions: where their stated values conflict with their actions
 3. A Forced Choice: the single most important decision they're avoiding
-4. North Star Focus: one sentence capturing what they should orient their next 90 days around
+4. Operating Focus: one decisive sentence capturing the singular intent they should orient their next 90 days around
 5. 90-Day Plan: 3 phases (30/60/90 days) with 2-3 specific actions each
 
 Be brutally honest but constructive. Reference their actual words. No generic advice.`;

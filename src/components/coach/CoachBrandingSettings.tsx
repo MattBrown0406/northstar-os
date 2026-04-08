@@ -226,7 +226,7 @@ const CoachBrandingSettings = () => {
           </div>
           <div>
             <Label className="text-sm font-medium">Tagline</Label>
-            <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Helping leaders find their north star" />
+            <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Coaching leaders to lead with intent" />
           </div>
         </div>
 

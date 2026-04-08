@@ -16,7 +16,7 @@ interface Message {
 
 const quickPrompts = [
   { icon: <TrendingUp className="h-4 w-4" />, label: "How am I trending?", prompt: "Based on my recent check-ins, how am I trending? Are things getting better or worse?" },
-  { icon: <AlertTriangle className="h-4 w-4" />, label: "Am I drifting?", prompt: "Am I drifting from my North Star and 90-day plan? Be honest with me." },
+  { icon: <AlertTriangle className="h-4 w-4" />, label: "Am I drifting?", prompt: "Am I drifting from my operating focus and 90-day plan? Be honest with me." },
   { icon: <Target className="h-4 w-4" />, label: "What should I focus on?", prompt: "What's the single most important thing I should focus on this week based on everything you know about me?" },
   { icon: <Sparkles className="h-4 w-4" />, label: "Challenge me", prompt: "Challenge my assumptions. What contradiction or blind spot should I be confronting right now?" },
 ];
