@@ -64,12 +64,10 @@ serve(async (req) => {
     // Build prompt from audit responses
     const responses = audit.responses as Record<string, string>;
     const sections = [
-      { name: "Time & Energy", keys: ["te1", "te2", "te3", "te4"] },
-      { name: "Money & Business", keys: ["mb1", "mb2", "mb3", "mb4"] },
-      { name: "Relationships", keys: ["r1", "r2", "r3", "r4"] },
-      { name: "Health & Body", keys: ["h1", "h2", "h3", "h4"] },
-      { name: "Purpose & Identity", keys: ["p1", "p2", "p3", "p4"] },
-      { name: "Environment & Systems", keys: ["e1", "e2", "e3", "e4"] },
+      { name: "Alignment & Trust", keys: ["p1", "p2", "r1", "r2", "te1", "te2"] },
+      { name: "Reality Check", keys: ["te3", "te4", "mb1", "mb2", "h1", "h2"] },
+      { name: "Blind Spots & Friction", keys: ["r3", "r4", "e1", "e2", "p3", "p4"] },
+      { name: "Priority & Commitment", keys: ["mb3", "mb4", "e3", "e4", "h3", "h4"] },
     ];
 
     let auditSummary = "";
@@ -99,10 +97,10 @@ Doctrine:
 
 You must return a JSON object using the tool provided.
 
-Analyze the responses deeply. Follow this sequence in the report logic:
-1. identify strengths briefly but specifically
-2. identify weaknesses clearly
-3. reveal blind spots fearlessly without sounding cruel
+Analyze the responses deeply. The audit was intentionally sequenced to move from alignment and trust, to current reality, to blind-spot depth, to prioritization. Use that progression in your report logic:
+1. identify what the user is sincerely trying to protect, build, or honor
+2. identify the reality gaps between that intent and how they are currently operating
+3. reveal blind spots and contradictions fearlessly without sounding cruel
 4. create a prioritized action path that demands agreement rather than vague aspiration
 5. set up check-in-ready actions that make drift obvious
 
@@ -118,6 +116,7 @@ Rules:
 - no generic advice, no participation-trophy language, no victim framing
 - show compassion for circumstance without surrendering standards
 - if they are hiding inside complexity, call for simplification and prioritization
+- use follow-up answers to disambiguate vague claims and weigh how self-aware they really are
 
 ${intentSummary}
 

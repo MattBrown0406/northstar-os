@@ -89,11 +89,13 @@ const CoachClientAudit = () => {
                 </h2>
                 <div className="space-y-4">
                   {sectionQuestions.map((q) => {
-                    const key = `${q.sectionIndex}-${q.questionIndex}`;
-                    const answer = responses[key];
+                    const answer = responses[q.id];
                     return (
-                      <div key={key}>
+                      <div key={q.id}>
                         <p className="text-sm font-medium text-foreground mb-1">{q.text}</p>
+                        {q.kind === "follow_up" && (
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-2">Follow-up</p>
+                        )}
                         <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
                           {answer
                             ? typeof answer === "object"

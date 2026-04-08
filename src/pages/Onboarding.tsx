@@ -82,12 +82,12 @@ const Onboarding = () => {
       </div>
       <h1 className="font-heading text-3xl font-bold text-foreground">Welcome to Intentus</h1>
       <p className="text-muted-foreground max-w-md mx-auto">
-        Intentus is your AI operating coach. You are about to look at how you actually operate, surface the few patterns that matter, and build a disciplined rhythm that keeps drift from quietly taking over.
+        Intentus is your AI operating coach. The audit starts by building alignment and trust, then gets honest about current reality, then surfaces blind spots, then forces prioritization so you leave with something usable instead of just feeling exposed.
       </p>
       <div className="max-w-md mx-auto rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-left">
         <p className="text-sm font-medium text-foreground">Do this when you can actually think.</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Not while driving, multitasking, half-working, or rushing. Focused, honest answers are required or the audit becomes theater.
+          Not while driving, multitasking, half-working, or rushing. Focused, honest answers are required or the audit turns into performance instead of insight.
         </p>
       </div>
       <div className="max-w-md mx-auto rounded-2xl border border-border bg-card px-4 py-4 text-left space-y-2">

@@ -46,7 +46,7 @@ async function streamCoachResponse({
       responses,
       current_question: currentQuestion,
       current_section: currentSection,
-      all_questions: AUDIT_QUESTIONS.map((q) => ({ id: q.id, text: q.text, section: q.section })),
+      all_questions: AUDIT_QUESTIONS.map((q) => ({ id: q.id, text: q.text, section: q.section, kind: q.kind })),
       coaching_tone: coachingTone,
       display_name: displayName,
       intent_profile: intentProfile,
@@ -205,7 +205,7 @@ const Audit = () => {
           setMessages([
             {
               role: "system",
-              text: "Before you start: do this when you can be fully present. Not distracted, not multitasking, not squeezing this in between other things. Honest, thoughtful answers are required or the audit loses its value.",
+              text: "Before you start: do this when you can be fully present. We begin by getting oriented, then pressure-test reality, then go after blind spots, then force prioritization. Honest, thoughtful answers are what make that progression useful.",
             },
             { role: "system", text: AUDIT_QUESTIONS[0].text },
           ]);
@@ -351,7 +351,7 @@ const Audit = () => {
         ...prev,
         {
           role: "coach",
-          text: "That answer feels rushed or guarded. Intentus works best when you're specific and fully here. If you can't give this question a real answer right now, step away and come back when you can.",
+          text: "That answer feels thin or guarded. Intentus works best when you're specific enough to be coachable. If you can't give this question a real answer right now, step away and come back when you can.",
         },
       ]);
       return;
@@ -409,7 +409,7 @@ const Audit = () => {
           </div>
 
           <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
-            <p>Give real answers, not polished ones. Brief honesty beats impressive nonsense.</p>
+            <p>We start with alignment, then reality, then blind spots, then priority. Real beats polished at every step.</p>
             {profile.intent_profile?.primaryLens && (
               <p className="text-xs text-muted-foreground">Current adaptive lens: {formatLensLabel(profile.intent_profile.primaryLens)}.</p>
             )}
@@ -482,7 +482,7 @@ const Audit = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                    placeholder="Answer directly and specifically..."
+                    placeholder="Answer directly. Specific beats polished..."
                     className="flex-1"
                   />
                   <Button onClick={handleSend} disabled={!input.trim()} variant="hero" size="icon">
