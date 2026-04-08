@@ -150,7 +150,7 @@ const Coaching = () => {
               <span className="font-heading text-lg font-bold text-foreground">AI Coach</span>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
+          <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens as any)}` : ""}</p>
         </div>
       </nav>
 
