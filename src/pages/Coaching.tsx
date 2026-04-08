@@ -169,7 +169,7 @@ const Coaching = () => {
                   Ask me about your progress, drift, decision clarity, blind spots, or what the next move should be.
                 </p>
                 {activeLens && (
-                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens).toLowerCase()}.</p>
+                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens as any).toLowerCase()}.</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">

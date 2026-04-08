@@ -140,14 +140,14 @@ const Audit = () => {
       // Load profile
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("coaching_tone, display_name, intent_profile")
+        .select("coaching_tone, display_name")
         .eq("user_id", user.id)
         .single();
       if (profileData) {
         setProfile({
-          coaching_tone: profileData.coaching_tone || "balanced",
-          display_name: profileData.display_name || "",
-          intent_profile: (profileData.intent_profile as IntentProfile | null) || null,
+          coaching_tone: (profileData as any).coaching_tone || "balanced",
+          display_name: (profileData as any).display_name || "",
+          intent_profile: null,
         });
       }
 
