@@ -69,6 +69,7 @@ const CheckIn = () => {
   const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
   const [aiDebrief, setAiDebrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [showCenteringGuide, setShowCenteringGuide] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -165,11 +166,7 @@ const CheckIn = () => {
   const handleSubmit = async () => {
     if (!user) return;
     if (hasThinCheckIn()) {
-      toast({
-        title: "Come back when you're present",
-        description: "This check-in looks thin. Intentus is meant for honest reflection, not box-checking while distracted or rushing.",
-        variant: "destructive",
-      });
+      setShowCenteringGuide(true);
       return;
     }
     setLoading(true);
