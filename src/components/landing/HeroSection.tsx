@@ -1,47 +1,50 @@
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-illustration.jpg";
-import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <section className="relative pt-32 pb-20 overflow-hidden">
+    <section className="relative overflow-hidden pt-32 pb-20">
       <div className="absolute inset-0 bg-gradient-subtle opacity-60" />
-      <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-accent/5 blur-3xl" />
+      <div className="absolute top-20 right-0 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl" />
+      <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-accent/5 blur-3xl" />
 
-      <div className="container mx-auto px-4 relative">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 animate-fade-up">
-            AI operating coach for founders, executives, and coaches running accountability programs
+      <div className="container relative mx-auto px-4">
+        <div className="mx-auto max-w-5xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary animate-fade-up">
+            Executive accountability software for founders, operators, and leadership teams
           </div>
-          <h1 className="font-heading text-5xl md:text-7xl font-bold tracking-tight mb-6 animate-fade-up" style={{ animationDelay: "0.1s" }}>
-            <span className="text-foreground">See the truth.</span>
+          <h1 className="mb-6 font-heading text-5xl font-bold tracking-tight md:text-7xl animate-fade-up" style={{ animationDelay: "0.1s" }}>
+            <span className="text-foreground">Run a more honest</span>
             <br />
-            <span className="text-gradient-primary">Lead with intent.</span>
+            <span className="text-gradient-primary">operating rhythm.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed animate-fade-up" style={{ animationDelay: "0.2s" }}>
-            Intentus gives high-performing operators an honest operating audit, surfaces the few metrics and behaviors that matter most, and turns that into a focused 90-day plan with daily or weekly accountability check-ins.
+          <p className="mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-muted-foreground md:text-xl animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            Intentus helps founders and executives audit how they are really operating, choose the few metrics and behaviors that matter most, and stay accountable to a focused 90-day plan with daily or weekly check-ins.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up" style={{ animationDelay: "0.3s" }}>
-            <a href="/auth">
-              <Button variant="hero" size="lg" className="text-base px-8 py-6">
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row animate-fade-up" style={{ animationDelay: "0.3s" }}>
+            <Button asChild variant="hero" size="lg" className="px-8 py-6 text-base">
+              <Link to="/auth">
                 Start audit <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </a>
-            <a href="#how-it-works">
-              <Button variant="hero-outline" size="lg" className="text-base px-8 py-6">
-                See how it works
-              </Button>
-            </a>
+              </Link>
+            </Button>
+            <Button asChild variant="hero-outline" size="lg" className="px-8 py-6 text-base">
+              <Link to="/for-executives">See the executive use case</Link>
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-4 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-            Private by design · Built for execution · White-label ready for coach-led client programs
-          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground animate-fade-up" style={{ animationDelay: "0.4s" }}>
+            <span>Private by design</span>
+            <span>•</span>
+            <span>Built around scoreboards and commitments</span>
+            <span>•</span>
+            <span>Coach-friendly, but operator-first</span>
+          </div>
         </div>
 
-        <div className="mt-16 max-w-5xl mx-auto animate-fade-up" style={{ animationDelay: "0.5s" }}>
-          <div className="rounded-2xl overflow-hidden shadow-medium animate-float">
-            <img src={heroImage} alt="Intentus leadership coaching dashboard visualization" width={1920} height={1080} className="w-full" />
+        <div className="mx-auto mt-16 max-w-5xl animate-fade-up" style={{ animationDelay: "0.5s" }}>
+          <div className="overflow-hidden rounded-2xl shadow-medium animate-float">
+            <img src={heroImage} alt="Intentus leadership accountability dashboard visualization" width={1920} height={1080} className="w-full" />
           </div>
         </div>
       </div>

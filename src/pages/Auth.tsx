@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Compass } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import Seo from "@/components/seo/Seo";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -69,8 +70,15 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <>
+      <Seo
+        title={showReset ? "Reset your password" : isLogin ? "Log in" : "Create your account"}
+        description="Secure access for Intentus members. Log in, create an account, or request a password reset."
+        path="/auth"
+        noindex
+      />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="bg-gradient-primary rounded-lg p-2">
             <Compass className="h-6 w-6 text-primary-foreground" />
@@ -170,11 +178,12 @@ const Auth = () => {
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
-        </p>
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

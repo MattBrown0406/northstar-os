@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const plans = [
   {
@@ -13,6 +14,7 @@ const plans = [
       "Recent check-in history",
     ],
     cta: "Start assessment",
+    ctaTo: "/auth",
     featured: false,
   },
   {
@@ -30,6 +32,7 @@ const plans = [
       "Exportable report + plan",
     ],
     cta: "Choose Executive",
+    ctaTo: "/accountability-software",
     featured: true,
   },
   {
@@ -45,50 +48,51 @@ const plans = [
       "White-label support for coach-led client programs",
     ],
     cta: "Choose Coach",
+    ctaTo: "/for-coaches",
     featured: false,
   },
 ];
 
 const PricingSection = () => {
   return (
-    <section id="pricing" className="py-24 bg-background">
+    <section id="pricing" className="bg-background py-24">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 font-heading text-3xl font-bold text-foreground md:text-4xl">
             Pricing for the level of accountability you want
           </h2>
           <p className="text-lg text-muted-foreground">
             Start with clarity. Upgrade for consistency. Scale it for yourself or for client accountability programs.
           </p>
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl p-8 border transition-all duration-300 hover:-translate-y-1 ${
+              className={`relative rounded-2xl border p-8 transition-all duration-300 hover:-translate-y-1 ${
                 plan.featured
-                  ? "bg-card shadow-glow border-primary/30 ring-1 ring-primary/20"
-                  : "bg-card shadow-soft border-border/50"
+                  ? "border-primary/30 bg-card shadow-glow ring-1 ring-primary/20"
+                  : "border-border/50 bg-card shadow-soft"
               }`}
             >
               {plan.featured && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-primary text-primary-foreground text-xs font-semibold">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-primary px-4 py-1 text-xs font-semibold text-primary-foreground">
                   Most Popular
                 </div>
               )}
               <h3 className="font-heading text-xl font-bold text-foreground">{plan.name}</h3>
-              <div className="mt-3 mb-1">
+              <div className="mb-1 mt-3">
                 <span className="font-heading text-4xl font-bold text-foreground">{plan.price}</span>
                 {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
               </div>
-              <p className="text-sm text-muted-foreground mb-6">{plan.desc}</p>
-              <Button variant={plan.featured ? "hero" : "hero-outline"} className="w-full mb-6">
-                {plan.cta}
+              <p className="mb-6 text-sm text-muted-foreground">{plan.desc}</p>
+              <Button asChild variant={plan.featured ? "hero" : "hero-outline"} className="mb-6 w-full">
+                <Link to={plan.ctaTo}>{plan.cta}</Link>
               </Button>
               <ul className="space-y-3">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm text-foreground">
-                    <Check className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     {f}
                   </li>
                 ))}
@@ -96,7 +100,7 @@ const PricingSection = () => {
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-muted-foreground mt-8">Cancel anytime.</p>
+        <p className="mt-8 text-center text-sm text-muted-foreground">Cancel anytime.</p>
       </div>
     </section>
   );
