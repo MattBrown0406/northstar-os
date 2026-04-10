@@ -1,17 +1,49 @@
+import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="py-12 bg-muted/50 border-t border-border">
+    <footer className="border-t border-border bg-muted/50 py-12">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center">
-            <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
+        <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr_0.9fr]">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-gradient-primary p-1.5">
+                <Compass className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="font-heading text-lg font-bold text-foreground">Intentus</span>
+            </div>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Accountability software for founders, executives, operators, and coach-led client programs. Built to turn an honest audit into a focused 90-day operating rhythm.
+            </p>
+            <p className="mt-4 max-w-md text-xs leading-relaxed text-muted-foreground">
+              Intentus provides coaching and self-reflection tools for operating discipline and execution accountability. It is not medical advice or mental health treatment.
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground text-center max-w-xl leading-relaxed">
-            Intentus provides coaching and self-reflection tools for operating discipline and execution accountability. It is not medical advice or mental health treatment. If you are in crisis, contact local emergency services.
-          </p>
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Intentus</p>
+
+          <div>
+            <h2 className="font-heading text-base font-bold text-foreground">Explore</h2>
+            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+              <li><Link to="/for-executives" className="hover:text-foreground">For executives</Link></li>
+              <li><Link to="/accountability-software" className="hover:text-foreground">Accountability software</Link></li>
+              <li><Link to="/operating-audit" className="hover:text-foreground">Operating audit</Link></li>
+              <li><Link to="/faq" className="hover:text-foreground">FAQ</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="font-heading text-base font-bold text-foreground">Use cases</h2>
+            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+              <li><Link to="/for-coaches" className="hover:text-foreground">Coaches and advisors</Link></li>
+              <li><a href="/#pricing" className="hover:text-foreground">Pricing</a></li>
+              <li><Link to="/auth" className="hover:text-foreground">Start audit</Link></li>
+              <li><Link to="/auth" className="hover:text-foreground">Log in</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-10 border-t border-border/60 pt-6 text-sm text-muted-foreground">
+          © {new Date().getFullYear()} Intentus
         </div>
       </div>
     </footer>

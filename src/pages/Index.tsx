@@ -6,17 +6,24 @@ import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import DifferentiatorsSection from "@/components/landing/DifferentiatorsSection";
 import PricingSection from "@/components/landing/PricingSection";
 import Footer from "@/components/landing/Footer";
+import TrustSection from "@/components/landing/TrustSection";
+import FAQPreviewSection from "@/components/landing/FAQPreviewSection";
+import Seo from "@/components/seo/Seo";
+import { faqJsonLd, organizationJsonLd, softwareJsonLd } from "@/lib/site";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Seo jsonLd={[organizationJsonLd, softwareJsonLd, faqJsonLd]} />
       <Navbar />
       <HeroSection />
       <ProblemSection />
       <PillarsSection />
       <HowItWorksSection />
       <DifferentiatorsSection />
+      <TrustSection />
       <PricingSection />
+      <FAQPreviewSection />
       <Footer />
     </div>
   );
