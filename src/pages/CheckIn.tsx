@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Compass, Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2 } from "lucide-react";
+import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wind } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, getBlockerPrompt, getCommitmentPrompt, getFocusPrompt, type IntentProfile } from "@/lib/intentus-architecture";
 
@@ -69,6 +69,7 @@ const CheckIn = () => {
   const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
   const [aiDebrief, setAiDebrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [showCenteringGuide, setShowCenteringGuide] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -165,11 +166,7 @@ const CheckIn = () => {
   const handleSubmit = async () => {
     if (!user) return;
     if (hasThinCheckIn()) {
-      toast({
-        title: "Come back when you're present",
-        description: "This check-in looks thin. Intentus is meant for honest reflection, not box-checking while distracted or rushing.",
-        variant: "destructive",
-      });
+      setShowCenteringGuide(true);
       return;
     }
     setLoading(true);
@@ -190,6 +187,61 @@ const CheckIn = () => {
       streamDebrief();
     }
   };
+
+  const resetAndRetry = () => {
+    setWins([]);
+    setBlockers([]);
+    setCommitments([]);
+    setInputVal("");
+    setMood(5);
+    setEnergy(5);
+    setStep(0);
+    setShowCenteringGuide(false);
+  };
+
+  if (showCenteringGuide) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-lg space-y-6">
+          <div className="text-center space-y-3">
+            <div className="inline-flex bg-primary/10 rounded-2xl p-4">
+              <Wind className="h-12 w-12 text-primary" />
+            </div>
+            <h2 className="font-heading text-2xl font-bold text-foreground">Let's get you centered first</h2>
+            <p className="text-sm text-muted-foreground">
+              Your check-in felt a bit rushed — and that's okay. The best coaching happens when you're present and honest with yourself.
+            </p>
+          </div>
+
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <h3 className="font-heading font-bold text-foreground text-sm">Try this 5-minute reset:</h3>
+            <ol className="space-y-3 text-sm text-foreground">
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">1</span>
+                <span><strong>Close everything else.</strong> Tabs, Slack, your phone — give yourself just these five minutes.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">2</span>
+                <span><strong>Take three slow breaths.</strong> Inhale for 4 counts, hold for 4, exhale for 6. Let your nervous system settle.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">3</span>
+                <span><strong>Ask yourself one question:</strong> "What's actually true about my week right now?" — not what you wish were true, not what sounds good. What's real.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">4</span>
+                <span><strong>When you feel ready,</strong> come back and check in from that place. Your coaching is only as good as the signal you give it.</span>
+              </li>
+            </ol>
+          </div>
+
+          <Button variant="hero" className="w-full" onClick={resetAndRetry}>
+            <RefreshCw className="mr-2 h-4 w-4" /> I'm ready — let me try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (done) {
     return (
