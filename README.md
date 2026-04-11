@@ -1,6 +1,6 @@
 # Intentus
 
-Intentus is an AI operating coach for executives, business owners, and aspiring leaders.
+Intentus is a Vite + React app for operating audits, 90-day plans, executive accountability check-ins, and coach-led accountability workflows.
 
 It helps users:
 - audit the metrics and behaviors that matter most
@@ -8,10 +8,9 @@ It helps users:
 - generate a focused 90-day operating plan
 - stay accountable with daily or weekly check-ins
 - monitor drift versus adherence over time
+- support coach-branded client accountability programs
 
-The product can also support professional coaches who want to white-label the experience for client accountability programs.
-
-## SEO notes
+## SEO and public-site notes
 
 - Route-aware metadata, canonical tags, OG/Twitter tags, robots control, and JSON-LD via `src/components/seo/Seo.tsx`
 - Public marketing pages for:
@@ -22,7 +21,7 @@ The product can also support professional coaches who want to white-label the ex
   - `/faq`
 - Static `public/sitemap.xml`
 - `robots.txt` includes the sitemap location
-- Route-level lazy loading for the public marketing pages in `src/App.tsx`
+- Route-level lazy loading in `src/App.tsx`
 - Google Fonts moved from CSS `@import` to `<link>` tags in `index.html`
 
 ## Domain assumptions

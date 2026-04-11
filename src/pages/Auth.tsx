@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ const Auth = () => {
         path="/auth"
         noindex
       />
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="mb-8 flex items-center justify-center gap-2">
             <div className="rounded-lg bg-gradient-primary p-2">
@@ -103,7 +103,7 @@ const Auth = () => {
 
           {inviteCode && !isLogin && (
             <div className="mb-4 rounded-xl border border-primary/20 bg-primary/10 p-4 text-center">
-              <p className="text-sm font-medium text-primary">You've been invited by a coach! Create your account to get started.</p>
+              <p className="text-sm font-medium text-primary">You've been invited by a coach. Create your account to get started.</p>
             </div>
           )}
 
@@ -123,39 +123,17 @@ const Auth = () => {
               {!isLogin && !showReset && (
                 <div>
                   <Label htmlFor="name">Display name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your name"
-                    required
-                  />
+                  <Input id="name" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" required />
                 </div>
               )}
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
               </div>
               {!showReset && (
                 <div>
                   <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    minLength={6}
-                  />
+                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
                 </div>
               )}
               <Button type="submit" variant="hero" className="w-full" disabled={loading}>
@@ -165,26 +143,26 @@ const Auth = () => {
 
             <div className="mt-4 space-y-2 text-center">
               {!showReset && isLogin && (
-                <button onClick={() => setShowReset(true)} className="text-sm text-primary hover:underline">
+                <button type="button" onClick={() => setShowReset(true)} className="text-sm text-primary hover:underline">
                   Forgot password?
                 </button>
               )}
               <p className="text-sm text-muted-foreground">
                 {showReset ? (
-                  <button onClick={() => setShowReset(false)} className="text-primary hover:underline">
+                  <button type="button" onClick={() => setShowReset(false)} className="text-primary hover:underline">
                     Back to sign in
                   </button>
                 ) : isLogin ? (
                   <>
-                    Don't have an account?{" "}
-                    <button onClick={() => setIsLogin(false)} className="text-primary hover:underline">
+                    Don't have an account? {" "}
+                    <button type="button" onClick={() => setIsLogin(false)} className="text-primary hover:underline">
                       Sign up
                     </button>
                   </>
                 ) : (
                   <>
-                    Already have an account?{" "}
-                    <button onClick={() => setIsLogin(true)} className="text-primary hover:underline">
+                    Already have an account? {" "}
+                    <button type="button" onClick={() => setIsLogin(true)} className="text-primary hover:underline">
                       Sign in
                     </button>
                   </>
