@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import logo from "@/assets/intentus-logo.png";
 import {
   Compass, Send, ArrowLeft, Loader2, MessageSquare,
   TrendingUp, AlertTriangle, Target, Sparkles
