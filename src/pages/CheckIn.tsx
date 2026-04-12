@@ -514,7 +514,9 @@ const CheckIn = () => {
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Intentus" className="h-7 w-auto object-contain" />
+            <Link to="/" className="flex items-center">
+              <img src={logo} alt="Intentus" className="h-7 w-auto object-contain cursor-pointer" />
+            </Link>
             <span className="font-heading text-lg font-bold text-foreground">Check-in</span>
           </div>
           <span className="text-sm text-muted-foreground">{displayStep} of {totalSteps}</span>

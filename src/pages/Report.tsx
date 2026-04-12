@@ -220,7 +220,9 @@ const Report = () => {
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10 print:hidden">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Intentus" className="h-7 w-auto" />
+            <Link to="/" className="flex items-center">
+              <img src={logo} alt="Intentus" className="h-7 w-auto cursor-pointer" />
+            </Link>
             <span className="font-heading text-lg font-bold text-foreground">Operating Report</span>
           </div>
           <div className="flex items-center gap-2">
