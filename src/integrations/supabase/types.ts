@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_history: {
+        Row: {
+          archived_at: string
+          audit_data: Json
+          audit_number: number
+          completed_at: string
+          id: string
+          report_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string
+          audit_data: Json
+          audit_number?: number
+          completed_at?: string
+          id?: string
+          report_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          archived_at?: string
+          audit_data?: Json
+          audit_number?: number
+          completed_at?: string
+          id?: string
+          report_data?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       baseline_audits: {
         Row: {
           completed_at: string | null
