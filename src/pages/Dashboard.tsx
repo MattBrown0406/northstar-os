@@ -11,11 +11,13 @@ import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
   FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
+  RefreshCw,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
 import { getCurrentWeekCommitment, getPreviousWeekCommitment, setWeeklyCommitment, type WeeklyCommitment } from "@/lib/commitments";
+import { canReaudit } from "@/lib/reaudit";
 
 interface Profile {
   display_name: string | null;
@@ -55,6 +57,8 @@ const Dashboard = () => {
   const [showOneThingModal, setShowOneThingModal] = useState(false);
   const [oneThingInput, setOneThingInput] = useState("");
   const [oneThingSaving, setOneThingSaving] = useState(false);
+  const [reauditEligible, setReauditEligible] = useState(false);
+  const [reauditNextDate, setReauditNextDate] = useState<Date | undefined>();
 
   useEffect(() => {
     if (!user) return;
@@ -84,6 +88,23 @@ const Dashboard = () => {
       setLastCommitment(prev);
     };
     loadCommitments();
+
+    // Load re-audit eligibility (Premium/Coach only)
+    const loadReaudit = async () => {
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("plan_tier")
+        .eq("user_id", user.id)
+        .single();
+      const tier = prof?.plan_tier ?? "free";
+      if (tier === "premium" || tier === "coach") {
+        const result = await canReaudit(user.id);
+        setReauditEligible(result.eligible);
+        setReauditNextDate(result.nextEligibleDate);
+      }
+    };
+    loadReaudit();
   }, [user]);
 
   const handleSaveOneThing = async () => {
@@ -204,6 +225,19 @@ const Dashboard = () => {
             <div>
               <h3 className="font-heading font-bold text-foreground">Your Operating Report is ready</h3>
               <p className="text-sm text-muted-foreground">Review your patterns, blind spots, forced choice, and 90-day operating plan</p>
+              {(planTier === "premium" || planTier === "coach") && (
+                <button
+                  className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  onClick={() => navigate("/report")}
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  {reauditEligible
+                    ? "Re-audit available"
+                    : reauditNextDate
+                    ? `Re-audit available ${format(reauditNextDate, "MMM d")}`
+                    : null}
+                </button>
+              )}
             </div>
             <Button variant="hero" onClick={() => navigate("/report")}>
               View report <FileText className="ml-2 h-4 w-4" />

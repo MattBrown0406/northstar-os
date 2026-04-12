@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Printer, Target, AlertTriangle,
-  Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit
+  Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit,
+  RefreshCw, ChevronDown, ChevronUp, Clock,
 } from "lucide-react";
 import logo from "@/assets/intentus-logo.png";
 import { formatLensLabel, type IntentModel } from "@/lib/intentus-architecture";
+import { canReaudit, archiveAndResetAudit, getAuditHistory, type AuditHistoryEntry } from "@/lib/reaudit";
+import { format } from "date-fns";
 
 interface PatternAnalysis {
   themes: { title: string; description: string; areas_affected: string[] }[];
@@ -54,6 +57,17 @@ const Report = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
+  // Re-audit state
+  const [planTier, setPlanTier] = useState<string>("free");
+  const [reauditEligible, setReauditEligible] = useState(false);
+  const [reauditReason, setReauditReason] = useState<string | undefined>();
+  const [nextEligibleDate, setNextEligibleDate] = useState<Date | undefined>();
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [reauditInProgress, setReauditInProgress] = useState(false);
+  const [auditHistory, setAuditHistory] = useState<AuditHistoryEntry[]>([]);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [expandedEntry, setExpandedEntry] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     const loadReport = async () => {
@@ -66,7 +80,7 @@ const Report = () => {
           .eq("id", reportId)
           .eq("user_id", user.id)
           .single();
-        if (data) setReport(data as any);
+        if (data) setReport(data as unknown as StrategicReport);
         setLoading(false);
         return;
       }
@@ -80,7 +94,7 @@ const Report = () => {
         .limit(1);
 
       if (data && data.length > 0) {
-        setReport(data[0] as any);
+        setReport(data[0] as unknown as StrategicReport);
         setLoading(false);
         return;
       }
@@ -109,9 +123,10 @@ const Report = () => {
             .select("*")
             .eq("id", fnData.report_id)
             .single();
-          if (newReport) setReport(newReport as any);
-        } catch (e: any) {
-          toast({ title: "Error generating report", description: e.message, variant: "destructive" });
+          if (newReport) setReport(newReport as unknown as StrategicReport);
+        } catch (e: unknown) {
+          const err = e as { message?: string };
+          toast({ title: "Error generating report", description: err.message, variant: "destructive" });
         } finally {
           setGenerating(false);
         }
@@ -121,6 +136,48 @@ const Report = () => {
     };
     loadReport();
   }, [user]);
+
+  // Load re-audit eligibility and history after report is available
+  useEffect(() => {
+    if (!user) return;
+    const loadReauditData = async () => {
+      // Load plan tier
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("plan_tier")
+        .eq("user_id", user.id)
+        .single();
+      const tier = profileData?.plan_tier ?? "free";
+      setPlanTier(tier);
+
+      if (tier === "premium" || tier === "coach") {
+        const result = await canReaudit(user.id);
+        setReauditEligible(result.eligible);
+        setReauditReason(result.reason);
+        setNextEligibleDate(result.nextEligibleDate);
+
+        const history = await getAuditHistory(user.id);
+        setAuditHistory(history);
+      }
+    };
+    loadReauditData();
+  }, [user]);
+
+  const handleConfirmReaudit = async () => {
+    if (!user) return;
+    setReauditInProgress(true);
+    try {
+      await archiveAndResetAudit(user.id);
+      toast({ title: "Audit archived", description: "Starting your new operating audit." });
+      navigate("/audit");
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      toast({ title: "Re-audit failed", description: err.message ?? "Something went wrong.", variant: "destructive" });
+    } finally {
+      setReauditInProgress(false);
+      setShowConfirmModal(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -155,6 +212,7 @@ const Report = () => {
   }
 
   const { pattern_analysis, contradictions, forced_choice, north_star_focus, ninety_day_plan, intent_model } = report;
+  const isPremiumTier = planTier === "premium" || planTier === "coach";
 
   return (
     <div className="min-h-screen bg-background">
@@ -364,7 +422,163 @@ const Report = () => {
             Back to Dashboard <ArrowLeft className="ml-2 h-4 w-4" />
           </Button>
         </div>
+
+        {/* ── Re-Audit Section (Premium/Coach only, hidden in print) ── */}
+        {isPremiumTier && (
+          <div className="print:hidden mb-8 space-y-4">
+            {/* Re-audit card */}
+            <div className="bg-card rounded-2xl border border-primary/20 p-6">
+              <div className="flex items-start gap-4">
+                <div className="rounded-xl bg-primary/10 p-3 shrink-0">
+                  <RefreshCw className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-heading font-bold text-foreground mb-1">Ready for a fresh look?</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Your operating system evolves. A quarterly re-audit surfaces what's shifted — new blind spots, changed priorities, updated commitments.
+                  </p>
+                  {reauditEligible ? (
+                    <Button
+                      variant="hero"
+                      size="sm"
+                      onClick={() => setShowConfirmModal(true)}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1.5" /> Start Re-Audit
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      <Clock className="h-4 w-4 mr-1.5" />
+                      {nextEligibleDate
+                        ? `Available ${format(nextEligibleDate, "MMM d")}`
+                        : reauditReason ?? "Not available"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Audit history */}
+            {auditHistory.length > 0 && (
+              <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-muted/30 transition-colors"
+                  onClick={() => setHistoryExpanded((v) => !v)}
+                >
+                  <span className="font-heading font-semibold text-foreground text-sm">
+                    Past Audits ({auditHistory.length})
+                  </span>
+                  {historyExpanded ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+
+                {historyExpanded && (
+                  <div className="border-t border-border divide-y divide-border">
+                    {auditHistory.map((entry) => {
+                      const isOpen = expandedEntry === entry.id;
+                      const reportSnap = entry.report_data as Record<string, string> | null;
+                      return (
+                        <div key={entry.id}>
+                          <button
+                            className="w-full flex items-center justify-between px-6 py-3 text-left hover:bg-muted/20 transition-colors"
+                            onClick={() => setExpandedEntry(isOpen ? null : entry.id)}
+                          >
+                            <span className="text-sm text-foreground">
+                              Audit #{entry.audit_number} — completed{" "}
+                              {format(new Date(entry.completed_at), "MMM d, yyyy")}
+                            </span>
+                            {isOpen ? (
+                              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            )}
+                          </button>
+
+                          {isOpen && reportSnap && (
+                            <div className="px-6 pb-4 space-y-3 bg-muted/10">
+                              {reportSnap.north_star_focus && (
+                                <div>
+                                  <p className="text-xs text-primary uppercase tracking-wider mb-1">Priority</p>
+                                  <p className="text-sm text-foreground">{reportSnap.north_star_focus}</p>
+                                </div>
+                              )}
+                              {reportSnap.forced_choice && (
+                                <div>
+                                  <p className="text-xs text-primary uppercase tracking-wider mb-1">Forced choice</p>
+                                  <p className="text-sm text-foreground">{reportSnap.forced_choice}</p>
+                                </div>
+                              )}
+                              {!reportSnap.north_star_focus && !reportSnap.forced_choice && (
+                                <p className="text-sm text-muted-foreground">No report snapshot available for this audit.</p>
+                              )}
+                            </div>
+                          )}
+
+                          {isOpen && !reportSnap && (
+                            <div className="px-6 pb-4 bg-muted/10">
+                              <p className="text-sm text-muted-foreground">No report snapshot saved for this audit.</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* ── Confirmation Modal ── */}
+      {showConfirmModal && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => !reauditInProgress && setShowConfirmModal(false)}
+        >
+          <div
+            className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-accent/10 p-2.5 shrink-0">
+                <RefreshCw className="h-5 w-5 text-accent" />
+              </div>
+              <h3 className="font-heading font-bold text-foreground">Archive this audit and start fresh?</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Your current audit and report will be saved to your history. You'll begin a new 24-question audit. This cannot be undone.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={reauditInProgress}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="hero"
+                className="flex-1"
+                onClick={handleConfirmReaudit}
+                disabled={reauditInProgress}
+              >
+                {reauditInProgress ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                    Archiving…
+                  </span>
+                ) : (
+                  "Yes, start re-audit"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
