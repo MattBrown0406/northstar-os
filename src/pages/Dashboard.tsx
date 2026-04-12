@@ -150,6 +150,12 @@ const Dashboard = () => {
           )}
         </div>
 
+        <div className="mb-8">
+          <Button variant="hero" size="lg" onClick={() => navigate("/check-in")}>
+            Start check-in <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+
         {!auditCompleted ? (
           <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between gap-4">
             <div>
@@ -308,11 +314,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <Button variant="hero" size="lg" onClick={() => navigate("/check-in")}>
-            Start check-in <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
       </div>
     </div>
   );
