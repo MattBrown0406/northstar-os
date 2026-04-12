@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import MoodEnergyChart from "@/components/dashboard/MoodEnergyChart";
 import DriftTracker from "@/components/dashboard/DriftTracker";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import {
-  Compass, LogOut, Target, TrendingUp, Flame,
+  LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
-  FileText, Users, MessageSquare, Sparkles, Lock, Settings,
+  FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -125,6 +126,11 @@ const Dashboard = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
               <Settings className="h-4 w-4 mr-1" /> Settings
             </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
+                <Shield className="h-4 w-4 mr-1" /> Admin
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
