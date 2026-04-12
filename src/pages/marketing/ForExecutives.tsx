@@ -7,6 +7,7 @@ const ForExecutives = () => {
       description="Intentus helps founders, executives, and operators run a sharper operating cadence with an honest audit, a focused 90-day plan, and AI accountability check-ins."
       path="/for-executives"
       heading="Accountability software for founders, executives, and operators who need a tighter operating rhythm"
+      intro="Intentus is built for leaders carrying real responsibility, not people collecting productivity hacks. Start with an operating audit, translate the truth into a concrete 90-day plan, and keep your commitments visible enough to stop drift early."
       sections={[
         {
           title: "See where execution is actually breaking",

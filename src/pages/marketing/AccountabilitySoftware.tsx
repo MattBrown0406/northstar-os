@@ -7,6 +7,7 @@ const AccountabilitySoftware = () => {
       description="Intentus is accountability software for founders and executives who want better follow-through on the metrics, decisions, and commitments that matter most."
       path="/accountability-software"
       heading="Executive accountability software that pushes past motivation and into operating discipline"
+      intro="Most accountability tools stop at reminders, habits, or generic goal tracking. Intentus is different. It starts with what matters strategically, ties commitments to scoreboards, and uses ongoing check-ins to catch drift before it compounds."
       sections={[
         {
           title: "Focus on operating outcomes, not streaks",
