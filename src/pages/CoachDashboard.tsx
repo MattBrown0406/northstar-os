@@ -5,10 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/intentus-logo.png";
 import {
   Compass, LogOut, Users, Link2, Plus, Copy, Trash2,
   Eye, FileText, BarChart3, CheckCircle, Clock,
   UserPlus, ChevronDown, ChevronUp, Activity, Crown
+
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -178,7 +180,7 @@ const CoachDashboard = () => {
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
+            <img src={logo} alt="Intentus" className="h-10 w-auto" />
             <span className="font-heading text-lg font-bold text-foreground">Coach Dashboard</span>
           </div>
           <div className="flex items-center gap-2">
