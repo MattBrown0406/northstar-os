@@ -207,12 +207,14 @@ const Dashboard = () => {
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
             {profile?.plan_tier === "coach" && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/coach")} className="border-primary text-primary">
+              <Button variant="outline" size="sm" onClick={() => navigate("/coach")} className="border-primary text-primary hidden md:inline-flex">
                 <Users className="h-4 w-4 mr-1" /> Coach Portal
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/coaching")}>
@@ -232,6 +234,78 @@ const Dashboard = () => {
               </Button>
             )}
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
+          </div>
+
+          {/* Mobile nav */}
+          <div className="flex md:hidden items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/check-in")} title="Check-in">
+              <CheckCircle className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/coaching")} title="Coach">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MenuIcon className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64 bg-background p-0">
+                <div className="flex flex-col h-full">
+                  <div className="border-b border-border px-5 py-4">
+                    <img src={logo} alt="Intentus" className="h-8 w-auto" />
+                  </div>
+                  <nav className="flex flex-col gap-1 px-4 py-4">
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/audit")}>
+                        <Target className="h-4 w-4 mr-2" /> Audit
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/check-in")}>
+                        <CheckCircle className="h-4 w-4 mr-2" /> Check-in
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/coaching")}>
+                        <MessageSquare className="h-4 w-4 mr-2" /> AI Coach
+                      </Button>
+                    </SheetClose>
+                    {auditCompleted && (
+                      <SheetClose asChild>
+                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/report")}>
+                          <FileText className="h-4 w-4 mr-2" /> Report
+                        </Button>
+                      </SheetClose>
+                    )}
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/settings")}>
+                        <Settings className="h-4 w-4 mr-2" /> Settings
+                      </Button>
+                    </SheetClose>
+                    {profile?.plan_tier === "coach" && (
+                      <SheetClose asChild>
+                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/coach")}>
+                          <Users className="h-4 w-4 mr-2" /> Coach Portal
+                        </Button>
+                      </SheetClose>
+                    )}
+                    {isAdmin && (
+                      <SheetClose asChild>
+                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/admin")}>
+                          <Shield className="h-4 w-4 mr-2" /> Admin
+                        </Button>
+                      </SheetClose>
+                    )}
+                  </nav>
+                  <div className="mt-auto border-t border-border px-4 py-4">
+                    <Button variant="ghost" className="w-full justify-start text-destructive" onClick={signOut}>
+                      <LogOut className="h-4 w-4 mr-2" /> Sign out
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </nav>
