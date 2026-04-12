@@ -5,9 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Compass, ArrowLeft, Printer, Target, AlertTriangle,
+  ArrowLeft, Printer, Target, AlertTriangle,
   Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit
 } from "lucide-react";
+import logo from "@/assets/intentus-logo.png";
 import { formatLensLabel, type IntentModel } from "@/lib/intentus-architecture";
 
 interface PatternAnalysis {
