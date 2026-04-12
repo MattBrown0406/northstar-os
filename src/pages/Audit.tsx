@@ -374,10 +374,10 @@ const Audit = () => {
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
-            <span className="font-heading text-lg font-bold text-foreground">Operating Audit</span>
+            <span className="font-heading text-base font-extrabold tracking-tight text-foreground uppercase sm:text-xl">Intentus</span>
+            <span className="font-heading text-sm font-bold text-foreground sm:text-lg">Operating Audit</span>
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs text-muted-foreground sm:text-sm truncate ml-2">
             {AUDIT_SECTIONS[currentSection]}
           </div>
         </div>
