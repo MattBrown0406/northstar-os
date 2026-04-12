@@ -35,13 +35,9 @@ const Coaching = () => {
   useEffect(() => {
     if (!user) return;
     const loadLens = async () => {
-      const [reportRes, profileRes] = await Promise.all([
-        supabase.from("strategic_reports").select("intent_model").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-        supabase.from("profiles").select("intent_profile").eq("user_id", user.id).single(),
-      ]);
-
-      const lens = (reportRes.data?.[0] as any)?.intent_model?.primary_lens || (profileRes.data as any)?.intent_profile?.primaryLens || null;
-      setActiveLens(lens);
+      const profileRes = await supabase.from("profiles").select("coaching_tone").eq("user_id", user.id).single();
+      // No active lens available from current schema
+      setActiveLens(null);
     };
     loadLens();
   }, [user]);
