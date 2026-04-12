@@ -11,6 +11,7 @@ const HowItWorksSection = () => {
     <section id="how-it-works" className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
+          <div className="mx-auto mb-4 h-px w-16 bg-gradient-gold rounded-full" />
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mb-4">
             How Intentus works
           </h2>
