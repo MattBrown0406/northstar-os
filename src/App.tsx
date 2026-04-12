@@ -54,6 +54,7 @@ const OperatingAudit = lazyWithRecovery(() => import("./pages/marketing/Operatin
 const AccountabilitySoftware = lazyWithRecovery(() => import("./pages/marketing/AccountabilitySoftware"), "AccountabilitySoftware");
 const FaqPage = lazyWithRecovery(() => import("./pages/marketing/FaqPage"), "FaqPage");
 const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
+const Admin = lazyWithRecovery(() => import("./pages/Admin"), "Admin");
 const NotFound = lazyWithRecovery(() => import("./pages/NotFound"), "NotFound");
 
 const queryClient = new QueryClient();
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="/coach/client/:clientId/audit" element={<ProtectedRoute><CoachClientAudit /></ProtectedRoute>} />
                 <Route path="/coach/client/:clientId/check-ins" element={<ProtectedRoute><CoachClientCheckIns /></ProtectedRoute>} />
                 <Route path="/c/:slug" element={<BrandedAuth />} />
+                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
