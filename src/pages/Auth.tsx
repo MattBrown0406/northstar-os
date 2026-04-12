@@ -94,7 +94,7 @@ const Auth = () => {
       />
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="mb-8 flex items-center justify-center">
+          <div className="mb-4 flex items-center justify-center">
             <img src={logo} alt="Intentus" className="h-48 w-auto" />
           </div>
 
