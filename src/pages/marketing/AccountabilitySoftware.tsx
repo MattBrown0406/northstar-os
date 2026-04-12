@@ -6,14 +6,7 @@ const AccountabilitySoftware = () => {
       title="Executive accountability software"
       description="Intentus is accountability software for founders and executives who want better follow-through on the metrics, decisions, and commitments that matter most."
       path="/accountability-software"
-      eyebrow="Commercial intent"
       heading="Executive accountability software that pushes past motivation and into operating discipline"
-      intro="Most accountability tools stop at reminders, habits, or generic goal tracking. Intentus is different. It starts with what matters strategically, ties commitments to scoreboards, and uses ongoing check-ins to catch drift before it compounds."
-      bullets={[
-        "Covers a core commercial keyword with a page tailored to executive buyers.",
-        "Connects software value to scoreboards, drift detection, and follow-through.",
-        "Gives the homepage and pricing section a stronger internal-link destination.",
-      ]}
       sections={[
         {
           title: "Focus on operating outcomes, not streaks",

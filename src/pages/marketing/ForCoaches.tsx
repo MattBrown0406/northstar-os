@@ -6,14 +6,7 @@ const ForCoaches = () => {
       title="For coaches and advisory firms"
       description="Intentus gives coaches a white-label-ready accountability layer with audits, 90-day plans, and structured client check-ins."
       path="/for-coaches"
-      eyebrow="Secondary use case"
       heading="Give coaching clients a structured accountability system between sessions"
-      intro="If you run leadership coaching, advisory, or accountability programs, Intentus adds a consistent operating cadence your clients can actually follow. Use the audit to establish truth, then reinforce execution with branded check-ins and quarterly resets."
-      bullets={[
-        "Captures coach-specific search intent without diluting the homepage for executives.",
-        "Explains white-label and client accountability benefits in one focused page.",
-        "Creates a natural internal-link target from the homepage, pricing, and footer.",
-      ]}
       sections={[
         {
           title: "Start each engagement from the same baseline",
