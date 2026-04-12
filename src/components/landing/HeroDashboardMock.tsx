@@ -1,5 +1,6 @@
 import { ArrowUpRight, BarChart3, CheckCircle2, Target, TrendingUp } from "lucide-react";
 import { brandLogo as logo } from "@/lib/brand";
+import { Link } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const momentumData = [
