@@ -9,7 +9,7 @@ import {
   Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit,
   RefreshCw, ChevronDown, ChevronUp, Clock,
 } from "lucide-react";
-import logo from "@/assets/intentus-logo.png";
+import { brandLogo as logo } from "@/lib/brand";
 import { formatLensLabel, type IntentModel } from "@/lib/intentus-architecture";
 import { canReaudit, archiveAndResetAudit, getAuditHistory, type AuditHistoryEntry } from "@/lib/reaudit";
 import { format } from "date-fns";

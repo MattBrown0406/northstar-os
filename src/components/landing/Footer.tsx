@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logo from "@/assets/intentus-logo.png";
+import { brandLogo as logo } from "@/lib/brand";
 
 const Footer = () => {
   return (

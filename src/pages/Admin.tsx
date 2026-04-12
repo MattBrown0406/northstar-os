@@ -11,7 +11,7 @@ import {
   ClipboardCheck, FileText, MessageSquare, Calendar,
   Shield
 } from "lucide-react";
-import logo from "@/assets/intentus-logo.png";
+import { brandLogo as logo } from "@/lib/brand";
 
 interface UserProfile {
   user_id: string;
