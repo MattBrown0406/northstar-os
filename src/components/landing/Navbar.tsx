@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/intentus-logo.png";
+import { brandLogo as logo } from "@/lib/brand";
 
 const Navbar = () => {
   return (

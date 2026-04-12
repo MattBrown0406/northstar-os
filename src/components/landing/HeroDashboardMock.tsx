@@ -1,5 +1,5 @@
 import { ArrowUpRight, BarChart3, CheckCircle2, Target, TrendingUp } from "lucide-react";
-import logo from "@/assets/intentus-logo.png";
+import { brandLogo as logo } from "@/lib/brand";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const momentumData = [

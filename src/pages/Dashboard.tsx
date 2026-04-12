@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import logo from "@/assets/intentus-logo.png";
+import { brandLogo as logo } from "@/lib/brand";
 import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
