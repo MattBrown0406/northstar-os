@@ -22,8 +22,11 @@
     --muted: 210 30% 96%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 25 95% 60%;
+    --accent: 37 72% 48%;
     --accent-foreground: 0 0% 100%;
+    --gold: 37 72% 48%;
+    --gold-light: 40 60% 70%;
+    --gold-dark: 34 80% 35%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -46,12 +49,14 @@
     /* Custom tokens */
     --hero-gradient: linear-gradient(135deg, hsl(174 72% 46%), hsl(190 80% 50%), hsl(210 85% 55%));
     --hero-gradient-subtle: linear-gradient(135deg, hsl(174 72% 96%), hsl(190 80% 96%), hsl(210 85% 97%));
-    --accent-gradient: linear-gradient(135deg, hsl(25 95% 60%), hsl(15 90% 55%));
+    --accent-gradient: linear-gradient(135deg, hsl(37 72% 48%), hsl(34 80% 40%));
+    --gold-gradient: linear-gradient(135deg, hsl(40 60% 70%), hsl(37 72% 48%), hsl(34 80% 35%));
     --glass-bg: hsla(0, 0%, 100%, 0.7);
     --glass-border: hsla(214, 25%, 92%, 0.5);
     --shadow-soft: 0 4px 24px -4px hsla(220, 25%, 10%, 0.08);
     --shadow-medium: 0 8px 32px -8px hsla(220, 25%, 10%, 0.12);
     --shadow-glow: 0 0 40px -10px hsla(174, 72%, 46%, 0.25);
+    --shadow-gold: 0 0 30px -10px hsla(37, 72%, 48%, 0.2);
   }
 
   .dark {
@@ -67,8 +72,11 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217 32% 17%;
     --muted-foreground: 215 20% 65%;
-    --accent: 25 95% 60%;
+    --accent: 37 72% 48%;
     --accent-foreground: 0 0% 100%;
+    --gold: 37 72% 48%;
+    --gold-light: 40 60% 70%;
+    --gold-dark: 34 80% 35%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
     --border: 217 32% 17%;
@@ -123,6 +131,21 @@
   }
   .shadow-glow {
     box-shadow: var(--shadow-glow);
+  }
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+  .text-gradient-gold {
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-gradient-gold {
+    background: var(--gold-gradient);
+  }
+  .border-gold {
+    border-color: hsl(var(--gold) / 0.2);
   }
 }
 

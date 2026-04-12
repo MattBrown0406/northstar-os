@@ -18,7 +18,7 @@ const HeroSection = () => {
           <h1 className="mb-6 font-heading text-5xl font-bold tracking-tight md:text-7xl animate-fade-up" style={{ animationDelay: "0.1s" }}>
             <span className="text-foreground">Run a more honest</span>
             <br />
-            <span className="text-gradient-primary">operating rhythm.</span>
+            <span className="text-gradient-gold">operating rhythm.</span>
           </h1>
           <p className="mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-muted-foreground md:text-xl animate-fade-up" style={{ animationDelay: "0.2s" }}>
             Intentus gives serious operators an honest audit of how they actually run, surfaces strengths, weaknesses, and blind spots fast, and turns that into a prioritized 90-day plan with check-ins built to catch drift before it compounds.

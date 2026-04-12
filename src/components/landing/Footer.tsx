@@ -39,7 +39,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-border/60 pt-6 text-sm text-muted-foreground">
+        <div className="mt-10 border-t border-gold pt-6 text-sm text-muted-foreground">
           © {new Date().getFullYear()} Intentus
         </div>
       </div>
