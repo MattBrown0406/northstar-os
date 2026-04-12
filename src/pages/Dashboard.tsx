@@ -8,7 +8,7 @@ import DriftTracker from "@/components/dashboard/DriftTracker";
 import {
   Compass, LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
-  FileText, Users, MessageSquare, Sparkles, Lock,
+  FileText, Users, MessageSquare, Sparkles, Lock, Settings,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -122,6 +122,9 @@ const Dashboard = () => {
                 <FileText className="h-4 w-4 mr-1" /> Report
               </Button>
             )}
+            <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
+              <Settings className="h-4 w-4 mr-1" /> Settings
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>

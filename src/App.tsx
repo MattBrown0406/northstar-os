@@ -53,6 +53,7 @@ const ForCoaches = lazyWithRecovery(() => import("./pages/marketing/ForCoaches")
 const OperatingAudit = lazyWithRecovery(() => import("./pages/marketing/OperatingAudit"), "OperatingAudit");
 const AccountabilitySoftware = lazyWithRecovery(() => import("./pages/marketing/AccountabilitySoftware"), "AccountabilitySoftware");
 const FaqPage = lazyWithRecovery(() => import("./pages/marketing/FaqPage"), "FaqPage");
+const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
 const NotFound = lazyWithRecovery(() => import("./pages/NotFound"), "NotFound");
 
 const queryClient = new QueryClient();
@@ -88,6 +89,7 @@ const App = () => (
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/check-in" element={<ProtectedRoute><CheckIn /></ProtectedRoute>} />
                 <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/coaching" element={<ProtectedRoute><Coaching /></ProtectedRoute>} />
                 <Route path="/coach" element={<ProtectedRoute><CoachDashboard /></ProtectedRoute>} />
                 <Route path="/coach/client/:clientId/report" element={<ProtectedRoute><CoachClientReport /></ProtectedRoute>} />
