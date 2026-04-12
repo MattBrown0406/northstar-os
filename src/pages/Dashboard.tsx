@@ -318,17 +318,17 @@ const Dashboard = () => {
         <div className="rounded-[28px] border border-white/50 bg-background/90 shadow-[0_30px_120px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 
           {/* Header bar — logo + title + momentum badge */}
-          <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 md:px-6">
+          <div className="flex flex-col gap-2 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center">
-                <img src={logo} alt="Intentus" className="h-8 w-auto cursor-pointer" />
+                <img src={logo} alt="Intentus" className="h-7 w-auto cursor-pointer sm:h-8" />
               </Link>
               <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Intentus Operating Dashboard
+                <p className="text-xs font-semibold text-foreground sm:text-sm">
+                  Operating Dashboard
                   {profile?.display_name ? ` — ${profile.display_name}` : ""}
                 </p>
-                <p className="text-xs text-muted-foreground">Weekly executive snapshot</p>
+                <p className="text-[10px] text-muted-foreground sm:text-xs">Weekly executive snapshot</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">

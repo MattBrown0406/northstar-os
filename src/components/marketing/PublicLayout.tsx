@@ -11,7 +11,7 @@ const PublicLayout = ({ children }: PublicLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-20">
+      <div className="pt-16 md:pt-20">
         <AppBreadcrumb />
       </div>
       <main>{children}</main>
