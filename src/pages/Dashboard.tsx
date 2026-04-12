@@ -3,17 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import MoodEnergyChart from "@/components/dashboard/MoodEnergyChart";
 import DriftTracker from "@/components/dashboard/DriftTracker";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
-  FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield,
+  FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
+import { getCurrentWeekCommitment, getPreviousWeekCommitment, setWeeklyCommitment, type WeeklyCommitment } from "@/lib/commitments";
 
 interface Profile {
   display_name: string | null;
@@ -48,6 +50,11 @@ const Dashboard = () => {
   const [auditCompleted, setAuditCompleted] = useState(false);
   const [reportSummary, setReportSummary] = useState<StrategicReportSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentCommitment, setCurrentCommitment] = useState<WeeklyCommitment | null>(null);
+  const [lastCommitment, setLastCommitment] = useState<WeeklyCommitment | null>(null);
+  const [showOneThingModal, setShowOneThingModal] = useState(false);
+  const [oneThingInput, setOneThingInput] = useState("");
+  const [oneThingSaving, setOneThingSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -65,7 +72,33 @@ const Dashboard = () => {
       setLoading(false);
     };
     load();
+
+    // Load commitment data
+    const loadCommitments = async () => {
+      if (!user) return;
+      const [curr, prev] = await Promise.all([
+        getCurrentWeekCommitment(user.id),
+        getPreviousWeekCommitment(user.id),
+      ]);
+      setCurrentCommitment(curr);
+      setLastCommitment(prev);
+    };
+    loadCommitments();
   }, [user]);
+
+  const handleSaveOneThing = async () => {
+    if (!user || !oneThingInput.trim()) return;
+    setOneThingSaving(true);
+    try {
+      const saved = await setWeeklyCommitment(user.id, oneThingInput.trim());
+      setCurrentCommitment(saved);
+      setShowOneThingModal(false);
+      setOneThingInput("");
+    } catch (e) {
+      console.error("Error saving one thing:", e);
+    }
+    setOneThingSaving(false);
+  };
 
   if (loading) {
     return (
@@ -175,6 +208,73 @@ const Dashboard = () => {
             <Button variant="hero" onClick={() => navigate("/report")}>
               View report <FileText className="ml-2 h-4 w-4" />
             </Button>
+          </div>
+        )}
+
+        {/* This Week Section */}
+        <div className="bg-card rounded-2xl border border-border p-5 mb-8">
+          <h3 className="font-heading font-bold text-foreground mb-3 flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" /> This Week
+          </h3>
+          {currentCommitment ? (
+            <div className="space-y-2">
+              <p className="text-sm text-foreground leading-relaxed">
+                <span className="text-muted-foreground mr-1">"</span>
+                {currentCommitment.commitment}
+                <span className="text-muted-foreground ml-1">"</span>
+              </p>
+              {lastCommitment?.outcome && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Circle
+                    className={`h-2.5 w-2.5 fill-current ${
+                      lastCommitment.outcome === "yes"
+                        ? "text-green-500"
+                        : lastCommitment.outcome === "partially"
+                        ? "text-yellow-500"
+                        : "text-destructive"
+                    }`}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    Last week:{" "}
+                    {lastCommitment.outcome === "yes"
+                      ? "Done"
+                      : lastCommitment.outcome === "partially"
+                      ? "Partial"
+                      : "Missed"}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">What's your one thing this week?</p>
+              <Button variant="outline" size="sm" onClick={() => setShowOneThingModal(true)}>
+                Set it
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* One Thing Modal */}
+        {showOneThingModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowOneThingModal(false)}>
+            <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="font-heading font-bold text-foreground">What's the one thing this week?</h3>
+              <p className="text-sm text-muted-foreground">If you actually did this — and nothing else — it would make the most difference.</p>
+              <Input
+                value={oneThingInput}
+                onChange={(e) => setOneThingInput(e.target.value)}
+                placeholder="This week I will..."
+                onKeyDown={(e) => e.key === "Enter" && handleSaveOneThing()}
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={() => setShowOneThingModal(false)}>Cancel</Button>
+                <Button variant="hero" className="flex-1" onClick={handleSaveOneThing} disabled={oneThingSaving || !oneThingInput.trim()}>
+                  {oneThingSaving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 

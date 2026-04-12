@@ -1,12 +1,19 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wind } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, getBlockerPrompt, getCommitmentPrompt, getFocusPrompt, type IntentProfile } from "@/lib/intentus-architecture";
+import {
+  type WeeklyCommitment,
+  getPreviousWeekCommitment,
+  setWeeklyCommitment,
+  recordCommitmentOutcome,
+} from "@/lib/commitments";
 
 const ScaleSelector = ({ value, onChange, label, emoji }: {
   value: number; onChange: (n: number) => void; label: string; emoji: string[];
@@ -56,7 +63,94 @@ const ListInput = ({ label, items, onAdd, onRemove, inputVal, setInputVal, place
   </div>
 );
 
+// ── Step 0: Commitment Callback ──────────────────────────────────────────────
+const CommitmentCallbackStep = ({
+  previousCommitment,
+  callbackOutcome,
+  setCallbackOutcome,
+  callbackReflection,
+  setCallbackReflection,
+}: {
+  previousCommitment: WeeklyCommitment;
+  callbackOutcome: "yes" | "partially" | "no" | null;
+  setCallbackOutcome: (v: "yes" | "partially" | "no") => void;
+  callbackReflection: string;
+  setCallbackReflection: (v: string) => void;
+}) => (
+  <div className="space-y-6">
+    <div>
+      <h3 className="font-heading text-lg font-bold text-foreground mb-1">Last week you committed to:</h3>
+      <blockquote className="border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r-lg text-foreground text-base italic">
+        "{previousCommitment.commitment}"
+      </blockquote>
+    </div>
+
+    <div className="space-y-3">
+      <p className="text-sm font-medium text-foreground">Did this happen?</p>
+      <div className="grid grid-cols-3 gap-3">
+        {(["yes", "partially", "no"] as const).map((option) => (
+          <button
+            key={option}
+            onClick={() => setCallbackOutcome(option)}
+            className={`py-4 rounded-xl border-2 text-sm font-semibold capitalize transition-all ${
+              callbackOutcome === option
+                ? option === "yes"
+                  ? "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400"
+                  : option === "partially"
+                  ? "border-yellow-500 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400"
+                  : "border-destructive bg-destructive/10 text-destructive"
+                : "border-border text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            {option === "yes" ? "Yes" : option === "partially" ? "Partially" : "No"}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {callbackOutcome && (
+      <div className="space-y-2">
+        <label className="text-sm text-muted-foreground">
+          Anything worth noting? <span className="text-xs">(optional)</span>
+        </label>
+        <Input
+          value={callbackReflection}
+          onChange={(e) => setCallbackReflection(e.target.value)}
+          placeholder="One line reflection..."
+          className="text-sm"
+        />
+      </div>
+    )}
+  </div>
+);
+
+// ── Final Step: Set "The One Thing" ─────────────────────────────────────────
+const OneThingStep = ({
+  oneThing,
+  setOneThing,
+}: {
+  oneThing: string;
+  setOneThing: (v: string) => void;
+}) => (
+  <div className="space-y-4">
+    <div>
+      <h3 className="font-heading text-lg font-bold text-foreground">What's the one thing this week?</h3>
+      <p className="text-sm text-muted-foreground mt-1">
+        If you actually did this — and nothing else — it would make the most difference.
+      </p>
+    </div>
+    <Textarea
+      value={oneThing}
+      onChange={(e) => setOneThing(e.target.value)}
+      placeholder="This week I will..."
+      className="min-h-[120px] text-sm resize-none"
+    />
+  </div>
+);
+
+// ── Main Component ───────────────────────────────────────────────────────────
 const CheckIn = () => {
+  // Step index: 0 = commitment callback (or skipped), 1–5 = original steps, 6 = one-thing
   const [step, setStep] = useState(0);
   const [mood, setMood] = useState(5);
   const [energy, setEnergy] = useState(5);
@@ -70,6 +164,16 @@ const CheckIn = () => {
   const [aiDebrief, setAiDebrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [showCenteringGuide, setShowCenteringGuide] = useState(false);
+
+  // Commitment callback state
+  const [previousCommitment, setPreviousCommitment] = useState<WeeklyCommitment | null>(null);
+  const [callbackOutcome, setCallbackOutcome] = useState<"yes" | "partially" | "no" | null>(null);
+  const [callbackReflection, setCallbackReflection] = useState("");
+  const [hasPreviousCommitment, setHasPreviousCommitment] = useState<boolean | null>(null); // null = loading
+
+  // One-thing state
+  const [oneThing, setOneThing] = useState("");
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -87,6 +191,22 @@ const CheckIn = () => {
     loadProfile();
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const checkPrevious = async () => {
+      const prev = await getPreviousWeekCommitment(user.id);
+      if (prev) {
+        setPreviousCommitment(prev);
+        setHasPreviousCommitment(true);
+      } else {
+        setHasPreviousCommitment(false);
+        // Skip step 0 — jump to step 1
+        setStep(1);
+      }
+    };
+    checkPrevious();
+  }, [user]);
+
   const hasThinCheckIn = () => {
     const totalItems = wins.length + blockers.length + commitments.length;
     const totalWords = [...wins, ...blockers, ...commitments]
@@ -94,7 +214,6 @@ const CheckIn = () => {
       .trim()
       .split(/\s+/)
       .filter(Boolean).length;
-
     return totalItems < 3 || totalWords < 12;
   };
 
@@ -170,7 +289,9 @@ const CheckIn = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("check_ins").insert({
+
+    // 1. Insert check-in
+    const { data: checkInData, error } = await supabase.from("check_ins").insert({
       user_id: user.id,
       mood_score: mood,
       energy_score: energy,
@@ -178,14 +299,47 @@ const CheckIn = () => {
       blockers,
       commitments,
       drift_detected: mood <= 4 || energy <= 4,
-    });
-    setLoading(false);
+    }).select().single();
+
     if (error) {
+      setLoading(false);
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setDone(true);
-      streamDebrief();
+      return;
     }
+
+    // 2. Record commitment callback if we had a previous commitment + outcome
+    if (previousCommitment && callbackOutcome && checkInData) {
+      try {
+        // Update the commitment record with the outcome
+        await recordCommitmentOutcome(previousCommitment.id, callbackOutcome, callbackReflection || undefined);
+
+        // Also insert a commitment_callback record linking the check-in
+        await supabase.from("commitment_callbacks").insert({
+          user_id: user.id,
+          check_in_id: checkInData.id,
+          previous_commitment_id: previousCommitment.id,
+          previous_commitment_text: previousCommitment.commitment,
+          outcome: callbackOutcome,
+        });
+      } catch (cbErr) {
+        console.error("Commitment callback error:", cbErr);
+        // Non-fatal: proceed
+      }
+    }
+
+    // 3. Save "one thing" commitment for this week
+    if (oneThing.trim()) {
+      try {
+        await setWeeklyCommitment(user.id, oneThing.trim());
+      } catch (otErr) {
+        console.error("One thing save error:", otErr);
+        // Non-fatal: proceed
+      }
+    }
+
+    setLoading(false);
+    setDone(true);
+    streamDebrief();
   };
 
   const resetAndRetry = () => {
@@ -195,9 +349,18 @@ const CheckIn = () => {
     setInputVal("");
     setMood(5);
     setEnergy(5);
-    setStep(0);
+    setStep(hasPreviousCommitment ? 0 : 1);
     setShowCenteringGuide(false);
   };
+
+  // ── Loading state while checking previous commitment ──────────────────────
+  if (hasPreviousCommitment === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (showCenteringGuide) {
     return (
@@ -295,21 +458,55 @@ const CheckIn = () => {
     );
   }
 
-  const steps = [
-    <ScaleSelector key="mood" value={mood} onChange={setMood} label="How focused and steady are you right now?"
-      emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />,
-    <ScaleSelector key="energy" value={energy} onChange={setEnergy} label="What's your disciplined execution energy level?"
-      emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />,
-    <ListInput key="wins" label={getFocusPrompt(intentProfile)} items={wins}
-      onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
-      inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />,
-    <ListInput key="blockers" label={getBlockerPrompt(intentProfile)} items={blockers}
-      onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
-      inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />,
-    <ListInput key="commitments" label={getCommitmentPrompt(intentProfile)} items={commitments}
-      onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
-      inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />,
-  ];
+  // ── Steps definition ─────────────────────────────────────────────────────
+  // step 0 = commitment callback (only shown if hasPreviousCommitment)
+  // step 1 = mood, step 2 = energy, step 3 = wins, step 4 = blockers
+  // step 5 = commitments (existing), step 6 = one thing (new)
+  const LAST_STEP = 6;
+
+  const renderStep = () => {
+    switch (step) {
+      case 0:
+        return previousCommitment ? (
+          <CommitmentCallbackStep
+            previousCommitment={previousCommitment}
+            callbackOutcome={callbackOutcome}
+            setCallbackOutcome={setCallbackOutcome}
+            callbackReflection={callbackReflection}
+            setCallbackReflection={setCallbackReflection}
+          />
+        ) : null;
+      case 1:
+        return <ScaleSelector value={mood} onChange={setMood} label="How focused and steady are you right now?"
+          emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />;
+      case 2:
+        return <ScaleSelector value={energy} onChange={setEnergy} label="What's your disciplined execution energy level?"
+          emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />;
+      case 3:
+        return <ListInput label={getFocusPrompt(intentProfile)} items={wins}
+          onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
+          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />;
+      case 4:
+        return <ListInput label={getBlockerPrompt(intentProfile)} items={blockers}
+          onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
+          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />;
+      case 5:
+        return <ListInput label={getCommitmentPrompt(intentProfile)} items={commitments}
+          onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
+          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />;
+      case 6:
+        return <OneThingStep oneThing={oneThing} setOneThing={setOneThing} />;
+      default:
+        return null;
+    }
+  };
+
+  // Total steps shown in progress bar: if hasPreviousCommitment → 7 steps (0–6), else 6 (1–6)
+  const firstStep = hasPreviousCommitment ? 0 : 1;
+  const totalSteps = LAST_STEP - firstStep + 1;
+  const displayStep = step - firstStep + 1;
+
+  const canAdvanceStep0 = step !== 0 || callbackOutcome !== null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -319,32 +516,39 @@ const CheckIn = () => {
             <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
             <span className="font-heading text-lg font-bold text-foreground">Check-in</span>
           </div>
-          <span className="text-sm text-muted-foreground">{step + 1} of {steps.length}</span>
+          <span className="text-sm text-muted-foreground">{displayStep} of {totalSteps}</span>
         </div>
         <div className="h-1 bg-border">
-          <div className="h-full bg-gradient-primary transition-all duration-500" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+          <div className="h-full bg-gradient-primary transition-all duration-500" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg space-y-4">
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
-            <p>Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.</p>
-            {intentProfile?.primaryLens && (
-              <p className="text-xs text-muted-foreground">This check-in is currently weighted toward {formatLensLabel(intentProfile.primaryLens).toLowerCase()}.</p>
-            )}
-          </div>
-          {steps[step]}
+          {step >= 1 && (
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
+              <p>Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.</p>
+              {intentProfile?.primaryLens && (
+                <p className="text-xs text-muted-foreground">This check-in is currently weighted toward {formatLensLabel(intentProfile.primaryLens).toLowerCase()}.</p>
+              )}
+            </div>
+          )}
+          {renderStep()}
         </div>
       </div>
 
       <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
         <div className="container mx-auto max-w-lg flex gap-3">
-          {step > 0 && (
-            <Button variant="outline" className="flex-1" onClick={() => setStep(step - 1)}>Back</Button>
+          {step > firstStep && (
+            <Button variant="outline" className="flex-1" onClick={() => { setInputVal(""); setStep(step - 1); }}>Back</Button>
           )}
-          {step < steps.length - 1 ? (
-            <Button variant="hero" className="flex-1" onClick={() => { setInputVal(""); setStep(step + 1); }}>
+          {step < LAST_STEP ? (
+            <Button
+              variant="hero"
+              className="flex-1"
+              disabled={!canAdvanceStep0}
+              onClick={() => { setInputVal(""); setStep(step + 1); }}
+            >
               Continue <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (

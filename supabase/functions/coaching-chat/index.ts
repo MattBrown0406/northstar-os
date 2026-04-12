@@ -38,24 +38,86 @@ serve(async (req) => {
     // mode: "check-in-debrief" or "chat"
 
     // Gather user context
-    const [profileRes, checkInsRes, auditRes, reportRes] = await Promise.all([
+    const [profileRes, checkInsRes, auditRes, reportRes, weeklyCommitmentsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("baseline_audits").select("responses, scores, status").eq("user_id", user.id).eq("status", "completed").limit(1),
-      supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+      supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan, intent_model, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+      // Fetch last 8 weekly_commitments for follow-through context
+      supabase.from("weekly_commitments").select("commitment, outcome, week_start").eq("user_id", user.id).order("week_start", { ascending: false }).limit(9),
     ]);
 
     const profile = profileRes.data;
     const checkIns = checkInsRes.data || [];
     const audit = auditRes.data?.[0];
     const report = reportRes.data?.[0];
+    const allCommitments = weeklyCommitmentsRes.data || [];
+
+    // ── Build commitment context ──────────────────────────────────────────
+    // Determine current week Monday
+    const todayMs = Date.now();
+    const todayDate = new Date(todayMs);
+    const dayOfWeek = todayDate.getDay(); // 0=Sun
+    const daysToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const mondayDate = new Date(todayDate);
+    mondayDate.setDate(todayDate.getDate() + daysToMon);
+    const thisWeekStart = mondayDate.toISOString().split("T")[0];
+
+    const currentWeekCommitment = allCommitments.find(c => c.week_start === thisWeekStart) || null;
+    const previousCommitments = allCommitments.filter(c => c.week_start < thisWeekStart);
+    const previousCommitmentOutcome = previousCommitments[0]?.outcome || null;
+
+    // Follow-through rate (exclude current week, last 8 previous)
+    const prevWithOutcome = previousCommitments.filter(c => c.outcome !== null);
+    let followThroughRate: number | null = null;
+    let followThroughPattern: string | null = null;
+    if (prevWithOutcome.length >= 3) {
+      const yes = prevWithOutcome.filter(c => c.outcome === "yes").length;
+      const partial = prevWithOutcome.filter(c => c.outcome === "partially").length;
+      followThroughRate = (yes + partial * 0.5) / prevWithOutcome.length;
+      if (followThroughRate >= 0.8) followThroughPattern = "You complete most of what you commit to";
+      else if (followThroughRate >= 0.6) followThroughPattern = "You follow through more often than not";
+      else if (followThroughRate >= 0.4) followThroughPattern = "You consistently start strong but rarely finish";
+      else followThroughPattern = "Your commitments are consistently not being completed";
+    }
+
+    // 90-day plan current phase
+    let currentPlanPhase: string | null = null;
+    let currentPlanActions: string[] = [];
+    if (report?.ninety_day_plan) {
+      const plan = report.ninety_day_plan as any;
+      const reportCreated = new Date(report.created_at || todayMs);
+      const daysSinceReport = Math.floor((todayMs - reportCreated.getTime()) / (1000 * 60 * 60 * 24));
+      const phases = plan?.phases;
+      if (Array.isArray(phases) && phases.length > 0) {
+        let targetPhase = phases[0];
+        if (daysSinceReport >= 60 && phases.length >= 3) targetPhase = phases[2];
+        else if (daysSinceReport >= 30 && phases.length >= 2) targetPhase = phases[1];
+        currentPlanPhase = targetPhase?.phase ? `Phase ${targetPhase.phase}${targetPhase.title ? ` — ${targetPhase.title}` : ""}${targetPhase.days ? ` (${targetPhase.days})` : ""}` : null;
+        currentPlanActions = Array.isArray(targetPhase?.actions) ? targetPhase.actions : [];
+      }
+    }
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
 
     // Build rich context
     let userContext = `User: ${name}\nCoaching tone preference: ${tone}\n\n`;
 
-    const intentSummary = buildIntentProfileSummary(null);
+    // Append commitment context block
+    userContext += `--- COMMITMENT TRACKING ---\n`;
+    userContext += `Current week's "one thing": ${currentWeekCommitment?.commitment ?? "not yet set"}\n`;
+    userContext += `Previous week outcome: ${previousCommitmentOutcome ?? "no data"}\n`;
+    userContext += `Follow-through rate (last 8 weeks): ${followThroughRate !== null ? `${(followThroughRate * 100).toFixed(0)}% — ${followThroughPattern}` : "insufficient data"}\n`;
+    if (currentPlanPhase) {
+      userContext += `\n90-DAY PLAN — CURRENT PHASE: ${currentPlanPhase}\n`;
+      if (currentPlanActions.length > 0) {
+        userContext += `Current phase actions:\n`;
+        for (const action of currentPlanActions) userContext += `  - ${action}\n`;
+      }
+    }
+    userContext += "\n";
+
+    const intentSummary = buildIntentProfileSummary((profile?.intent_profile as any) || null);
     userContext += `${intentSummary}\n\n`;
 
     if (report) {
@@ -102,6 +164,23 @@ serve(async (req) => {
 
 ${userContext}
 
+COMMITMENT CONTEXT GUIDANCE:
+- If follow-through rate is below 50%: this IS the coaching conversation. Name the pattern directly.
+- If previous outcome was "no": open with curiosity about what happened, not judgment
+- If previous outcome was "partially": explore what stopped full completion
+- Reference the 90-day plan actions when they are relevant to the conversation
+- Never show follow-through rate as a number to the user — translate it using the pattern language already provided
+- If current week commitment is not yet set, prompt them to set it before ending the conversation
+
+TREND LANGUAGE RULES:
+- Never show mood/energy as numbers or averages in your response
+- Instead translate trends into language:
+  * 3+ weeks declining: "Your energy has been quietly declining for a few weeks now. Not dramatically — but consistently."
+  * Flat/stable: "You've been steady — neither losing ground nor gaining it."
+  * Improving: "There's been a real shift in your energy over the last few weeks."
+- Always follow a trend observation with a question, never a conclusion
+- The goal is for the user to feel seen, not measured
+
 Based on this check-in and their history, provide a personalized coaching debrief:
 
 1. **Pattern Recognition**: What trends do you see across their recent check-ins? Is mood/energy improving or declining?
@@ -126,6 +205,14 @@ Keep it concise (4-6 sentences). Be direct, human, and specific. Use their actua
       systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are having an ongoing conversation with ${name}. Your tone setting is ${tone}, but the doctrine stays constant: direct because the outcome matters, warm because the person matters.
 
 ${userContext}
+
+COMMITMENT COACHING GUIDANCE:
+- If follow-through rate is below 50%: this IS the coaching conversation. Name the pattern directly.
+- If previous outcome was "no": open with curiosity about what happened, not judgment
+- If previous outcome was "partially": explore what stopped full completion
+- Reference the 90-day plan actions when they are relevant to the conversation
+- Never show follow-through rate as a number — translate it: "You complete most of what you commit to" or "You consistently start strong but rarely finish" etc.
+- If current week commitment is not yet set, prompt them to set it before ending the conversation
 
 You have full access to their baseline audit data, strategic report, and check-in history. Use this data to provide deeply personalized coaching.
 
