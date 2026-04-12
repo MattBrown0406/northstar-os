@@ -42,7 +42,7 @@ serve(async (req) => {
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("baseline_audits").select("responses, scores, status").eq("user_id", user.id).eq("status", "completed").limit(1),
-      supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan, intent_model").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+      supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
     ]);
 
     const profile = profileRes.data;
@@ -65,7 +65,7 @@ serve(async (req) => {
       if (report.contradictions) userContext += `Key Contradictions: ${JSON.stringify(report.contradictions)}\n`;
       if (report.pattern_analysis) userContext += `Patterns: ${JSON.stringify(report.pattern_analysis)}\n`;
       if (report.ninety_day_plan) userContext += `90-Day Plan: ${JSON.stringify(report.ninety_day_plan)}\n`;
-      if (report.intent_model) userContext += `Intent Model: ${JSON.stringify(report.intent_model)}\n`;
+      
       userContext += "\n";
     }
 
