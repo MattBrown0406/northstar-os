@@ -5,9 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Compass, ArrowLeft, Printer, Target, AlertTriangle,
+  ArrowLeft, Printer, Target, AlertTriangle,
   Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit
 } from "lucide-react";
+import logo from "@/assets/intentus-logo.png";
 import { formatLensLabel, type IntentModel } from "@/lib/intentus-architecture";
 
 interface PatternAnalysis {
@@ -179,8 +180,8 @@ const Report = () => {
         {/* Print header */}
         <div className="hidden print:block mb-8 pt-4">
           <div className="flex items-center gap-2 mb-2">
-            <Compass className="h-6 w-6" />
-            <span className="font-heading text-2xl font-bold">Intentus — Operating Report</span>
+            <img src={logo} alt="Intentus" className="h-8 w-auto print:h-8" />
+            <span className="font-heading text-2xl font-bold">Operating Report</span>
           </div>
           <p className="text-sm text-muted-foreground">Generated {new Date(report.created_at).toLocaleDateString()}</p>
         </div>

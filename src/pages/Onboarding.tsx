@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Compass, ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers } from "lucide-react";
+import { ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers } from "lucide-react";
+import logo from "@/assets/intentus-logo.png";
 import { useToast } from "@/hooks/use-toast";
 import {
   FOCUS_AREA_OPTIONS,
@@ -77,8 +78,8 @@ const Onboarding = () => {
 
   const steps = [
     <div key="welcome" className="text-center space-y-6">
-      <div className="inline-flex bg-gradient-primary rounded-2xl p-4">
-        <Compass className="h-12 w-12 text-primary-foreground" />
+      <div className="inline-flex">
+        <img src={logo} alt="Intentus" className="h-20 w-auto" />
       </div>
       <h1 className="font-heading text-3xl font-bold text-foreground">Welcome to Intentus</h1>
       <p className="text-muted-foreground max-w-md mx-auto">
