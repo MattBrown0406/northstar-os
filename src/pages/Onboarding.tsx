@@ -93,7 +93,7 @@ const Onboarding = () => {
       </div>
       <div className="max-w-md mx-auto rounded-2xl border border-border bg-card px-4 py-4 text-left space-y-2">
         <p className="text-xs uppercase tracking-[0.2em] text-primary">How Intentus thinks</p>
-        <p className="text-sm text-foreground">Core anchors stay constant: James Clear, Stephen Covey, Marshall Goldsmith, Annie Duke, Peter Drucker, and Carl Rogers.</p>
+        <p className="text-sm text-foreground">Core anchors stay constant — drawn from the best thinking in habit science, executive leadership, decision-making under uncertainty, management theory, and human-centered coaching.</p>
         <p className="text-sm text-muted-foreground">Then the coaching emphasis adapts to your pressure, priorities, and blind spots so the product feels like a serious mirror instead of a generic chatbot.</p>
       </div>
       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
