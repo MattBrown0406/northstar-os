@@ -183,7 +183,8 @@ const CoachBrandingSettings = () => {
     setSaving(false);
   };
 
-  const brandedUrl = `${window.location.origin}/c/${slug}`;
+  const customDomain = "https://intentusai.com";
+  const brandedUrl = `${customDomain}/c/${slug}`;
 
   if (loading) return null;
 
@@ -199,7 +200,7 @@ const CoachBrandingSettings = () => {
           <Label className="text-sm font-medium">Your branded URL</Label>
           <div className="flex gap-2 mt-1">
             <div className="flex-1 flex items-center bg-muted/50 rounded-lg px-3">
-              <span className="text-sm text-muted-foreground">{window.location.origin}/c/</span>
+              <span className="text-sm text-muted-foreground">https://intentusai.com/c/</span>
               <Input
                 value={slug}
                 onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
