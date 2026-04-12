@@ -171,7 +171,7 @@ Keep responses focused and conversational. Do not lecture. Do not be permissive.
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-preview",
         messages: aiMessages,
         stream: true,
       }),
