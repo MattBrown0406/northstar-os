@@ -4,17 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import MoodEnergyChart from "@/components/dashboard/MoodEnergyChart";
-import DriftTracker from "@/components/dashboard/DriftTracker";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import logo from "@/assets/intentus-logo.png";
 import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
   FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
-  RefreshCw,
+  RefreshCw, ArrowUpRight, CheckCircle2,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
 import { getCurrentWeekCommitment, getPreviousWeekCommitment, setWeeklyCommitment, type WeeklyCommitment } from "@/lib/commitments";
 import { canReaudit } from "@/lib/reaudit";
@@ -30,6 +29,8 @@ interface Profile {
 
 interface StrategicReportSummary {
   intent_model?: IntentModel | null;
+  north_star_focus?: string | null;
+  pattern_analysis?: any;
 }
 
 interface CheckIn {
@@ -67,7 +68,7 @@ const Dashboard = () => {
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
         supabase.from("baseline_audits").select("status").eq("user_id", user.id).eq("status", "completed").limit(1),
-        supabase.from("strategic_reports").select("intent_model").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+        supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
       if (profileRes.data) setProfile(profileRes.data as any);
       if (checkInsRes.data) setCheckIns(checkInsRes.data as any);
@@ -77,7 +78,6 @@ const Dashboard = () => {
     };
     load();
 
-    // Load commitment data
     const loadCommitments = async () => {
       if (!user) return;
       const [curr, prev] = await Promise.all([
@@ -89,7 +89,6 @@ const Dashboard = () => {
     };
     loadCommitments();
 
-    // Load re-audit eligibility (Premium/Coach only)
     const loadReaudit = async () => {
       if (!user) return;
       const { data: prof } = await supabase
@@ -133,12 +132,13 @@ const Dashboard = () => {
   const moodSamples = checkIns.filter((c) => c.mood_score !== null);
   const energySamples = checkIns.filter((c) => c.energy_score !== null);
   const avgMood = moodSamples.length > 0
-    ? (moodSamples.reduce((acc, c) => acc + (c.mood_score ?? 0), 0) / moodSamples.length).toFixed(1)
-    : "—";
+    ? Math.round(moodSamples.reduce((acc, c) => acc + (c.mood_score ?? 0), 0) / moodSamples.length * 10)
+    : null;
   const avgEnergy = energySamples.length > 0
-    ? (energySamples.reduce((acc, c) => acc + (c.energy_score ?? 0), 0) / energySamples.length).toFixed(1)
-    : "—";
+    ? Math.round(energySamples.reduce((acc, c) => acc + (c.energy_score ?? 0), 0) / energySamples.length * 10)
+    : null;
   const driftCount = checkIns.filter((c) => c.drift_detected).length;
+  const driftRate = checkIns.length > 0 ? Math.round((driftCount / checkIns.length) * 100) : null;
   const recentCommitments = checkIns[0]?.commitments ?? [];
   const planTier = profile?.plan_tier ?? "free";
   const trendWindow = planTier === "premium" || planTier === "coach" ? 10 : planTier === "pro" ? 7 : 4;
@@ -146,28 +146,72 @@ const Dashboard = () => {
     .slice(0, trendWindow)
     .reverse()
     .map((checkIn, index) => ({
-      label: checkIn.created_at ? format(new Date(checkIn.created_at), "MMM d") : `Check-in ${index + 1}`,
-      focus: checkIn.mood_score ?? null,
-      energy: checkIn.energy_score ?? null,
+      label: checkIn.created_at ? format(new Date(checkIn.created_at), "MMM d") : `#${index + 1}`,
+      focus: checkIn.mood_score ? checkIn.mood_score * 10 : null,
+      energy: checkIn.energy_score ? checkIn.energy_score * 10 : null,
       drift: checkIn.drift_detected ? 1 : 0,
     }));
   const hasTrendData = trendData.some((point) => point.focus !== null || point.energy !== null);
-  const tierSummary = getTierSummary(planTier);
   const activeLens = reportSummary?.intent_model?.primary_lens || profile?.intent_profile?.primaryLens;
+  const northStarFocus = (reportSummary as any)?.north_star_focus;
+
+  // Execution quality = average of focus & energy (as percentage)
+  const executionScore = avgMood !== null && avgEnergy !== null
+    ? Math.round((avgMood + avgEnergy) / 2)
+    : null;
+
+  // Scorecard data
+  const scorecardItems = [
+    { label: "Focus", value: avgMood },
+    { label: "Energy", value: avgEnergy },
+    { label: "Execution", value: executionScore },
+    { label: "Drift", value: driftRate },
+  ];
+
+  // Momentum assessment
+  const getMomentumLabel = () => {
+    if (!hasTrendData || trendData.length < 2) return null;
+    const recent = trendData.slice(-2);
+    const first = (recent[0]?.focus ?? 0) + (recent[0]?.energy ?? 0);
+    const last = (recent[1]?.focus ?? 0) + (recent[1]?.energy ?? 0);
+    if (last > first) return "Momentum is improving";
+    if (last < first) return "Momentum is declining";
+    return "Momentum is steady";
+  };
+  const momentumLabel = getMomentumLabel();
+
+  // Coaching signals
+  const coachingSignals = [
+    { label: "Check-in cadence", value: profile?.check_in_cadence ? capitalize(profile.check_in_cadence.replace("_", " ")) : "Not set" },
+    { label: "Coaching tone", value: profile?.coaching_tone ? capitalize(profile.coaching_tone) : "Balanced" },
+    { label: "Drift risk", value: driftRate !== null ? (driftRate > 30 ? "Elevated" : "Low") : "Unknown" },
+  ];
+
+  // Next actions
+  const nextActions: string[] = [];
+  if (!auditCompleted) nextActions.push("Finish the operating audit");
+  if (auditCompleted && !reportSummary) nextActions.push("Review the strategic report");
+  if (!currentCommitment) nextActions.push("Set this week's one thing");
+  if (checkIns.length === 0) nextActions.push("Complete your first check-in");
+  else nextActions.push("Start this week's check-in");
+  if (nextActions.length < 3) nextActions.push("Lock next week's commitments");
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Subtle radial glow background like the mock */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.08),transparent_32%),radial-gradient(circle_at_left,rgba(20,184,166,0.06),transparent_28%)]" />
+
+      {/* Navigation */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <div className="flex items-center">
-            <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
-          </div>
           <div className="flex items-center gap-2">
             {profile?.plan_tier === "coach" && (
               <Button variant="outline" size="sm" onClick={() => navigate("/coach")} className="border-primary text-primary">
                 <Users className="h-4 w-4 mr-1" /> Coach Portal
               </Button>
             )}
+          </div>
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/coaching")}>
@@ -191,340 +235,376 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8">
-          <h1 className="font-heading text-2xl font-bold text-foreground">
-            Welcome back{profile?.display_name ? `, ${profile.display_name}` : ""}
-          </h1>
-          <p className="text-muted-foreground">Here's your operating snapshot — current rhythm, current signal, current priority.</p>
-          {activeLens && (
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Active coaching lens: {formatLensLabel(activeLens)}
-            </div>
-          )}
-        </div>
+      <div className="relative container mx-auto px-4 py-6 max-w-6xl">
+        {/* Dashboard card — mirrors the hero mock container */}
+        <div className="rounded-[28px] border border-white/50 bg-background/90 shadow-[0_30px_120px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 
-        <div className="mb-8">
-          <Button variant="hero" size="lg" onClick={() => navigate("/check-in")}>
-            Start check-in <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-
-        {!auditCompleted ? (
-          <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between gap-4">
-            <div>
-              <h3 className="font-heading font-bold text-foreground">Complete your Operating Audit</h3>
-              <p className="text-sm text-muted-foreground">Get clarity on your strengths, weaknesses, blind spots, and the 90-day plan worth agreeing to</p>
+          {/* Header bar — logo + title + momentum badge */}
+          <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 md:px-6">
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Intentus" className="h-8 w-auto" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Intentus Operating Dashboard
+                  {profile?.display_name ? ` — ${profile.display_name}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">Weekly executive snapshot</p>
+              </div>
             </div>
-            <Button variant="hero" onClick={() => navigate("/audit")}>
-              Start audit <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <div className="bg-gradient-subtle rounded-2xl p-6 border border-primary/20 mb-8 flex items-center justify-between gap-4">
-            <div>
-              <h3 className="font-heading font-bold text-foreground">Your Operating Report is ready</h3>
-              <p className="text-sm text-muted-foreground">Review your patterns, blind spots, forced choice, and 90-day operating plan</p>
-              {(planTier === "premium" || planTier === "coach") && (
-                <button
-                  className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:underline"
-                  onClick={() => navigate("/report")}
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  {reauditEligible
-                    ? "Re-audit available"
-                    : reauditNextDate
-                    ? `Re-audit available ${format(reauditNextDate, "MMM d")}`
-                    : null}
-                </button>
+            <div className="hidden md:flex items-center gap-3">
+              {activeLens && (
+                <div className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+                  <Sparkles className="h-3.5 w-3.5" /> {formatLensLabel(activeLens)}
+                </div>
               )}
-            </div>
-            <Button variant="hero" onClick={() => navigate("/report")}>
-              View report <FileText className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        {/* This Week Section */}
-        <div className="bg-card rounded-2xl border border-border p-5 mb-8">
-          <h3 className="font-heading font-bold text-foreground mb-3 flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" /> This Week
-          </h3>
-          {currentCommitment ? (
-            <div className="space-y-2">
-              <p className="text-sm text-foreground leading-relaxed">
-                <span className="text-muted-foreground mr-1">"</span>
-                {currentCommitment.commitment}
-                <span className="text-muted-foreground ml-1">"</span>
-              </p>
-              {lastCommitment?.outcome && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <Circle
-                    className={`h-2.5 w-2.5 fill-current ${
-                      lastCommitment.outcome === "yes"
-                        ? "text-green-500"
-                        : lastCommitment.outcome === "partially"
-                        ? "text-yellow-500"
-                        : "text-destructive"
-                    }`}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    Last week:{" "}
-                    {lastCommitment.outcome === "yes"
-                      ? "Done"
-                      : lastCommitment.outcome === "partially"
-                      ? "Partial"
-                      : "Missed"}
-                  </span>
+              {momentumLabel && (
+                <div className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+                  <TrendingUp className="h-3.5 w-3.5" /> {momentumLabel}
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Audit / Report CTA Banner — inside the card */}
+          {!auditCompleted ? (
+            <div className="mx-4 mt-4 md:mx-6 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-background to-background p-4">
+              <div>
+                <h3 className="font-heading font-bold text-foreground">Complete your Operating Audit</h3>
+                <p className="text-sm text-muted-foreground">Get clarity on your strengths, weaknesses, blind spots, and your 90-day plan</p>
+              </div>
+              <Button variant="hero" size="sm" onClick={() => navigate("/audit")}>
+                Start audit <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           ) : (
-            <div className="flex items-center justify-between gap-4">
-              <p className="text-sm text-muted-foreground">What's your one thing this week?</p>
-              <Button variant="outline" size="sm" onClick={() => setShowOneThingModal(true)}>
-                Set it
+            <div className="mx-4 mt-4 md:mx-6 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-background to-background p-4">
+              <div>
+                <h3 className="font-heading font-bold text-foreground">Your Operating Report is ready</h3>
+                <p className="text-sm text-muted-foreground">Review your patterns, blind spots, forced choice, and 90-day plan</p>
+                {(planTier === "premium" || planTier === "coach") && (
+                  <button
+                    className="mt-1 flex items-center gap-1.5 text-xs text-primary hover:underline"
+                    onClick={() => navigate("/report")}
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {reauditEligible
+                      ? "Re-audit available"
+                      : reauditNextDate
+                      ? `Re-audit available ${format(reauditNextDate, "MMM d")}`
+                      : null}
+                  </button>
+                )}
+              </div>
+              <Button variant="hero" size="sm" onClick={() => navigate("/report")}>
+                View report <FileText className="ml-2 h-4 w-4" />
               </Button>
             </div>
           )}
-        </div>
 
-        {/* One Thing Modal */}
-        {showOneThingModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowOneThingModal(false)}>
-            <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-heading font-bold text-foreground">What's the one thing this week?</h3>
-              <p className="text-sm text-muted-foreground">If you actually did this — and nothing else — it would make the most difference.</p>
-              <Input
-                value={oneThingInput}
-                onChange={(e) => setOneThingInput(e.target.value)}
-                placeholder="This week I will..."
-                onKeyDown={(e) => e.key === "Enter" && handleSaveOneThing()}
-                autoFocus
-              />
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={() => setShowOneThingModal(false)}>Cancel</Button>
-                <Button variant="hero" className="flex-1" onClick={handleSaveOneThing} disabled={oneThingSaving || !oneThingInput.trim()}>
-                  {oneThingSaving ? "Saving..." : "Save"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={<Flame className="h-5 w-5 text-accent" />} label="Streak" value={`${streak} days`} />
-          <StatCard icon={<TrendingUp className="h-5 w-5 text-primary" />} label="Avg focus" value={avgMood} />
-          <StatCard icon={<BarChart3 className="h-5 w-5 text-primary" />} label="Avg energy" value={avgEnergy} />
-          <StatCard icon={<AlertTriangle className="h-5 w-5 text-accent" />} label="Drift flags" value={String(driftCount)} />
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
-          <div className="space-y-6">
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h3 className="font-heading font-bold text-foreground flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" /> Operating Trend
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {hasTrendData
-                      ? `Showing your last ${trendData.length} check-ins based on your ${tierSummary.label} tier.`
-                      : "Complete a few honest check-ins to unlock a real trendline."}
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-                  <Sparkles className="h-3.5 w-3.5" /> {tierSummary.badge}
-                </div>
-              </div>
-
-              {hasTrendData ? (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData}>
-                      <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={24} />
-                      <YAxis domain={[0, 10]} axisLine={false} tickLine={false} width={26} />
-                      <Tooltip
-                        cursor={{ stroke: "hsl(var(--border))", strokeDasharray: "4 4" }}
-                        contentStyle={{
-                          borderRadius: 12,
-                          border: "1px solid hsl(var(--border))",
-                          background: "hsl(var(--background))",
-                        }}
-                      />
-                      <Line type="monotone" dataKey="focus" name="Focus" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 0 }} connectNulls />
-                      <Line type="monotone" dataKey="energy" name="Energy" stroke="hsl(var(--accent))" strokeWidth={3} dot={{ r: 0 }} connectNulls />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
-                  Your trend view populates from real check-ins, not filler data. Start one focused check-in and the dashboard will begin plotting your operating rhythm over time.
-                </div>
-              )}
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <TrendCallout label="Trend window" value={tierSummary.windowLabel} tone="primary" />
-                <TrendCallout label="Drift flags" value={driftCount ? `${driftCount} detected` : "None flagged"} tone="accent" />
-                <TrendCallout label="Cadence" value={profile?.check_in_cadence ? capitalize(profile.check_in_cadence) : "Set during onboarding"} tone="neutral" />
-                {activeLens && <TrendCallout label="Adaptive lens" value={formatLensLabel(activeLens)} tone="primary" />}
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <MoodEnergyChart checkIns={checkIns} />
-              <DriftTracker checkIns={checkIns} />
-            </div>
-
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <h3 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" /> Current Commitments
-              </h3>
-              {recentCommitments.length > 0 ? (
-                <ul className="space-y-3">
-                  {recentCommitments.map((c, i) => (
-                    <li key={i} className="flex items-start gap-3 rounded-xl border border-border/70 bg-background/70 px-4 py-3 text-sm">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span className="text-foreground">{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">No commitments yet. Complete a check-in to set your next disciplined actions.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <h3 className="font-heading font-bold text-foreground mb-3 flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" /> Tier Access
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">Your dashboard mirrors what your current plan actually includes without inventing signal that doesn't exist.</p>
-              <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 mb-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Current tier</p>
-                    <p className="font-heading text-xl font-bold text-foreground">{tierSummary.label}</p>
-                  </div>
-                  <div className="rounded-full bg-background px-3 py-1 text-xs font-medium text-primary shadow-sm">{tierSummary.badge}</div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {tierSummary.features.map((feature) => (
-                  <div key={feature.label} className="flex items-center justify-between rounded-xl border border-border/70 bg-background/70 px-4 py-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      {feature.available ? <CheckCircle className="h-4 w-4 text-primary" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
-                      <span className="text-foreground">{feature.label}</span>
+          {/* Main grid — matches hero mock layout */}
+          <div className="grid gap-4 p-4 md:grid-cols-[1.6fr_0.95fr] md:p-6">
+            {/* Left column */}
+            <div className="space-y-4">
+              {/* Top row: Momentum trend + Operating scorecard */}
+              <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                {/* Momentum trend chart */}
+                <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Momentum trend</p>
+                      <p className="text-xs text-muted-foreground">Focus and energy from recent check-ins</p>
                     </div>
-                    <span className={`text-xs font-medium ${feature.available ? "text-primary" : "text-muted-foreground"}`}>{feature.status}</span>
+                    <div className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                      Last {trendData.length || trendWindow} {trendData.length === 1 ? "check-in" : "check-ins"}
+                    </div>
                   </div>
-                ))}
+                  <div className="h-56">
+                    {hasTrendData ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trendData}>
+                          <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="label" axisLine={false} tickLine={false} />
+                          <YAxis domain={[0, 100]} axisLine={false} tickLine={false} width={28} />
+                          <Tooltip
+                            cursor={{ stroke: "hsl(var(--border))", strokeDasharray: "4 4" }}
+                            contentStyle={{
+                              borderRadius: 12,
+                              border: "1px solid hsl(var(--border))",
+                              background: "hsl(var(--background))",
+                            }}
+                          />
+                          <Line type="monotone" dataKey="focus" name="Focus" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 0 }} activeDot={{ r: 5 }} connectNulls />
+                          <Line type="monotone" dataKey="energy" name="Energy" stroke="hsl(var(--accent))" strokeWidth={3} dot={{ r: 0 }} activeDot={{ r: 5 }} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground text-center">
+                        Your trend view populates from real check-ins, not filler data. Complete a check-in to start plotting your rhythm.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Operating scorecard */}
+                <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
+                  <div className="mb-4 flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold text-foreground">Operating scorecard</p>
+                  </div>
+                  <div className="space-y-4">
+                    {scorecardItems.map((metric) => (
+                      <div key={metric.label} className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{metric.label}</span>
+                          <span className="font-medium text-foreground">{metric.value !== null ? `${metric.value}%` : "—"}</span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${metric.label === "Drift" ? "bg-accent" : "bg-gradient-primary"}`}
+                            style={{ width: `${metric.value ?? 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom row: 90-day plan / This Week + Coach summary */}
+              <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+                {/* This Week / Commitments */}
+                <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">This week's focus</p>
+                      <p className="text-xs text-muted-foreground">Commitments tied to your operating sprint</p>
+                    </div>
+                    <Target className="h-4 w-4 text-primary" />
+                  </div>
+
+                  {/* The one thing */}
+                  {currentCommitment ? (
+                    <div className="mb-3 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
+                      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        01
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{currentCommitment.commitment}</p>
+                        <p className="text-xs text-muted-foreground">This week's one thing</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-dashed border-border/70 bg-background/70 px-3 py-3">
+                      <p className="text-sm text-muted-foreground">What's your one thing this week?</p>
+                      <Button variant="outline" size="sm" onClick={() => setShowOneThingModal(true)}>Set it</Button>
+                    </div>
+                  )}
+
+                  {/* Recent commitments from check-in */}
+                  <div className="space-y-2">
+                    {recentCommitments.slice(0, 2).map((commitment, index) => (
+                      <div key={commitment} className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/70 px-3 py-3">
+                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                          0{index + 2}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{commitment}</p>
+                          <p className="text-xs text-muted-foreground">From latest check-in</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {lastCommitment?.outcome && (
+                    <div className="mt-3 flex items-center gap-1.5">
+                      <Circle
+                        className={`h-2.5 w-2.5 fill-current ${
+                          lastCommitment.outcome === "yes"
+                            ? "text-green-500"
+                            : lastCommitment.outcome === "partially"
+                            ? "text-yellow-500"
+                            : "text-destructive"
+                        }`}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        Last week: {lastCommitment.outcome === "yes" ? "Done" : lastCommitment.outcome === "partially" ? "Partial" : "Missed"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coach summary */}
+                <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Coach summary</p>
+                      <p className="text-xs text-muted-foreground">Quick-glance context for your next conversation</p>
+                    </div>
+                    {driftRate !== null && driftRate > 30 && (
+                      <div className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">1 open risk</div>
+                    )}
+                  </div>
+
+                  {/* Operating focus */}
+                  <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Current operating focus</p>
+                    <p className="mt-1 text-sm font-medium text-foreground">
+                      {northStarFocus || "Complete your audit to generate a focused operating plan."}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {coachingSignals.map((signal) => (
+                      <div key={signal.label} className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2 text-sm">
+                        <span className="text-muted-foreground">{signal.label}</span>
+                        <span className="font-medium text-foreground">{signal.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border p-6">
-              <h3 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" /> Recent Check-ins
-              </h3>
-              {checkIns.length > 0 ? (
-                <ul className="space-y-3">
-                  {checkIns.slice(0, 5).map((c) => (
-                    <li key={c.id} className="flex items-center justify-between gap-3 text-sm border-b border-border pb-3 last:border-0">
-                      <span className="text-muted-foreground">{format(new Date(c.created_at), "MMM d, h:mm a")}</span>
-                      <div className="flex items-center gap-3 flex-wrap justify-end">
-                        <span className="text-foreground">Focus: {c.mood_score ?? "—"}</span>
-                        <span className="text-foreground">Energy: {c.energy_score ?? "—"}</span>
-                        {c.drift_detected && <AlertTriangle className="h-4 w-4 text-accent" />}
-                      </div>
-                    </li>
+            {/* Right column */}
+            <div className="space-y-4">
+              {/* Execution quality — area chart */}
+              <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-background to-background p-4 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Weekly review</p>
+                    <p className="text-lg font-semibold text-foreground">Execution quality</p>
+                  </div>
+                  <div className="rounded-full bg-background px-3 py-1 text-sm font-semibold text-primary shadow-sm">
+                    {executionScore !== null ? `${executionScore}%` : "—"}
+                  </div>
+                </div>
+                <div className="h-36">
+                  {hasTrendData ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData}>
+                        <defs>
+                          <linearGradient id="dashArea" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="label" axisLine={false} tickLine={false} />
+                        <Tooltip
+                          contentStyle={{
+                            borderRadius: 12,
+                            border: "1px solid hsl(var(--border))",
+                            background: "hsl(var(--background))",
+                          }}
+                        />
+                        <Area type="monotone" dataKey="focus" name="Focus" stroke="hsl(var(--primary))" fill="url(#dashArea)" strokeWidth={2.5} connectNulls />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      Check-in data needed
+                    </div>
+                  )}
+                </div>
+                {hasTrendData && (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                    <ArrowUpRight className="h-3.5 w-3.5 text-primary" /> Trend reflects follow-through across the current sprint.
+                  </div>
+                )}
+              </div>
+
+              {/* Quick stats row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-border/70 bg-card/90 p-3 text-center">
+                  <Flame className="h-5 w-5 text-accent mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{streak}</p>
+                  <p className="text-xs text-muted-foreground">Day streak</p>
+                </div>
+                <div className="rounded-2xl border border-border/70 bg-card/90 p-3 text-center">
+                  <AlertTriangle className="h-5 w-5 text-accent mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{driftCount}</p>
+                  <p className="text-xs text-muted-foreground">Drift flags</p>
+                </div>
+              </div>
+
+              {/* Next actions */}
+              <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Next actions</p>
+                </div>
+                <div className="space-y-2">
+                  {nextActions.slice(0, 3).map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center justify-between rounded-xl border border-border/60 bg-background/80 px-3 py-2.5 text-sm cursor-pointer hover:border-primary/30 transition-colors"
+                      onClick={() => {
+                        if (item.includes("audit")) navigate("/audit");
+                        else if (item.includes("report")) navigate("/report");
+                        else if (item.includes("check-in")) navigate("/check-in");
+                        else if (item.includes("one thing")) setShowOneThingModal(true);
+                      }}
+                    >
+                      <span className="text-foreground">{item}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
                   ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">No check-ins yet. Start one when you can answer honestly.</p>
-              )}
+                </div>
+              </div>
+
+              {/* Recent check-ins */}
+              <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Recent check-ins</p>
+                </div>
+                {checkIns.length > 0 ? (
+                  <div className="space-y-2">
+                    {checkIns.slice(0, 4).map((c) => (
+                      <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 py-2 text-sm">
+                        <span className="text-muted-foreground">{format(new Date(c.created_at), "MMM d")}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-foreground">F: {c.mood_score ?? "—"}</span>
+                          <span className="text-foreground">E: {c.energy_score ?? "—"}</span>
+                          {c.drift_detected && <AlertTriangle className="h-3.5 w-3.5 text-accent" />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No check-ins yet. Start one when you can answer honestly.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-
       </div>
+
+      {/* One Thing Modal */}
+      {showOneThingModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowOneThingModal(false)}>
+          <div className="bg-card rounded-2xl border border-border p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-heading font-bold text-foreground">What's the one thing this week?</h3>
+            <p className="text-sm text-muted-foreground">If you actually did this — and nothing else — it would make the most difference.</p>
+            <Input
+              value={oneThingInput}
+              onChange={(e) => setOneThingInput(e.target.value)}
+              placeholder="This week I will..."
+              onKeyDown={(e) => e.key === "Enter" && handleSaveOneThing()}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowOneThingModal(false)}>Cancel</Button>
+              <Button variant="hero" className="flex-1" onClick={handleSaveOneThing} disabled={oneThingSaving || !oneThingInput.trim()}>
+                {oneThingSaving ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="bg-card rounded-2xl border border-border p-4">
-      <div className="flex items-center gap-2 mb-2">{icon}<span className="text-xs text-muted-foreground">{label}</span></div>
-      <p className="font-heading text-2xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function TrendCallout({ label, value, tone }: { label: string; value: string; tone: "primary" | "accent" | "neutral" }) {
-  const toneClass = tone === "primary"
-    ? "border-primary/20 bg-primary/5 text-primary"
-    : tone === "accent"
-      ? "border-accent/20 bg-accent/5 text-accent"
-      : "border-border bg-muted/30 text-foreground";
-
-  return (
-    <div className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
-      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-medium">{value}</p>
-    </div>
-  );
-}
-
-function getTierSummary(planTier: string) {
-  switch (planTier) {
-    case "premium":
-      return {
-        label: "Premium",
-        badge: "Extended trends",
-        windowLabel: "Last 10 check-ins",
-        features: [
-          { label: "Momentum chart", status: "10-point view", available: true },
-          { label: "Commitment tracking", status: "Included", available: true },
-          { label: "AI coaching chat", status: "Included", available: true },
-        ],
-      };
-    case "coach":
-      return {
-        label: "Coach",
-        badge: "Full visibility",
-        windowLabel: "Last 10 check-ins",
-        features: [
-          { label: "Momentum chart", status: "10-point view", available: true },
-          { label: "Client-facing workflows", status: "Included", available: true },
-          { label: "AI coaching chat", status: "Included", available: true },
-        ],
-      };
-    case "pro":
-      return {
-        label: "Pro",
-        badge: "Balanced visibility",
-        windowLabel: "Last 7 check-ins",
-        features: [
-          { label: "Momentum chart", status: "7-point view", available: true },
-          { label: "Commitment tracking", status: "Included", available: true },
-          { label: "Extended trend history", status: "Premium tier", available: false },
-        ],
-      };
-    default:
-      return {
-        label: "Free",
-        badge: "Starter view",
-        windowLabel: "Last 4 check-ins",
-        features: [
-          { label: "Momentum chart", status: "4-point view", available: true },
-          { label: "Commitment tracking", status: "Included", available: true },
-          { label: "Extended trend history", status: "Upgrade required", available: false },
-        ],
-      };
-  }
-}
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
