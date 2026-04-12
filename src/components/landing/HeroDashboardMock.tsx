@@ -1,5 +1,6 @@
 import { ArrowUpRight, BarChart3, CheckCircle2, Target, TrendingUp } from "lucide-react";
 import { brandLogo as logo } from "@/lib/brand";
+import { Link } from "react-router-dom";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const momentumData = [
@@ -39,7 +40,9 @@ const HeroDashboardMock = () => {
         <div className="relative rounded-[28px] border border-white/50 bg-background/90 shadow-[0_30px_120px_rgba(15,23,42,0.14)] backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 md:px-6">
             <div className="flex items-center gap-3">
-              <img src={logo} alt="Intentus" className="h-8 w-auto" />
+              <Link to="/" className="flex items-center">
+                <img src={logo} alt="Intentus" className="h-8 w-auto cursor-pointer" />
+              </Link>
               <div>
                 <p className="text-sm font-semibold text-foreground">Intentus Operating Dashboard</p>
                 <p className="text-xs text-muted-foreground">Weekly executive snapshot</p>

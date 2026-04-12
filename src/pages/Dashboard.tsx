@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -242,7 +242,9 @@ const Dashboard = () => {
           {/* Header bar — logo + title + momentum badge */}
           <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 md:px-6">
             <div className="flex items-center gap-3">
-              <img src={logo} alt="Intentus" className="h-8 w-auto" />
+              <Link to="/" className="flex items-center">
+                <img src={logo} alt="Intentus" className="h-8 w-auto cursor-pointer" />
+              </Link>
               <div>
                 <p className="text-sm font-semibold text-foreground">
                   Intentus Operating Dashboard
