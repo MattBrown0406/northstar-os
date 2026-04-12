@@ -1,4 +1,5 @@
-import { ArrowUpRight, BarChart3, CheckCircle2, Compass, Target, TrendingUp } from "lucide-react";
+import { ArrowUpRight, BarChart3, CheckCircle2, Target, TrendingUp } from "lucide-react";
+import logo from "@/assets/intentus-logo.png";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const momentumData = [
@@ -38,9 +39,7 @@ const HeroDashboardMock = () => {
         <div className="relative rounded-[28px] border border-white/50 bg-background/90 shadow-[0_30px_120px_rgba(15,23,42,0.14)] backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 md:px-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-gradient-primary p-2 text-primary-foreground shadow-glow">
-                <Compass className="h-4 w-4" />
-              </div>
+              <img src={logo} alt="Intentus" className="h-8 w-auto" />
               <div>
                 <p className="text-sm font-semibold text-foreground">Intentus Operating Dashboard</p>
                 <p className="text-xs text-muted-foreground">Weekly executive snapshot</p>
