@@ -10,8 +10,7 @@ import { brandLogo as logo } from "@/lib/brand";
 import {
   Compass, LogOut, Users, Link2, Plus, Copy, Trash2,
   Eye, FileText, BarChart3, CheckCircle, Clock,
-  UserPlus, ChevronDown, ChevronUp, Activity, Crown
-
+  UserPlus, ChevronDown, ChevronUp, Activity, Crown, ArrowLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
