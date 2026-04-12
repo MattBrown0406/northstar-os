@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { brandLogo as logo } from "@/lib/brand";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
   FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
-  RefreshCw, ArrowUpRight, CheckCircle2,
+  RefreshCw, ArrowUpRight, CheckCircle2, Menu as MenuIcon,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
