@@ -141,7 +141,7 @@ const Coaching = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center">
-              <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
+              <img src={logo} alt="Intentus" className="h-10 w-auto object-contain" />
             </div>
           </div>
           <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens as any)}` : ""}</p>
