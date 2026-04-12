@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Compass } from "lucide-react";
+import logo from "@/assets/intentus-logo.png";
 
 const Footer = () => {
   return (
@@ -8,10 +8,7 @@ const Footer = () => {
         <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr_0.9fr]">
           <div>
             <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-gradient-primary p-1.5">
-                <Compass className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-heading text-lg font-bold text-foreground">Intentus</span>
+              <img src={logo} alt="Intentus" className="h-7 w-auto" />
             </div>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
               Accountability software for founders, executives, operators, and coach-led client programs. Built to turn an honest audit into a focused 90-day operating rhythm.
