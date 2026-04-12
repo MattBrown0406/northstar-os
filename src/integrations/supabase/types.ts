@@ -53,44 +53,6 @@ export type Database = {
         }
         Relationships: []
       }
-      commitment_callbacks: {
-        Row: {
-          check_in_id: string
-          created_at: string
-          id: string
-          outcome: string
-          previous_commitment_id: string | null
-          previous_commitment_text: string | null
-          user_id: string
-        }
-        Insert: {
-          check_in_id: string
-          created_at?: string
-          id?: string
-          outcome: string
-          previous_commitment_id?: string | null
-          previous_commitment_text?: string | null
-          user_id: string
-        }
-        Update: {
-          check_in_id?: string
-          created_at?: string
-          id?: string
-          outcome?: string
-          previous_commitment_id?: string | null
-          previous_commitment_text?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commitment_callbacks_previous_commitment_id_fkey"
-            columns: ["previous_commitment_id"]
-            isOneToOne: false
-            referencedRelation: "weekly_commitments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       check_ins: {
         Row: {
           ai_response: Json | null
@@ -127,39 +89,6 @@ export type Database = {
           mood_score?: number | null
           user_id?: string
           wins?: string[] | null
-        }
-        Relationships: []
-      }
-      weekly_commitments: {
-        Row: {
-          commitment: string
-          completed_at: string | null
-          created_at: string
-          id: string
-          outcome: string | null
-          reflection: string | null
-          user_id: string
-          week_start: string
-        }
-        Insert: {
-          commitment: string
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          outcome?: string | null
-          reflection?: string | null
-          user_id: string
-          week_start: string
-        }
-        Update: {
-          commitment?: string
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          outcome?: string | null
-          reflection?: string | null
-          user_id?: string
-          week_start?: string
         }
         Relationships: []
       }
@@ -267,6 +196,44 @@ export type Database = {
           uses_count?: number
         }
         Relationships: []
+      }
+      commitment_callbacks: {
+        Row: {
+          check_in_id: string
+          created_at: string | null
+          id: string
+          outcome: string
+          previous_commitment_id: string | null
+          previous_commitment_text: string | null
+          user_id: string
+        }
+        Insert: {
+          check_in_id: string
+          created_at?: string | null
+          id?: string
+          outcome: string
+          previous_commitment_id?: string | null
+          previous_commitment_text?: string | null
+          user_id: string
+        }
+        Update: {
+          check_in_id?: string
+          created_at?: string | null
+          id?: string
+          outcome?: string
+          previous_commitment_id?: string | null
+          previous_commitment_text?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commitment_callbacks_previous_commitment_id_fkey"
+            columns: ["previous_commitment_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_commitments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -381,6 +348,39 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_commitments: {
+        Row: {
+          commitment: string
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          outcome: string | null
+          reflection: string | null
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          commitment: string
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          outcome?: string | null
+          reflection?: string | null
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          commitment?: string
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          outcome?: string | null
+          reflection?: string | null
+          user_id?: string
+          week_start?: string
         }
         Relationships: []
       }
