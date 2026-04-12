@@ -4,10 +4,10 @@ import logo from "@/assets/intentus-logo.png";
 
 const Navbar = () => {
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Intentus" className="h-14 w-auto" />
+    <nav className="fixed left-0 right-0 top-0 z-50 border-none" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
+      <div className="container mx-auto flex h-20 items-end justify-between px-4 pb-2">
+        <Link to="/" className="flex items-end">
+          <img src={logo} alt="Intentus" className="h-16 w-auto object-contain" />
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
