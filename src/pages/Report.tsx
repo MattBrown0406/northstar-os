@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -235,6 +236,8 @@ const Report = () => {
           </div>
         </div>
       </nav>
+
+      <AppBreadcrumb />
 
       <div className="container mx-auto px-4 py-8 max-w-3xl print:max-w-none print:py-0">
         {/* Print header */}
