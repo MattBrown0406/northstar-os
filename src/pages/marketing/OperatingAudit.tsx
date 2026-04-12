@@ -6,14 +6,8 @@ const OperatingAudit = () => {
       title="Operating audit software"
       description="Run an evidence-based operating audit for leadership performance, execution gaps, scoreboards, blind spots, and the next 90-day plan."
       path="/operating-audit"
-      eyebrow="Use case page"
       heading="Run an honest operating audit before another quarter disappears into noise"
       intro="Intentus starts with a practical operating audit that looks at metrics, habits, priorities, decision-making, and contradictions. The point is not to flatter you. The point is to give you a useful baseline for the next 90 days."
-      bullets={[
-        "Targets search intent around operating audits and leadership assessment software.",
-        "Explains what the audit covers and why it matters before planning.",
-        "Supports trust with practical language instead of vague transformation claims.",
-      ]}
       sections={[
         {
           title: "A better baseline than self-esteem surveys",
