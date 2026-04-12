@@ -10,8 +10,7 @@ import { brandLogo as logo } from "@/lib/brand";
 import {
   Compass, LogOut, Users, Link2, Plus, Copy, Trash2,
   Eye, FileText, BarChart3, CheckCircle, Clock,
-  UserPlus, ChevronDown, ChevronUp, Activity, Crown
-
+  UserPlus, ChevronDown, ChevronUp, Activity, Crown, ArrowLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -181,11 +180,13 @@ const CoachDashboard = () => {
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="Intentus" className="h-10 w-auto" />
-            <span className="font-heading text-lg font-bold text-foreground">Coach Dashboard</span>
+            <img src={logo} alt="Intentus" className="h-8 w-auto md:h-10" />
+            <span className="font-heading text-base font-bold text-foreground sm:text-lg">Coach Dashboard</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>My Dashboard</Button>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="px-2 sm:px-3">
+              <ArrowLeft className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">My Dashboard</span>
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>

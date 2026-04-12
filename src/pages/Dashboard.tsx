@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { brandLogo as logo } from "@/lib/brand";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
   FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
-  RefreshCw, ArrowUpRight, CheckCircle2,
+  RefreshCw, ArrowUpRight, CheckCircle2, Menu as MenuIcon,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -207,12 +208,14 @@ const Dashboard = () => {
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2">
             {profile?.plan_tier === "coach" && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/coach")} className="border-primary text-primary">
+              <Button variant="outline" size="sm" onClick={() => navigate("/coach")} className="border-primary text-primary hidden md:inline-flex">
                 <Users className="h-4 w-4 mr-1" /> Coach Portal
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/coaching")}>
@@ -233,6 +236,78 @@ const Dashboard = () => {
             )}
             <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
           </div>
+
+          {/* Mobile nav */}
+          <div className="flex md:hidden items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/check-in")} title="Check-in">
+              <CheckCircle className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/coaching")} title="Coach">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MenuIcon className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64 bg-background p-0">
+                <div className="flex flex-col h-full">
+                  <div className="border-b border-border px-5 py-4">
+                    <img src={logo} alt="Intentus" className="h-8 w-auto" />
+                  </div>
+                  <nav className="flex flex-col gap-1 px-4 py-4">
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/audit")}>
+                        <Target className="h-4 w-4 mr-2" /> Audit
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/check-in")}>
+                        <CheckCircle className="h-4 w-4 mr-2" /> Check-in
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/coaching")}>
+                        <MessageSquare className="h-4 w-4 mr-2" /> AI Coach
+                      </Button>
+                    </SheetClose>
+                    {auditCompleted && (
+                      <SheetClose asChild>
+                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/report")}>
+                          <FileText className="h-4 w-4 mr-2" /> Report
+                        </Button>
+                      </SheetClose>
+                    )}
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/settings")}>
+                        <Settings className="h-4 w-4 mr-2" /> Settings
+                      </Button>
+                    </SheetClose>
+                    {profile?.plan_tier === "coach" && (
+                      <SheetClose asChild>
+                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/coach")}>
+                          <Users className="h-4 w-4 mr-2" /> Coach Portal
+                        </Button>
+                      </SheetClose>
+                    )}
+                    {isAdmin && (
+                      <SheetClose asChild>
+                        <Button variant="ghost" className="justify-start" onClick={() => navigate("/admin")}>
+                          <Shield className="h-4 w-4 mr-2" /> Admin
+                        </Button>
+                      </SheetClose>
+                    )}
+                  </nav>
+                  <div className="mt-auto border-t border-border px-4 py-4">
+                    <Button variant="ghost" className="w-full justify-start text-destructive" onClick={signOut}>
+                      <LogOut className="h-4 w-4 mr-2" /> Sign out
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </nav>
 
@@ -243,17 +318,17 @@ const Dashboard = () => {
         <div className="rounded-[28px] border border-white/50 bg-background/90 shadow-[0_30px_120px_rgba(15,23,42,0.14)] backdrop-blur-xl">
 
           {/* Header bar — logo + title + momentum badge */}
-          <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 md:px-6">
+          <div className="flex flex-col gap-2 border-b border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center">
-                <img src={logo} alt="Intentus" className="h-8 w-auto cursor-pointer" />
+                <img src={logo} alt="Intentus" className="h-7 w-auto cursor-pointer sm:h-8" />
               </Link>
               <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Intentus Operating Dashboard
+                <p className="text-xs font-semibold text-foreground sm:text-sm">
+                  Operating Dashboard
                   {profile?.display_name ? ` — ${profile.display_name}` : ""}
                 </p>
-                <p className="text-xs text-muted-foreground">Weekly executive snapshot</p>
+                <p className="text-[10px] text-muted-foreground sm:text-xs">Weekly executive snapshot</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
