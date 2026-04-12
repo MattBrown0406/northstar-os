@@ -206,20 +206,20 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Intentus" className="h-10 w-auto" />
+        <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:h-16">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src={logo} alt="Intentus" className="h-8 w-auto sm:h-10" />
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-gold" />
               <span className="font-heading text-sm font-semibold text-muted-foreground">Admin</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> My Dashboard
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="px-2 sm:px-3">
+              <ArrowLeft className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">My Dashboard</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/coach")}>
-              <Crown className="h-4 w-4 mr-1" /> Coach
+            <Button variant="ghost" size="sm" onClick={() => navigate("/coach")} className="px-2 sm:px-3">
+              <Crown className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Coach</span>
             </Button>
             <Button variant="ghost" size="icon" onClick={signOut}>
               <LogOut className="h-4 w-4" />

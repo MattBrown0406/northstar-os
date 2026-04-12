@@ -224,14 +224,14 @@ const Report = () => {
             <Link to="/" className="flex items-center">
               <img src={logo} alt="Intentus" className="h-7 w-auto cursor-pointer" />
             </Link>
-            <span className="font-heading text-lg font-bold text-foreground">Operating Report</span>
+            <span className="font-heading text-base font-bold text-foreground sm:text-lg">Operating Report</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Dashboard
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="px-2 sm:px-3">
+              <ArrowLeft className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Dashboard</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-1" /> Print / PDF
+            <Button variant="outline" size="sm" onClick={() => window.print()} className="px-2 sm:px-3">
+              <Printer className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Print / PDF</span>
             </Button>
           </div>
         </div>

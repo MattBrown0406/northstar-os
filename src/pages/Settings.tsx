@@ -138,25 +138,25 @@ const Settings = () => {
       {/* Nav */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2">
               <SettingsIcon className="h-4 w-4 text-muted-foreground" />
-              <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">
+              <span className="font-heading text-lg font-extrabold tracking-tight text-foreground uppercase sm:text-xl">
                 Intentus
               </span>
             </div>
           </div>
-          <Button variant="hero" size="sm" onClick={handleSave} disabled={saving}>
+          <Button variant="hero" size="sm" onClick={handleSave} disabled={saving} className="px-3 text-xs sm:text-sm sm:px-4">
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Saving…
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" /> <span className="hidden sm:inline">Saving…</span>
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-1" /> Save changes
+                <Save className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Save changes</span>
               </>
             )}
           </Button>
