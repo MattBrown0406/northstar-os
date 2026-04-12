@@ -132,6 +132,21 @@
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+  .text-gradient-gold {
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-gradient-gold {
+    background: var(--gold-gradient);
+  }
+  .border-gold {
+    border-color: hsl(var(--gold) / 0.2);
+  }
 }
 
 @media print {
