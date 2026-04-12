@@ -42,6 +42,7 @@ interface CheckIn {
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isAdmin } = useAdminCheck();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [auditCompleted, setAuditCompleted] = useState(false);
