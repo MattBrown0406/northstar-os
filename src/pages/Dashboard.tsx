@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -234,6 +235,8 @@ const Dashboard = () => {
           </div>
         </div>
       </nav>
+
+      <AppBreadcrumb />
 
       <div className="relative container mx-auto px-4 py-6 max-w-6xl">
         {/* Dashboard card — mirrors the hero mock container */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import CoachBrandingSettings from "@/components/coach/CoachBrandingSettings";
 import { useNavigate } from "react-router-dom";
+import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -189,6 +190,8 @@ const CoachDashboard = () => {
           </div>
         </div>
       </nav>
+
+      <AppBreadcrumb />
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-8">

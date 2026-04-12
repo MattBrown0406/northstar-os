@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -226,6 +227,8 @@ const Admin = () => {
           </div>
         </div>
       </header>
+
+      <AppBreadcrumb />
 
       <main className="container mx-auto px-4 py-8">
         {/* Stats row */}

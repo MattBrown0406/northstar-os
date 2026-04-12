@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -384,6 +385,8 @@ const Audit = () => {
           <div className="h-full bg-gradient-primary transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
       </div>
+
+      <AppBreadcrumb />
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto">
