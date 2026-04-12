@@ -7,7 +7,7 @@ const Navbar = () => {
     <nav className="fixed left-0 right-0 top-0 z-50 bg-glass">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Intentus" className="h-16 w-auto" />
+          <img src={logo} alt="Intentus" className="h-24 w-auto" />
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
