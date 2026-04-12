@@ -5,7 +5,7 @@ import HeroDashboardMock from "@/components/landing/HeroDashboardMock";
 
 const HeroSection = () => {
   return (
-    <section className="relative overflow-hidden pb-20 pt-32">
+    <section className="relative overflow-hidden pb-12 pt-24 sm:pb-20 sm:pt-32">
       <div className="absolute inset-0 bg-gradient-subtle opacity-60" />
       <div className="absolute right-0 top-20 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl" />
       <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-accent/5 blur-3xl" />
@@ -15,7 +15,7 @@ const HeroSection = () => {
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary animate-fade-up">
             Executive accountability software for founders, operators, leadership teams, and coach-led programs
           </div>
-          <h1 className="mb-6 font-heading text-5xl font-bold tracking-tight md:text-7xl animate-fade-up" style={{ animationDelay: "0.1s" }}>
+          <h1 className="mb-6 font-heading text-3xl font-bold tracking-tight sm:text-5xl md:text-7xl animate-fade-up" style={{ animationDelay: "0.1s" }}>
             <span className="text-foreground">Run a more honest</span>
             <br />
             <span className="text-gradient-gold">operating rhythm.</span>
