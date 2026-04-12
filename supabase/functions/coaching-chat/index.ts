@@ -55,7 +55,7 @@ serve(async (req) => {
     // Build rich context
     let userContext = `User: ${name}\nCoaching tone preference: ${tone}\n\n`;
 
-    const intentSummary = buildIntentProfileSummary((profile?.intent_profile as any) || null);
+    const intentSummary = buildIntentProfileSummary(null);
     userContext += `${intentSummary}\n\n`;
 
     if (report) {
