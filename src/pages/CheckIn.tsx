@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -525,6 +526,8 @@ const CheckIn = () => {
           <div className="h-full bg-gradient-primary transition-all duration-500" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
         </div>
       </div>
+
+      <AppBreadcrumb />
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg space-y-4">
