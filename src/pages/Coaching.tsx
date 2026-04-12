@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import logo from "@/assets/intentus-logo.png";
 import {
   Compass, Send, ArrowLeft, Loader2, MessageSquare,
   TrendingUp, AlertTriangle, Target, Sparkles
@@ -140,7 +141,7 @@ const Coaching = () => {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center">
-              <span className="font-heading text-xl font-extrabold tracking-tight text-foreground uppercase">Intentus</span>
+              <img src={logo} alt="Intentus" className="h-10 w-auto object-contain" />
             </div>
           </div>
           <p className="text-xs text-muted-foreground">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens as any)}` : ""}</p>
