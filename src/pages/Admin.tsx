@@ -5,12 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
   LogOut, ArrowLeft, Users, UserX, Crown,
   ClipboardCheck, FileText, MessageSquare, Calendar,
-  Shield
+  Shield, UserPlus, Send
 } from "lucide-react";
 import { brandLogo as logo } from "@/lib/brand";
 
