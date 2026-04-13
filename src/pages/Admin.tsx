@@ -286,6 +286,40 @@ const Admin = () => {
           ))}
         </div>
 
+        {/* Admin Invite */}
+        <div className="rounded-xl border border-border bg-card p-6 mb-8">
+          <h2 className="font-heading text-lg font-bold text-foreground flex items-center gap-2 mb-4">
+            <UserPlus className="h-5 w-5 text-primary" /> Invite a User
+          </h2>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Label className="text-xs">Name</Label>
+              <Input placeholder="Jane Doe" value={inviteName} onChange={(e) => setInviteName(e.target.value)} />
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs">Email</Label>
+              <Input type="email" placeholder="jane@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+            </div>
+            <div className="w-36">
+              <Label className="text-xs">Tier</Label>
+              <Select value={inviteTier} onValueChange={setInviteTier}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <Button onClick={handleAdminInvite} variant="hero" size="sm" disabled={inviteLoading}>
+                <Send className="h-4 w-4 mr-1" /> {inviteLoading ? "Sending…" : "Send Invite"}
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">This sends an email invitation. The user will not be linked to any coach.</p>
+        </div>
+
         {/* Tabs */}
         <Tabs defaultValue="active" className="space-y-4">
           <TabsList className="grid w-full max-w-md grid-cols-3">
