@@ -139,6 +139,29 @@ const Admin = () => {
     fetchUsers();
   };
 
+  const handleAdminInvite = async () => {
+    if (!inviteEmail || !inviteName) {
+      toast({ title: "Missing fields", description: "Email and name are required.", variant: "destructive" });
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("invite-user", {
+        body: { email: inviteEmail, display_name: inviteName, plan_tier: inviteTier },
+      });
+      if (error) throw error;
+      toast({ title: "Invite sent!", description: `${inviteName} will receive an email to set up their account.` });
+      setInviteEmail("");
+      setInviteName("");
+      setInviteTier("free");
+      fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Invite failed", description: err.message || "Something went wrong", variant: "destructive" });
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   if (adminLoading || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
