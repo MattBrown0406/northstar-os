@@ -47,9 +47,14 @@ const Admin = () => {
   const { signOut } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, active: 0, closed: 0, coaches: 0 });
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteTier, setInviteTier] = useState("free");
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   useEffect(() => {
     if (adminLoading) return;
