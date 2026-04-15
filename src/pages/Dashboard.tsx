@@ -381,6 +381,17 @@ const Dashboard = () => {
             </div>
           )}
 
+          {/* Check-in CTA */}
+          <div className="mx-4 mt-4 md:mx-6">
+            <Button
+              variant="hero"
+              className="w-full sm:w-auto"
+              onClick={() => navigate("/check-in")}
+            >
+              <CheckCircle className="h-5 w-5 mr-2" /> Start Check-in
+            </Button>
+          </div>
+
           {/* Main grid — matches hero mock layout */}
           <div className="grid gap-4 p-4 md:grid-cols-[1.6fr_0.95fr] md:p-6">
             {/* Left column */}
