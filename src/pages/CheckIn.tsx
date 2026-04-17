@@ -287,10 +287,11 @@ const CheckIn = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
-    if (hasThinCheckIn()) {
-      setShowCenteringGuide(true);
+    if (hasThinCheckIn() && !showThinPrompt) {
+      setShowThinPrompt(true);
       return;
     }
+    setShowThinPrompt(false);
     setLoading(true);
 
     // 1. Insert check-in
