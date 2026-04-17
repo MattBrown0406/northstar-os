@@ -8,6 +8,8 @@ import {
   Flame, CheckCircle, Clock
 } from "lucide-react";
 import { format } from "date-fns";
+import { SignalCoverage } from "@/components/coach/SignalCoverage";
+import { COACHING_QUESTIONS } from "@/lib/coaching-questions";
 
 interface CheckIn {
   id: string;
@@ -19,6 +21,7 @@ interface CheckIn {
   drift_detected: boolean | null;
   created_at: string;
   ai_response: any;
+  extras: Record<string, unknown> | null;
 }
 
 const CoachClientCheckIns = () => {
@@ -93,6 +96,8 @@ const CoachClientCheckIns = () => {
           </div>
         </div>
 
+        {checkIns.length > 0 && <SignalCoverage checkIns={checkIns} />}
+
         {checkIns.length === 0 ? (
           <div className="text-center py-12">
             <Clock className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
@@ -147,13 +152,34 @@ const CoachClientCheckIns = () => {
                 )}
 
                 {ci.commitments && ci.commitments.length > 0 && (
-                  <div>
+                  <div className="mb-3">
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Commitments</p>
                     <ul className="space-y-1">
                       {ci.commitments.map((c, i) => (
                         <li key={i} className="text-sm text-foreground">• {c}</li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {ci.extras && typeof ci.extras === "object" && Object.keys(ci.extras).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border/60">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Coaching signals</p>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      {Object.entries(ci.extras).map(([key, val]) => {
+                        if (val === null || val === undefined || val === "") return null;
+                        const q = COACHING_QUESTIONS.find((qq) => qq.id === key);
+                        if (!q) return null;
+                        return (
+                          <div key={key} className="rounded-lg bg-muted/30 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{q.label}</p>
+                            <p className="text-sm text-foreground mt-0.5">
+                              {q.type === "scale" ? `${val}/10` : String(val)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
