@@ -17,11 +17,14 @@ import {
   recordCommitmentOutcome,
 } from "@/lib/commitments";
 
-const ScaleSelector = ({ value, onChange, label, emoji }: {
-  value: number; onChange: (n: number) => void; label: string; emoji: string[];
+const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
+  value: number; onChange: (n: number) => void; label: string; helper?: string; emoji: string[];
 }) => (
   <div className="space-y-4">
-    <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+    <div>
+      <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+      {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
+    </div>
     <div className="flex gap-1">
       {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
         <button
@@ -43,21 +46,39 @@ const ScaleSelector = ({ value, onChange, label, emoji }: {
   </div>
 );
 
-const ListInput = ({ label, items, onAdd, onRemove, inputVal, setInputVal, placeholder }: {
-  label: string; items: string[]; onAdd: () => void; onRemove: (index: number) => void;
+const ListInput = ({ label, helper, examples, items, onAdd, onRemove, inputVal, setInputVal, placeholder }: {
+  label: string; helper?: string; examples?: string[]; items: string[]; onAdd: () => void; onRemove: (index: number) => void;
   inputVal: string; setInputVal: (v: string) => void; placeholder: string;
 }) => (
   <div className="space-y-4">
-    <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
-    <div className="flex gap-2">
-      <Input value={inputVal} onChange={(e) => setInputVal(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onAdd()} placeholder={placeholder} className="flex-1" />
+    <div>
+      <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+      {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
+      {examples && examples.length > 0 && (
+        <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+          {examples.map((ex, i) => (
+            <li key={i} className="flex gap-2"><span className="text-primary">•</span><span className="italic">"{ex}"</span></li>
+          ))}
+        </ul>
+      )}
+    </div>
+    <div className="flex gap-2 items-start">
+      <Textarea
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onAdd(); }
+        }}
+        placeholder={placeholder}
+        className="flex-1 min-h-[90px] text-sm resize-none"
+      />
       <Button variant="outline" size="icon" onClick={onAdd}><Plus className="h-4 w-4" /></Button>
     </div>
+    <p className="text-xs text-muted-foreground -mt-2">Aim for a full sentence with context. Press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px]">⌘/Ctrl + Enter</kbd> or click + to add.</p>
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-          <span className="flex-1">{item}</span>
+        <li key={i} className="flex items-start gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+          <span className="flex-1 whitespace-pre-wrap">{item}</span>
           <button onClick={() => onRemove(i)}><X className="h-4 w-4 text-muted-foreground hover:text-destructive" /></button>
         </li>
       ))}
@@ -137,15 +158,19 @@ const OneThingStep = ({
   <div className="space-y-4">
     <div>
       <h3 className="font-heading text-lg font-bold text-foreground">What's the one thing this week?</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        If you actually did this — and nothing else — it would make the most difference.
+      <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+        If you actually did this — and nothing else — it would make the most difference. Not the easiest thing. Not the most urgent thing. The thing that, if you skip it, you'll feel it for weeks. Be specific enough that someone else could check whether you did it.
       </p>
+      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+        <li className="flex gap-2"><span className="text-primary">•</span><span className="italic">"This week I will sit down and write the one-page strategic narrative I've been avoiding, and share it with two people for honest feedback."</span></li>
+        <li className="flex gap-2"><span className="text-primary">•</span><span className="italic">"This week I will have the direct conversation with my Head of Sales about the underperformance — by Wednesday, in person."</span></li>
+      </ul>
     </div>
     <Textarea
       value={oneThing}
       onChange={(e) => setOneThing(e.target.value)}
-      placeholder="This week I will..."
-      className="min-h-[120px] text-sm resize-none"
+      placeholder="This week I will…"
+      className="min-h-[140px] text-sm resize-none"
     />
   </div>
 );
@@ -523,22 +548,48 @@ const CheckIn = () => {
         ) : null;
       case 1:
         return <ScaleSelector value={mood} onChange={setMood} label="How focused and steady are you right now?"
+          helper="Be honest, not aspirational. Think about the last 48 hours: how clear is your head, how reactive vs. intentional have you been, how present are you for the people and decisions in front of you?"
           emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />;
       case 2:
         return <ScaleSelector value={energy} onChange={setEnergy} label="What's your disciplined execution energy level?"
+          helper="Not how busy you feel — how much capacity you have to do the hard, focused work that actually moves things forward. Are you sprinting, jogging, or running on fumes?"
           emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />;
       case 3:
-        return <ListInput label={getFocusPrompt(intentProfile)} items={wins}
+        return <ListInput
+          label={getFocusPrompt(intentProfile)}
+          helper="What actually moved? Be specific. Name the decision, the conversation, the shipped work — and why it mattered. Generic wins like 'had a good week' give your coach nothing to work with."
+          examples={[
+            "Closed the partnership conversation with X by getting clear on our deal-breakers — saved us 3 weeks of back-and-forth.",
+            "Shipped the v2 onboarding flow and watched 4 users go through it live; saw exactly where two of them stalled.",
+          ]}
+          items={wins}
           onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
-          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />;
+          inputVal={inputVal} setInputVal={setInputVal}
+          placeholder="What happened, what made it a win, and what does it tell you about your operating rhythm?" />;
       case 4:
-        return <ListInput label={getBlockerPrompt(intentProfile)} items={blockers}
+        return <ListInput
+          label={getBlockerPrompt(intentProfile)}
+          helper="What's actually in the way — and what's your honest read on why? Don't just name the symptom (e.g. 'no time'). Name the real friction: a decision you're avoiding, a person you haven't pushed, a habit that keeps slipping."
+          examples={[
+            "I keep delaying the hard conversation with my co-founder about role clarity — I'm telling myself it's timing, but really I don't want the conflict.",
+            "Our pipeline is stalling because I haven't decided which segment to double down on; I'm hedging instead of choosing.",
+          ]}
+          items={blockers}
           onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
-          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />;
+          inputVal={inputVal} setInputVal={setInputVal}
+          placeholder="What's blocking you, and what's the real reason underneath the surface reason?" />;
       case 5:
-        return <ListInput label={getCommitmentPrompt(intentProfile)} items={commitments}
+        return <ListInput
+          label={getCommitmentPrompt(intentProfile)}
+          helper="Specific, observable, and small enough to actually do this week. 'I will be more disciplined' is not a commitment. 'I will send the partnership decision email by Wednesday EOD' is. If a stranger read it on Sunday, could they tell whether you did it?"
+          examples={[
+            "By Thursday, I will book the 60-min strategy block with my exec team and send a one-page brief 24 hours ahead.",
+            "I will say no — in writing — to the two non-core opportunities sitting in my inbox by tomorrow.",
+          ]}
+          items={commitments}
           onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
-          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />;
+          inputVal={inputVal} setInputVal={setInputVal}
+          placeholder="What will you do, by when, and how will you know it's done?" />;
       case 6:
         return <OneThingStep oneThing={oneThing} setOneThing={setOneThing} />;
       default:
