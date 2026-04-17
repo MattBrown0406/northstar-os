@@ -166,6 +166,7 @@ const CheckIn = () => {
   const [aiDebrief, setAiDebrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [showCenteringGuide, setShowCenteringGuide] = useState(false);
+  const [showThinPrompt, setShowThinPrompt] = useState(false);
 
   // Commitment callback state
   const [previousCommitment, setPreviousCommitment] = useState<WeeklyCommitment | null>(null);
