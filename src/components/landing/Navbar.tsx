@@ -23,10 +23,10 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-none" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:h-20 md:items-end md:pb-2">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-none pt-[calc(env(safe-area-inset-top,0px)+12px)] md:pt-0" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
+      <div className="container mx-auto flex h-[84px] items-center justify-between px-4 pt-2 md:h-20 md:items-end md:pb-2 md:pt-0">
         <Link to="/" className="flex items-center md:items-end">
-          <img src={logo} alt="Intentus" className="h-10 w-auto object-contain md:h-16" />
+          <img src={logo} alt="Intentus" className="h-8 w-auto object-contain md:h-16" />
         </Link>
 
         {/* Desktop nav */}
@@ -56,12 +56,12 @@ const Navbar = () => {
 
         {/* Mobile hamburger */}
         <div className="flex items-center gap-2 md:hidden">
-          <Button asChild variant="hero" size="sm" className="text-xs px-3">
-            <Link to="/auth">Start audit</Link>
+          <Button asChild variant="ghost" size="sm" className="px-3 text-xs">
+            <Link to="/auth">Log in</Link>
           </Button>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Button variant="ghost" size="icon" className="h-10 w-10">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Open menu</span>
               </Button>
@@ -99,13 +99,13 @@ const Navbar = () => {
                 {/* CTA buttons */}
                 <div className="mt-auto border-t border-border px-4 py-4 space-y-2">
                   <SheetClose asChild>
-                    <Button asChild variant="ghost" className="w-full justify-center">
-                      <Link to="/auth">Log in</Link>
+                    <Button asChild variant="hero" className="w-full justify-center">
+                      <Link to="/auth">Start audit</Link>
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button asChild variant="hero" className="w-full justify-center">
-                      <Link to="/auth">Start audit</Link>
+                    <Button asChild variant="ghost" className="w-full justify-center">
+                      <Link to="/auth">Log in</Link>
                     </Button>
                   </SheetClose>
                 </div>
