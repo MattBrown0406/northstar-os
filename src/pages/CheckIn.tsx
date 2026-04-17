@@ -366,6 +366,47 @@ const CheckIn = () => {
     );
   }
 
+  if (showThinPrompt) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-lg space-y-6">
+          <div className="text-center space-y-3">
+            <div className="inline-flex bg-primary/10 rounded-2xl p-4">
+              <Wind className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="font-heading text-2xl font-bold text-foreground">A quick gut check</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your answers were very short and it seemed like you didn't give this much thought. In order to get the most out of this experience together, I need you to make sure you're thoughtful and intentional about your responses.
+            </p>
+            <p className="text-sm text-foreground font-medium pt-2">
+              Would you like to start over, or do you feel good about the answers you've submitted?
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            <Button
+              variant="hero"
+              className="w-full"
+              onClick={() => {
+                setShowThinPrompt(false);
+                setShowCenteringGuide(true);
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Let me start over
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleSubmit()}
+            >
+              I feel good — submit my check-in
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (showCenteringGuide) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
