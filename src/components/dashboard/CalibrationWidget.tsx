@@ -163,26 +163,24 @@ export const CalibrationWidget = ({ userId }: CalibrationWidgetProps) => {
           {/* Compact bar grid: per week, show confidence (×10) vs. outcome */}
           <div className="space-y-2.5">
             {rows.map((r) => (
-              <div key={r.weekStart} className="grid grid-cols-[44px_1fr_44px] items-center gap-2 text-xs">
+              <div key={r.weekStart} className="grid grid-cols-[36px_1fr_56px] sm:grid-cols-[44px_1fr_64px] items-center gap-2 text-xs">
                 <span className="text-muted-foreground tabular-nums">{r.weekLabel}</span>
-                <div className="space-y-1">
-                  {/* Confidence bar (what they promised) */}
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-12 text-[10px] text-muted-foreground">Promised</span>
-                    <div className="flex-1 h-2 bg-muted/40 rounded-full overflow-hidden">
+                    <span className="w-14 sm:w-16 shrink-0 text-[10px] text-muted-foreground">Promised</span>
+                    <div className="flex-1 min-w-0 h-2 bg-muted/40 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary/60 rounded-full transition-all"
                         style={{ width: `${(r.confidence ?? 0) * 10}%` }}
                       />
                     </div>
-                    <span className="w-6 text-[10px] tabular-nums text-foreground text-right">
+                    <span className="w-6 shrink-0 text-[10px] tabular-nums text-foreground text-right">
                       {r.confidence !== null ? r.confidence.toFixed(0) : "—"}
                     </span>
                   </div>
-                  {/* Outcome bar (what actually happened) */}
                   <div className="flex items-center gap-1.5">
-                    <span className="w-12 text-[10px] text-muted-foreground">Actual</span>
-                    <div className="flex-1 h-2 bg-muted/40 rounded-full overflow-hidden">
+                    <span className="w-14 sm:w-16 shrink-0 text-[10px] text-muted-foreground">Actual</span>
+                    <div className="flex-1 min-w-0 h-2 bg-muted/40 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           r.outcomeRaw === "yes"
@@ -196,7 +194,7 @@ export const CalibrationWidget = ({ userId }: CalibrationWidgetProps) => {
                         style={{ width: `${r.outcomeScore ?? 0}%` }}
                       />
                     </div>
-                    <span className="w-6 text-[10px] tabular-nums text-foreground text-right">
+                    <span className="w-6 shrink-0 text-[10px] tabular-nums text-foreground text-right">
                       {r.outcomeScore !== null ? `${r.outcomeScore}` : "—"}
                     </span>
                   </div>

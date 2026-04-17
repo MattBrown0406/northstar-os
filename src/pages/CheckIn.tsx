@@ -82,7 +82,7 @@ const ListInput = ({ label, helper, examples, items, onAdd, onRemove, inputVal, 
       />
       <Button variant="outline" size="icon" onClick={onAdd}><Plus className="h-4 w-4" /></Button>
     </div>
-    <p className="text-xs text-muted-foreground -mt-2">Aim for a full sentence with context. Press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px]">⌘/Ctrl + Enter</kbd> or click + to add.</p>
+    <p className="text-xs text-muted-foreground -mt-2"><span className="hidden sm:inline">Aim for a full sentence with context. Press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px]">⌘/Ctrl + Enter</kbd> or click + to add.</span><span className="sm:hidden">Tap + to add. Aim for a full sentence with context.</span></p>
     <ul className="space-y-2">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
