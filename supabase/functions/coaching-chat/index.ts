@@ -139,7 +139,29 @@ serve(async (req) => {
         if (ci.wins?.length) userContext += `, Wins: ${ci.wins.join("; ")}`;
         if (ci.blockers?.length) userContext += `, Blockers: ${ci.blockers.join("; ")}`;
         if (ci.commitments?.length) userContext += `, Commitments: ${ci.commitments.join("; ")}`;
+        if (ci.extras && typeof ci.extras === "object" && Object.keys(ci.extras).length > 0) {
+          const extrasStr = Object.entries(ci.extras)
+            .map(([k, v]) => `${k}=${typeof v === "string" ? `"${v}"` : v}`)
+            .join("; ");
+          userContext += `, Extras: ${extrasStr}`;
+        }
         userContext += "\n";
+      }
+
+      // Latest non-empty value for each extras key (so the coach always has the freshest signal)
+      const latestExtras: Record<string, { value: unknown; created_at: string }> = {};
+      for (const ci of checkIns) {
+        if (!ci.extras || typeof ci.extras !== "object") continue;
+        for (const [k, v] of Object.entries(ci.extras)) {
+          if (v === null || v === undefined || v === "") continue;
+          if (!latestExtras[k]) latestExtras[k] = { value: v, created_at: ci.created_at };
+        }
+      }
+      if (Object.keys(latestExtras).length > 0) {
+        userContext += `\nLatest signal per question:\n`;
+        for (const [k, info] of Object.entries(latestExtras)) {
+          userContext += `  • ${k} (${info.created_at}): ${typeof info.value === "string" ? `"${info.value}"` : info.value}\n`;
+        }
       }
 
       // Trend analysis
