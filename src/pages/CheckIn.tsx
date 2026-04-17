@@ -16,6 +16,14 @@ import {
   setWeeklyCommitment,
   recordCommitmentOutcome,
 } from "@/lib/commitments";
+import {
+  type CoachingQuestion,
+  type Tier,
+  selectQuestionsForCheckIn,
+  buildRecencyMap,
+  extractRecentGroups,
+} from "@/lib/coaching-questions";
+import { ExtraQuestionsStep } from "@/components/checkin/ExtraQuestionsStep";
 
 const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
   value: number; onChange: (n: number) => void; label: string; helper?: string; emoji: string[];
@@ -202,21 +210,43 @@ const CheckIn = () => {
   // One-thing state
   const [oneThing, setOneThing] = useState("");
 
+  // Extras (rotating coaching questions)
+  const [tier, setTier] = useState<Tier>("free");
+  const [extraQuestions, setExtraQuestions] = useState<CoachingQuestion[]>([]);
+  const [extraValues, setExtraValues] = useState<Record<string, string | number>>({});
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
-    const loadProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-      if ((data as any)?.intent_profile) setIntentProfile((data as any).intent_profile as IntentProfile);
+    const loadProfileAndExtras = async () => {
+      const [profileRes, recentRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+        supabase
+          .from("check_ins")
+          .select("created_at, extras")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(14),
+      ]);
+
+      const profile = profileRes.data as any;
+      if (profile?.intent_profile) setIntentProfile(profile.intent_profile as IntentProfile);
+      const userTier: Tier = (profile?.plan_tier ?? "free") as Tier;
+      setTier(userTier);
+
+      const recentCheckIns = (recentRes.data ?? []).map((r: any) => ({
+        created_at: r.created_at,
+        extras: (r.extras ?? {}) as Record<string, unknown>,
+      }));
+      const recency = buildRecencyMap(recentCheckIns);
+      const recentGroups = extractRecentGroups(recentCheckIns);
+      const selected = selectQuestionsForCheckIn(userTier, recency, recentGroups);
+      setExtraQuestions(selected);
     };
-    loadProfile();
+    loadProfileAndExtras();
   }, [user]);
 
   useEffect(() => {
@@ -319,6 +349,13 @@ const CheckIn = () => {
     setShowThinPrompt(false);
     setLoading(true);
 
+    // Build a clean extras payload — strip empty strings / 0 scale values
+    const cleanedExtras: Record<string, string | number> = {};
+    for (const [k, v] of Object.entries(extraValues)) {
+      if (typeof v === "string" && v.trim() !== "") cleanedExtras[k] = v.trim();
+      else if (typeof v === "number" && v > 0) cleanedExtras[k] = v;
+    }
+
     // 1. Insert check-in
     const { data: checkInData, error } = await supabase.from("check_ins").insert({
       user_id: user.id,
@@ -328,6 +365,7 @@ const CheckIn = () => {
       blockers,
       commitments,
       drift_detected: mood <= 4 || energy <= 4,
+      extras: cleanedExtras as any,
     }).select().single();
 
     if (error) {
@@ -531,8 +569,9 @@ const CheckIn = () => {
   // ── Steps definition ─────────────────────────────────────────────────────
   // step 0 = commitment callback (only shown if hasPreviousCommitment)
   // step 1 = mood, step 2 = energy, step 3 = wins, step 4 = blockers
-  // step 5 = commitments (existing), step 6 = one thing (new)
-  const LAST_STEP = 6;
+  // step 5 = commitments, step 6 = one thing, step 7 = extras (skipped on free)
+  const hasExtras = extraQuestions.length > 0;
+  const LAST_STEP = hasExtras ? 7 : 6;
 
   const renderStep = () => {
     switch (step) {
@@ -592,6 +631,14 @@ const CheckIn = () => {
           placeholder="What will you do, by when, and how will you know it's done?" />;
       case 6:
         return <OneThingStep oneThing={oneThing} setOneThing={setOneThing} />;
+      case 7:
+        return (
+          <ExtraQuestionsStep
+            questions={extraQuestions}
+            values={extraValues}
+            setValue={(id, v) => setExtraValues((prev) => ({ ...prev, [id]: v }))}
+          />
+        );
       default:
         return null;
     }
