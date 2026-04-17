@@ -210,21 +210,43 @@ const CheckIn = () => {
   // One-thing state
   const [oneThing, setOneThing] = useState("");
 
+  // Extras (rotating coaching questions)
+  const [tier, setTier] = useState<Tier>("free");
+  const [extraQuestions, setExtraQuestions] = useState<CoachingQuestion[]>([]);
+  const [extraValues, setExtraValues] = useState<Record<string, string | number>>({});
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
-    const loadProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-      if ((data as any)?.intent_profile) setIntentProfile((data as any).intent_profile as IntentProfile);
+    const loadProfileAndExtras = async () => {
+      const [profileRes, recentRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+        supabase
+          .from("check_ins")
+          .select("created_at, extras")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(14),
+      ]);
+
+      const profile = profileRes.data as any;
+      if (profile?.intent_profile) setIntentProfile(profile.intent_profile as IntentProfile);
+      const userTier: Tier = (profile?.plan_tier ?? "free") as Tier;
+      setTier(userTier);
+
+      const recentCheckIns = (recentRes.data ?? []).map((r: any) => ({
+        created_at: r.created_at,
+        extras: (r.extras ?? {}) as Record<string, unknown>,
+      }));
+      const recency = buildRecencyMap(recentCheckIns);
+      const recentGroups = extractRecentGroups(recentCheckIns);
+      const selected = selectQuestionsForCheckIn(userTier, recency, recentGroups);
+      setExtraQuestions(selected);
     };
-    loadProfile();
+    loadProfileAndExtras();
   }, [user]);
 
   useEffect(() => {
