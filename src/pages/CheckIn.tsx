@@ -544,22 +544,48 @@ const CheckIn = () => {
         ) : null;
       case 1:
         return <ScaleSelector value={mood} onChange={setMood} label="How focused and steady are you right now?"
+          helper="Be honest, not aspirational. Think about the last 48 hours: how clear is your head, how reactive vs. intentional have you been, how present are you for the people and decisions in front of you?"
           emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]} />;
       case 2:
         return <ScaleSelector value={energy} onChange={setEnergy} label="What's your disciplined execution energy level?"
+          helper="Not how busy you feel — how much capacity you have to do the hard, focused work that actually moves things forward. Are you sprinting, jogging, or running on fumes?"
           emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]} />;
       case 3:
-        return <ListInput label={getFocusPrompt(intentProfile)} items={wins}
+        return <ListInput
+          label={getFocusPrompt(intentProfile)}
+          helper="What actually moved? Be specific. Name the decision, the conversation, the shipped work — and why it mattered. Generic wins like 'had a good week' give your coach nothing to work with."
+          examples={[
+            "Closed the partnership conversation with X by getting clear on our deal-breakers — saved us 3 weeks of back-and-forth.",
+            "Shipped the v2 onboarding flow and watched 4 users go through it live; saw exactly where two of them stalled.",
+          ]}
+          items={wins}
           onAdd={() => addItem(setWins)} onRemove={(i) => removeItem(setWins, i)}
-          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a win..." />;
+          inputVal={inputVal} setInputVal={setInputVal}
+          placeholder="What happened, what made it a win, and what does it tell you about your operating rhythm?" />;
       case 4:
-        return <ListInput label={getBlockerPrompt(intentProfile)} items={blockers}
+        return <ListInput
+          label={getBlockerPrompt(intentProfile)}
+          helper="What's actually in the way — and what's your honest read on why? Don't just name the symptom (e.g. 'no time'). Name the real friction: a decision you're avoiding, a person you haven't pushed, a habit that keeps slipping."
+          examples={[
+            "I keep delaying the hard conversation with my co-founder about role clarity — I'm telling myself it's timing, but really I don't want the conflict.",
+            "Our pipeline is stalling because I haven't decided which segment to double down on; I'm hedging instead of choosing.",
+          ]}
+          items={blockers}
           onAdd={() => addItem(setBlockers)} onRemove={(i) => removeItem(setBlockers, i)}
-          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a blocker..." />;
+          inputVal={inputVal} setInputVal={setInputVal}
+          placeholder="What's blocking you, and what's the real reason underneath the surface reason?" />;
       case 5:
-        return <ListInput label={getCommitmentPrompt(intentProfile)} items={commitments}
+        return <ListInput
+          label={getCommitmentPrompt(intentProfile)}
+          helper="Specific, observable, and small enough to actually do this week. 'I will be more disciplined' is not a commitment. 'I will send the partnership decision email by Wednesday EOD' is. If a stranger read it on Sunday, could they tell whether you did it?"
+          examples={[
+            "By Thursday, I will book the 60-min strategy block with my exec team and send a one-page brief 24 hours ahead.",
+            "I will say no — in writing — to the two non-core opportunities sitting in my inbox by tomorrow.",
+          ]}
+          items={commitments}
           onAdd={() => addItem(setCommitments)} onRemove={(i) => removeItem(setCommitments, i)}
-          inputVal={inputVal} setInputVal={setInputVal} placeholder="Add a commitment..." />;
+          inputVal={inputVal} setInputVal={setInputVal}
+          placeholder="What will you do, by when, and how will you know it's done?" />;
       case 6:
         return <OneThingStep oneThing={oneThing} setOneThing={setOneThing} />;
       default:
