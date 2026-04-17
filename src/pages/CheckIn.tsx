@@ -33,14 +33,14 @@ const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
       <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
       {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
     </div>
-    <div className="flex gap-1">
+    <div className="flex gap-0.5 sm:gap-1 w-full">
       {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
         <button
           key={n}
           onClick={() => onChange(n)}
-          className={`flex-1 h-12 rounded-lg border text-sm font-medium transition-all ${
+          className={`flex-1 min-w-0 h-11 sm:h-12 rounded-md sm:rounded-lg border text-xs sm:text-sm font-medium transition-all ${
             n === value
-              ? "bg-primary text-primary-foreground border-primary scale-110"
+              ? "bg-primary text-primary-foreground border-primary scale-105 sm:scale-110"
               : n <= value
               ? "bg-primary/10 border-primary/30 text-primary"
               : "border-border text-muted-foreground hover:border-primary/50"

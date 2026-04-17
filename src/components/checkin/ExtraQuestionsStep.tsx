@@ -29,7 +29,7 @@ export const ExtraQuestionsStep = ({ questions, values, setValue }: ExtraQuestio
 
             {q.type === "scale" ? (
               <div className="space-y-2">
-                <div className="flex gap-1">
+                <div className="flex gap-0.5 sm:gap-1 w-full">
                   {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
                     const current = typeof values[q.id] === "number" ? (values[q.id] as number) : 0;
                     return (
@@ -37,9 +37,9 @@ export const ExtraQuestionsStep = ({ questions, values, setValue }: ExtraQuestio
                         key={n}
                         type="button"
                         onClick={() => setValue(q.id, n)}
-                        className={`flex-1 h-10 rounded-lg border text-xs font-medium transition-all ${
+                        className={`flex-1 min-w-0 h-10 rounded-md sm:rounded-lg border text-xs font-medium transition-all ${
                           n === current
-                            ? "bg-primary text-primary-foreground border-primary scale-110"
+                            ? "bg-primary text-primary-foreground border-primary scale-105 sm:scale-110"
                             : n <= current
                             ? "bg-primary/10 border-primary/30 text-primary"
                             : "border-border text-muted-foreground hover:border-primary/50"
