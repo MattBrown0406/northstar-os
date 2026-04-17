@@ -16,6 +16,14 @@ import {
   setWeeklyCommitment,
   recordCommitmentOutcome,
 } from "@/lib/commitments";
+import {
+  type CoachingQuestion,
+  type Tier,
+  selectQuestionsForCheckIn,
+  buildRecencyMap,
+  extractRecentGroups,
+} from "@/lib/coaching-questions";
+import { ExtraQuestionsStep } from "@/components/checkin/ExtraQuestionsStep";
 
 const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
   value: number; onChange: (n: number) => void; label: string; helper?: string; emoji: string[];
