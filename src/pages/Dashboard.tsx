@@ -19,6 +19,7 @@ import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, T
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
 import { getCurrentWeekCommitment, getPreviousWeekCommitment, setWeeklyCommitment, type WeeklyCommitment } from "@/lib/commitments";
 import { canReaudit } from "@/lib/reaudit";
+import { CalibrationWidget } from "@/components/dashboard/CalibrationWidget";
 
 interface Profile {
   display_name: string | null;
@@ -460,6 +461,11 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Calibration: promises vs follow-through (Executive+ only) */}
+              {user && profile?.plan_tier && profile.plan_tier !== "free" && (
+                <CalibrationWidget userId={user.id} />
+              )}
 
               {/* Bottom row: 90-day plan / This Week + Coach summary */}
               <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
