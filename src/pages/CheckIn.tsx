@@ -349,6 +349,13 @@ const CheckIn = () => {
     setShowThinPrompt(false);
     setLoading(true);
 
+    // Build a clean extras payload — strip empty strings / 0 scale values
+    const cleanedExtras: Record<string, string | number> = {};
+    for (const [k, v] of Object.entries(extraValues)) {
+      if (typeof v === "string" && v.trim() !== "") cleanedExtras[k] = v.trim();
+      else if (typeof v === "number" && v > 0) cleanedExtras[k] = v;
+    }
+
     // 1. Insert check-in
     const { data: checkInData, error } = await supabase.from("check_ins").insert({
       user_id: user.id,
@@ -358,6 +365,7 @@ const CheckIn = () => {
       blockers,
       commitments,
       drift_detected: mood <= 4 || energy <= 4,
+      extras: cleanedExtras as any,
     }).select().single();
 
     if (error) {
@@ -561,8 +569,9 @@ const CheckIn = () => {
   // ── Steps definition ─────────────────────────────────────────────────────
   // step 0 = commitment callback (only shown if hasPreviousCommitment)
   // step 1 = mood, step 2 = energy, step 3 = wins, step 4 = blockers
-  // step 5 = commitments (existing), step 6 = one thing (new)
-  const LAST_STEP = 6;
+  // step 5 = commitments, step 6 = one thing, step 7 = extras (skipped on free)
+  const hasExtras = extraQuestions.length > 0;
+  const LAST_STEP = hasExtras ? 7 : 6;
 
   const renderStep = () => {
     switch (step) {
@@ -622,6 +631,14 @@ const CheckIn = () => {
           placeholder="What will you do, by when, and how will you know it's done?" />;
       case 6:
         return <OneThingStep oneThing={oneThing} setOneThing={setOneThing} />;
+      case 7:
+        return (
+          <ExtraQuestionsStep
+            questions={extraQuestions}
+            values={extraValues}
+            setValue={(id, v) => setExtraValues((prev) => ({ ...prev, [id]: v }))}
+          />
+        );
       default:
         return null;
     }
