@@ -91,6 +91,7 @@ export type Database = {
           created_at: string
           drift_detected: boolean | null
           energy_score: number | null
+          extras: Json
           id: string
           mood_score: number | null
           user_id: string
@@ -103,6 +104,7 @@ export type Database = {
           created_at?: string
           drift_detected?: boolean | null
           energy_score?: number | null
+          extras?: Json
           id?: string
           mood_score?: number | null
           user_id: string
@@ -115,6 +117,7 @@ export type Database = {
           created_at?: string
           drift_detected?: boolean | null
           energy_score?: number | null
+          extras?: Json
           id?: string
           mood_score?: number | null
           user_id?: string
