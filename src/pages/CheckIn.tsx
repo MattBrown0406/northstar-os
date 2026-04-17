@@ -43,21 +43,39 @@ const ScaleSelector = ({ value, onChange, label, emoji }: {
   </div>
 );
 
-const ListInput = ({ label, items, onAdd, onRemove, inputVal, setInputVal, placeholder }: {
-  label: string; items: string[]; onAdd: () => void; onRemove: (index: number) => void;
+const ListInput = ({ label, helper, examples, items, onAdd, onRemove, inputVal, setInputVal, placeholder }: {
+  label: string; helper?: string; examples?: string[]; items: string[]; onAdd: () => void; onRemove: (index: number) => void;
   inputVal: string; setInputVal: (v: string) => void; placeholder: string;
 }) => (
   <div className="space-y-4">
-    <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
-    <div className="flex gap-2">
-      <Input value={inputVal} onChange={(e) => setInputVal(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onAdd()} placeholder={placeholder} className="flex-1" />
+    <div>
+      <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+      {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
+      {examples && examples.length > 0 && (
+        <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+          {examples.map((ex, i) => (
+            <li key={i} className="flex gap-2"><span className="text-primary">•</span><span className="italic">"{ex}"</span></li>
+          ))}
+        </ul>
+      )}
+    </div>
+    <div className="flex gap-2 items-start">
+      <Textarea
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onAdd(); }
+        }}
+        placeholder={placeholder}
+        className="flex-1 min-h-[90px] text-sm resize-none"
+      />
       <Button variant="outline" size="icon" onClick={onAdd}><Plus className="h-4 w-4" /></Button>
     </div>
+    <p className="text-xs text-muted-foreground -mt-2">Aim for a full sentence with context. Press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px]">⌘/Ctrl + Enter</kbd> or click + to add.</p>
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-          <span className="flex-1">{item}</span>
+        <li key={i} className="flex items-start gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+          <span className="flex-1 whitespace-pre-wrap">{item}</span>
           <button onClick={() => onRemove(i)}><X className="h-4 w-4 text-muted-foreground hover:text-destructive" /></button>
         </li>
       ))}
