@@ -17,11 +17,14 @@ import {
   recordCommitmentOutcome,
 } from "@/lib/commitments";
 
-const ScaleSelector = ({ value, onChange, label, emoji }: {
-  value: number; onChange: (n: number) => void; label: string; emoji: string[];
+const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
+  value: number; onChange: (n: number) => void; label: string; helper?: string; emoji: string[];
 }) => (
   <div className="space-y-4">
-    <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+    <div>
+      <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
+      {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
+    </div>
     <div className="flex gap-1">
       {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
         <button
