@@ -158,15 +158,19 @@ const OneThingStep = ({
   <div className="space-y-4">
     <div>
       <h3 className="font-heading text-lg font-bold text-foreground">What's the one thing this week?</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        If you actually did this — and nothing else — it would make the most difference.
+      <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+        If you actually did this — and nothing else — it would make the most difference. Not the easiest thing. Not the most urgent thing. The thing that, if you skip it, you'll feel it for weeks. Be specific enough that someone else could check whether you did it.
       </p>
+      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+        <li className="flex gap-2"><span className="text-primary">•</span><span className="italic">"This week I will sit down and write the one-page strategic narrative I've been avoiding, and share it with two people for honest feedback."</span></li>
+        <li className="flex gap-2"><span className="text-primary">•</span><span className="italic">"This week I will have the direct conversation with my Head of Sales about the underperformance — by Wednesday, in person."</span></li>
+      </ul>
     </div>
     <Textarea
       value={oneThing}
       onChange={(e) => setOneThing(e.target.value)}
-      placeholder="This week I will..."
-      className="min-h-[120px] text-sm resize-none"
+      placeholder="This week I will…"
+      className="min-h-[140px] text-sm resize-none"
     />
   </div>
 );
