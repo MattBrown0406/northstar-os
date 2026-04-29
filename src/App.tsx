@@ -48,7 +48,7 @@ const CoachClientReport = lazyWithRecovery(() => import("./pages/CoachClientRepo
 const CoachClientAudit = lazyWithRecovery(() => import("./pages/CoachClientAudit"), "CoachClientAudit");
 const CoachClientCheckIns = lazyWithRecovery(() => import("./pages/CoachClientCheckIns"), "CoachClientCheckIns");
 const BrandedAuth = lazyWithRecovery(() => import("./pages/BrandedAuth"), "BrandedAuth");
-const ForExecutives = lazyWithRecovery(() => import("./pages/marketing/ForExecutives"), "ForExecutives");
+const ForLeaders = lazyWithRecovery(() => import("./pages/marketing/ForExecutives"), "ForLeaders");
 const ForCoaches = lazyWithRecovery(() => import("./pages/marketing/ForCoaches"), "ForCoaches");
 const OperatingAudit = lazyWithRecovery(() => import("./pages/marketing/OperatingAudit"), "OperatingAudit");
 const AccountabilitySoftware = lazyWithRecovery(() => import("./pages/marketing/AccountabilitySoftware"), "AccountabilitySoftware");
@@ -78,7 +78,8 @@ const App = () => (
             <Suspense fallback={<RouteFallback />}>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/for-executives" element={<ForExecutives />} />
+                <Route path="/for-leaders" element={<ForLeaders />} />
+                <Route path="/for-executives" element={<ForLeaders />} />
                 <Route path="/for-coaches" element={<ForCoaches />} />
                 <Route path="/operating-audit" element={<OperatingAudit />} />
                 <Route path="/accountability-software" element={<AccountabilitySoftware />} />

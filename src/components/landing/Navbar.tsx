@@ -12,7 +12,7 @@ import {
 
 const navLinks = [
   { label: "How it works", href: "/#how-it-works", isAnchor: true },
-  { label: "For executives", href: "/for-executives", isAnchor: false },
+  { label: "For leaders", href: "/for-leaders", isAnchor: false },
   { label: "For coaches", href: "/for-coaches", isAnchor: false },
   { label: "Operating audit", href: "/operating-audit", isAnchor: false },
   { label: "Pricing", href: "/#pricing", isAnchor: true },

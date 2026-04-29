@@ -11,7 +11,7 @@ const Footer = () => {
               <img src={logo} alt="Intentus" className="h-7 w-auto" />
             </div>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Accountability software for founders, executives, operators, and coach-led client programs. Built to turn an honest audit into a focused 90-day operating rhythm.
+              Accountability software for founders, leaders, operators, and anyone serious about growth — including coach-led client programs. Built to turn an honest audit into a focused 90-day operating rhythm.
             </p>
             <p className="mt-4 max-w-md text-xs leading-relaxed text-muted-foreground">
               Intentus provides coaching and self-reflection tools for operating discipline and execution accountability. It is not medical advice or mental health treatment.
@@ -21,7 +21,7 @@ const Footer = () => {
           <div>
             <h2 className="font-heading text-base font-bold text-foreground">Explore</h2>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-              <li><Link to="/for-executives" className="hover:text-foreground">For executives</Link></li>
+              <li><Link to="/for-leaders" className="hover:text-foreground">For leaders</Link></li>
               <li><Link to="/accountability-software" className="hover:text-foreground">Accountability software</Link></li>
               <li><Link to="/operating-audit" className="hover:text-foreground">Operating audit</Link></li>
               <li><Link to="/faq" className="hover:text-foreground">FAQ</Link></li>
