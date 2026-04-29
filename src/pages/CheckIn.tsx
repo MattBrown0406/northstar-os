@@ -573,7 +573,7 @@ const CheckIn = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => navigate(getTierCapability(tier).canUseAiChat ? "/coaching" : "/#pricing")}>
+            <Button variant="outline" className="flex-1" onClick={() => navigate(getTierCapability(tier).canUseAiChat ? "/coaching" : "/subscribe")}>
               <MessageSquare className="mr-2 h-4 w-4" /> {getTierCapability(tier).canUseAiChat ? "Continue coaching" : "View plans"}
             </Button>
             <Button variant="hero" className="flex-1" onClick={() => navigate("/dashboard")}>

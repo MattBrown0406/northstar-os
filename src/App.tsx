@@ -8,7 +8,9 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 
-const lazyWithRecovery = (importPage: () => Promise<{ default: ComponentType<any> }>, key: string) =>
+type RouteComponent = ComponentType<Record<string, never>>;
+
+const lazyWithRecovery = (importPage: () => Promise<{ default: RouteComponent }>, key: string) =>
   lazy(async () => {
     try {
       const module = await importPage();
@@ -43,6 +45,7 @@ const Dashboard = lazyWithRecovery(() => import("./pages/Dashboard"), "Dashboard
 const CheckIn = lazyWithRecovery(() => import("./pages/CheckIn"), "CheckIn");
 const Report = lazyWithRecovery(() => import("./pages/Report"), "Report");
 const Coaching = lazyWithRecovery(() => import("./pages/Coaching"), "Coaching");
+const Subscribe = lazyWithRecovery(() => import("./pages/Subscribe"), "Subscribe");
 const CoachDashboard = lazyWithRecovery(() => import("./pages/CoachDashboard"), "CoachDashboard");
 const CoachClientReport = lazyWithRecovery(() => import("./pages/CoachClientReport"), "CoachClientReport");
 const CoachClientAudit = lazyWithRecovery(() => import("./pages/CoachClientAudit"), "CoachClientAudit");
@@ -53,6 +56,7 @@ const ForCoaches = lazyWithRecovery(() => import("./pages/marketing/ForCoaches")
 const OperatingAudit = lazyWithRecovery(() => import("./pages/marketing/OperatingAudit"), "OperatingAudit");
 const AccountabilitySoftware = lazyWithRecovery(() => import("./pages/marketing/AccountabilitySoftware"), "AccountabilitySoftware");
 const FaqPage = lazyWithRecovery(() => import("./pages/marketing/FaqPage"), "FaqPage");
+const SupportPage = lazyWithRecovery(() => import("./pages/marketing/SupportPage"), "SupportPage");
 const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
 const Admin = lazyWithRecovery(() => import("./pages/Admin"), "Admin");
 const NotFound = lazyWithRecovery(() => import("./pages/NotFound"), "NotFound");
@@ -84,6 +88,7 @@ const App = () => (
                 <Route path="/operating-audit" element={<OperatingAudit />} />
                 <Route path="/accountability-software" element={<AccountabilitySoftware />} />
                 <Route path="/faq" element={<FaqPage />} />
+                <Route path="/support" element={<SupportPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
@@ -93,6 +98,7 @@ const App = () => (
                 <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/coaching" element={<ProtectedRoute><Coaching /></ProtectedRoute>} />
+                <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
                 <Route path="/coach" element={<ProtectedRoute><CoachDashboard /></ProtectedRoute>} />
                 <Route path="/coach/client/:clientId/report" element={<ProtectedRoute><CoachClientReport /></ProtectedRoute>} />
                 <Route path="/coach/client/:clientId/audit" element={<ProtectedRoute><CoachClientAudit /></ProtectedRoute>} />

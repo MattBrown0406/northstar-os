@@ -33,7 +33,7 @@ interface Profile {
 interface StrategicReportSummary {
   intent_model?: IntentModel | null;
   north_star_focus?: string | null;
-  pattern_analysis?: any;
+  pattern_analysis?: unknown;
 }
 
 interface CheckIn {
@@ -73,8 +73,8 @@ const Dashboard = () => {
         supabase.from("baseline_audits").select("status").eq("user_id", user.id).eq("status", "completed").limit(1),
         supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
-      if (profileRes.data) setProfile(profileRes.data as any);
-      if (checkInsRes.data) setCheckIns(checkInsRes.data as any);
+      if (profileRes.data) setProfile(profileRes.data as Profile);
+      if (checkInsRes.data) setCheckIns(checkInsRes.data as CheckIn[]);
       setAuditCompleted((auditRes.data?.length ?? 0) > 0);
       if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
       setLoading(false);
@@ -156,7 +156,7 @@ const Dashboard = () => {
     }));
   const hasTrendData = trendData.some((point) => point.focus !== null || point.energy !== null);
   const activeLens = reportSummary?.intent_model?.primary_lens || profile?.intent_profile?.primaryLens;
-  const northStarFocus = (reportSummary as any)?.north_star_focus;
+  const northStarFocus = reportSummary?.north_star_focus;
 
   // Execution quality = average of focus & energy (as percentage)
   const executionScore = avgMood !== null && avgEnergy !== null
@@ -219,6 +219,9 @@ const Dashboard = () => {
           <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/subscribe")}>
+              <Sparkles className="h-4 w-4 mr-1" /> Plan
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/coaching")}>
               <MessageSquare className="h-4 w-4 mr-1" /> Coach
             </Button>
@@ -245,6 +248,9 @@ const Dashboard = () => {
             </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/coaching")} title="Coach">
               <MessageSquare className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/subscribe")} title="Plan">
+              <Sparkles className="h-4 w-4" />
             </Button>
             <Sheet>
               <SheetTrigger asChild>

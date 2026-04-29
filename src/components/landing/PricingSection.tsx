@@ -20,7 +20,7 @@ const plans = [
   },
   {
     name: "Executive",
-    price: "$29",
+    price: "$29.99",
     period: "/mo",
     desc: "For operators who want a tighter execution rhythm around the priorities and numbers that matter.",
     features: [
@@ -35,12 +35,12 @@ const plans = [
       "Exportable report + plan",
     ],
     cta: "Choose Executive",
-    ctaTo: "/accountability-software",
+    ctaTo: "/subscribe",
     featured: true,
   },
   {
     name: "Premium",
-    price: "$99",
+    price: "$99.99",
     period: "/mo",
     desc: "A stricter mirror and faster drift correction for serious operators.",
     features: [
@@ -51,12 +51,12 @@ const plans = [
       "AI plan refreshes",
     ],
     cta: "Choose Premium",
-    ctaTo: "/auth",
+    ctaTo: "/subscribe",
     featured: false,
   },
   {
     name: "Coach",
-    price: "$399",
+    price: "$399.99",
     period: "/mo",
     desc: "For professional coaches running a branded accountability layer for clients.",
     features: [
@@ -70,7 +70,7 @@ const plans = [
       "White-label support + shareable invite links",
     ],
     cta: "Apply for Coach Access",
-    ctaTo: "/for-coaches",
+    ctaTo: "/subscribe",
     featured: false,
   },
 ];

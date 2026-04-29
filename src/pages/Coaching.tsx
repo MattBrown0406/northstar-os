@@ -200,7 +200,7 @@ const Coaching = () => {
               ) : (
                 <div className="rounded-2xl border border-border bg-card p-5 text-center space-y-3">
                   <p className="text-sm text-foreground">{tierCapability.aiBehavior}</p>
-                  <Button variant="hero" onClick={() => navigate("/#pricing")}>View plans</Button>
+                  <Button variant="hero" onClick={() => navigate("/subscribe")}>View plans</Button>
                 </div>
               )}
             </div>

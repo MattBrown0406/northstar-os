@@ -17,6 +17,7 @@ const navLinks = [
   { label: "Operating audit", href: "/operating-audit", isAnchor: false },
   { label: "Pricing", href: "/#pricing", isAnchor: true },
   { label: "FAQ", href: "/faq", isAnchor: false },
+  { label: "Support", href: "/support", isAnchor: false },
 ];
 
 const Navbar = () => {
