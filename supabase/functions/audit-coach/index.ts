@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 import { COACHING_SAFETY_BOUNDARY, truncate } from "../_shared/ai-guardrails.ts";
+import { buildTierPolicyPrompt, normalizePlanTier } from "../_shared/tier-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,12 +49,13 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone, intent_profile")
+      .select("display_name, coaching_tone, intent_profile, plan_tier")
       .eq("user_id", user.id)
       .maybeSingle();
 
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
+    const planTier = normalizePlanTier(profile?.plan_tier);
 
     // Build conversation context from all answered questions
     let conversationContext = "";
@@ -83,6 +85,8 @@ Audit sequence:
 - then force prioritization and commitment
 
 ${intentSummary}
+
+${buildTierPolicyPrompt(planTier)}
 
 ${COACHING_SAFETY_BOUNDARY}
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wi
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, getBlockerPrompt, getCommitmentPrompt, getFocusPrompt, type IntentProfile } from "@/lib/intentus-architecture";
 import { brandLogo as logo } from "@/lib/brand";
+import { getTierCapability, normalizePlanTier } from "@/lib/tier-policy";
 import {
   type WeeklyCommitment,
   getPreviousWeekCommitment,
@@ -24,6 +26,16 @@ import {
   extractRecentGroups,
 } from "@/lib/coaching-questions";
 import { ExtraQuestionsStep } from "@/components/checkin/ExtraQuestionsStep";
+
+type CheckInProfile = {
+  intent_profile?: IntentProfile | null;
+  plan_tier?: unknown;
+};
+
+type RecentCheckInRow = {
+  created_at: string;
+  extras: Record<string, unknown> | null;
+};
 
 const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
   value: number; onChange: (n: number) => void; label: string; helper?: string; emoji: string[];
@@ -232,12 +244,12 @@ const CheckIn = () => {
           .limit(14),
       ]);
 
-      const profile = profileRes.data as any;
+      const profile = profileRes.data as CheckInProfile | null;
       if (profile?.intent_profile) setIntentProfile(profile.intent_profile as IntentProfile);
-      const userTier: Tier = (profile?.plan_tier ?? "free") as Tier;
+      const userTier = normalizePlanTier(profile?.plan_tier) as Tier;
       setTier(userTier);
 
-      const recentCheckIns = (recentRes.data ?? []).map((r: any) => ({
+      const recentCheckIns = ((recentRes.data ?? []) as RecentCheckInRow[]).map((r) => ({
         created_at: r.created_at,
         extras: (r.extras ?? {}) as Record<string, unknown>,
       }));
@@ -287,6 +299,7 @@ const CheckIn = () => {
   };
 
   const streamDebrief = async () => {
+    if (!getTierCapability(tier).canUseAiDebrief) return;
     setAiLoading(true);
     try {
       const session = await supabase.auth.getSession();
@@ -331,7 +344,9 @@ const CheckIn = () => {
               fullText += content;
               setAiDebrief(fullText);
             }
-          } catch {}
+          } catch {
+            // Ignore incomplete SSE chunks; the next chunk usually completes the frame.
+          }
         }
       }
     } catch (e) {
@@ -365,7 +380,7 @@ const CheckIn = () => {
       blockers,
       commitments,
       drift_detected: mood <= 4 || energy <= 4,
-      extras: cleanedExtras as any,
+      extras: cleanedExtras as Json,
     }).select().single();
 
     if (error) {
@@ -406,7 +421,7 @@ const CheckIn = () => {
 
     setLoading(false);
     setDone(true);
-    streamDebrief();
+    if (getTierCapability(tier).canUseAiDebrief) streamDebrief();
   };
 
   const resetAndRetry = () => {
@@ -535,7 +550,7 @@ const CheckIn = () => {
               <div className="bg-primary/10 rounded-lg p-1.5">
                 <MessageSquare className="h-4 w-4 text-primary" />
               </div>
-              <h3 className="font-heading font-bold text-foreground text-sm">Your Executive Operating Coach</h3>
+              <h3 className="font-heading font-bold text-foreground text-sm">{getTierCapability(tier).coachingName}</h3>
             </div>
             {aiLoading && !aiDebrief ? (
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -544,6 +559,10 @@ const CheckIn = () => {
               </div>
             ) : aiDebrief ? (
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{aiDebrief}</p>
+            ) : !getTierCapability(tier).canUseAiDebrief ? (
+              <p className="text-sm text-muted-foreground">
+                Starter saves your weekly accountability signal. Executive and above add AI debriefs that read your check-in against your operating focus, drift, and commitments.
+              </p>
             ) : (
               <p className="text-sm text-muted-foreground">
                 {mood <= 4
@@ -554,8 +573,8 @@ const CheckIn = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => navigate("/coaching")}>
-              <MessageSquare className="mr-2 h-4 w-4" /> Continue coaching
+            <Button variant="outline" className="flex-1" onClick={() => navigate(getTierCapability(tier).canUseAiChat ? "/coaching" : "/#pricing")}>
+              <MessageSquare className="mr-2 h-4 w-4" /> {getTierCapability(tier).canUseAiChat ? "Continue coaching" : "View plans"}
             </Button>
             <Button variant="hero" className="flex-1" onClick={() => navigate("/dashboard")}>
               Dashboard <ArrowRight className="ml-2 h-4 w-4" />

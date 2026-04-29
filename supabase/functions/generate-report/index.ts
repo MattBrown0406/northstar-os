@@ -7,6 +7,7 @@ import {
   parseToolArguments,
   truncate,
 } from "../_shared/ai-guardrails.ts";
+import { buildReportDepthPrompt, buildTierPolicyPrompt, normalizePlanTier } from "../_shared/tier-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -135,7 +136,7 @@ serve(async (req) => {
     // Get profile for coaching tone + adaptive lens choices
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone, intent_profile")
+      .select("display_name, coaching_tone, intent_profile, plan_tier")
       .eq("user_id", user.id)
       .single();
 
@@ -158,6 +159,7 @@ serve(async (req) => {
 
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
+    const planTier = normalizePlanTier(profile?.plan_tier);
     const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
     const intentModelInstructions = buildIntentModelInstructions();
 
@@ -197,6 +199,10 @@ Rules:
 - use follow-up answers to disambiguate vague claims and weigh how self-aware they really are
 
 ${intentSummary}
+
+${buildTierPolicyPrompt(planTier)}
+
+${buildReportDepthPrompt(planTier)}
 
 ${COACHING_SAFETY_BOUNDARY}
 

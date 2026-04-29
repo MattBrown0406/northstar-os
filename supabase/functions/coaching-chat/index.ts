@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 import { COACHING_SAFETY_BOUNDARY, boundedArray, safeJsonStringify, truncate } from "../_shared/ai-guardrails.ts";
+import { buildTierPolicyPrompt, canUseAiChat, canUseAiDebrief, normalizePlanTier } from "../_shared/tier-policy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,6 +79,23 @@ serve(async (req) => {
     const audit = auditRes.data?.[0];
     const report = reportRes.data?.[0];
     const allCommitments = weeklyCommitmentsRes.data || [];
+    const planTier = normalizePlanTier(profile?.plan_tier);
+
+    if (mode === "chat" && !canUseAiChat(planTier)) {
+      return new Response(JSON.stringify({
+        error: "The ongoing AI Operating Coach is available on Executive and above. Starter includes the audit snapshot and weekly accountability tracking.",
+      }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (mode === "check-in-debrief" && !canUseAiDebrief(planTier)) {
+      return new Response(JSON.stringify({
+        error: "AI check-in debriefs are available on Executive and above.",
+      }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // ── Build commitment context ──────────────────────────────────────────
     // Determine current week Monday
@@ -145,6 +163,7 @@ serve(async (req) => {
 
     const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
     userContext += `${intentSummary}\n\n`;
+    userContext += `${buildTierPolicyPrompt(planTier)}\n\n`;
 
     if (report) {
       userContext += `--- STRATEGIC REPORT ---\n`;

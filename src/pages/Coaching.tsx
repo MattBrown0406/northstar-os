@@ -6,8 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { brandLogo as logo } from "@/lib/brand";
+import { getTierCapability, normalizePlanTier, type PlanTier } from "@/lib/tier-policy";
 import {
-  Compass, Send, ArrowLeft, Loader2, MessageSquare,
+  Send, ArrowLeft, Loader2, MessageSquare,
   TrendingUp, AlertTriangle, Target, Sparkles
 } from "lucide-react";
 import { formatLensLabel, type AdaptiveLens } from "@/lib/intentus-architecture";
@@ -29,6 +30,8 @@ const Coaching = () => {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeLens, setActiveLens] = useState<AdaptiveLens | null>(null);
+  const [planTier, setPlanTier] = useState<PlanTier>("free");
+  const [profileLoading, setProfileLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -36,12 +39,18 @@ const Coaching = () => {
 
   useEffect(() => {
     if (!user) return;
-    const loadLens = async () => {
-      const profileRes = await supabase.from("profiles").select("coaching_tone").eq("user_id", user.id).single();
-      // No active lens available from current schema
-      setActiveLens(null);
+    const loadProfile = async () => {
+      setProfileLoading(true);
+      try {
+        const { data } = await supabase.from("profiles").select("plan_tier").eq("user_id", user.id).single();
+        setPlanTier(normalizePlanTier(data?.plan_tier));
+        // No active lens available from current schema
+        setActiveLens(null);
+      } finally {
+        setProfileLoading(false);
+      }
     };
-    loadLens();
+    loadProfile();
   }, [user]);
 
   useEffect(() => {
@@ -49,7 +58,8 @@ const Coaching = () => {
   }, [messages]);
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || isStreaming) return;
+    const tierCapability = getTierCapability(planTier);
+    if (!text.trim() || isStreaming || !tierCapability.canUseAiChat) return;
 
     const userMsg: Message = { role: "user", content: text.trim() };
     const updatedMessages = [...messages, userMsg];
@@ -134,6 +144,8 @@ const Coaching = () => {
     inputRef.current?.focus();
   };
 
+  const tierCapability = getTierCapability(planTier);
+
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col h-[100dvh]">
       {/* Header */}
@@ -164,25 +176,33 @@ const Coaching = () => {
                 </div>
                 <h2 className="font-heading text-xl font-bold text-foreground">Your AI Operating Coach</h2>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  I have access to your audit, strategic report, and all your check-ins.
-                  Ask me about your progress, drift, decision clarity, blind spots, or what the next move should be.
+                  {tierCapability.canUseAiChat
+                    ? `You are using ${tierCapability.coachingName}. Ask about progress, drift, decision clarity, blind spots, or the next move.`
+                    : "Starter includes the audit snapshot and weekly accountability tracking. Ongoing AI coaching opens on Executive and above."}
                 </p>
                 {activeLens && (
                   <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens).toLowerCase()}.</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                {quickPrompts.map((qp, i) => (
-                  <button
-                    key={i}
-                    onClick={() => sendMessage(qp.prompt)}
-                    className="flex items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/5 hover:border-primary/30 transition-all text-left text-sm"
-                  >
-                    <div className="text-primary shrink-0">{qp.icon}</div>
-                    <span className="text-foreground font-medium">{qp.label}</span>
-                  </button>
-                ))}
-              </div>
+              {tierCapability.canUseAiChat ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {quickPrompts.map((qp, i) => (
+                    <button
+                      key={i}
+                      onClick={() => sendMessage(qp.prompt)}
+                      className="flex items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent/5 hover:border-primary/30 transition-all text-left text-sm"
+                    >
+                      <div className="text-primary shrink-0">{qp.icon}</div>
+                      <span className="text-foreground font-medium">{qp.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card p-5 text-center space-y-3">
+                  <p className="text-sm text-foreground">{tierCapability.aiBehavior}</p>
+                  <Button variant="hero" onClick={() => navigate("/#pricing")}>View plans</Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -224,11 +244,11 @@ const Coaching = () => {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask for clarity, challenge, or the next priority..."
-              disabled={isStreaming}
+              placeholder={tierCapability.canUseAiChat ? "Ask for clarity, challenge, or the next priority..." : "Upgrade to Executive to use the AI coach"}
+              disabled={isStreaming || profileLoading || !tierCapability.canUseAiChat}
               className="flex-1"
             />
-            <Button type="submit" variant="hero" size="icon" disabled={isStreaming || !input.trim()}>
+            <Button type="submit" variant="hero" size="icon" disabled={isStreaming || !input.trim() || profileLoading || !tierCapability.canUseAiChat}>
               <Send className="h-4 w-4" />
             </Button>
           </form>
