@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Purchases } from "@revenuecat/purchases-capacitor";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Save, Settings as SettingsIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Settings as SettingsIcon, Loader2, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { configureRevenueCat, isNativeRevenueCatAvailable } from "@/lib/revenuecat";
 
 const TIMEZONES = [
   "America/New_York",
@@ -70,7 +72,7 @@ interface ProfileData {
 }
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -81,6 +83,8 @@ const Settings = () => {
   const [tone, setTone] = useState<"direct" | "supportive" | "balanced">("balanced");
   const [cadence, setCadence] = useState<"daily" | "every_other_day" | "weekly">("daily");
   const [timezone, setTimezone] = useState("America/New_York");
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -122,6 +126,39 @@ const Settings = () => {
       toast({ title: "Error saving settings", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Settings saved", description: "Your profile has been updated." });
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    let managementUrl = "https://apps.apple.com/account/subscriptions";
+
+    if (user && isNativeRevenueCatAvailable()) {
+      try {
+        await configureRevenueCat(user.id);
+        const { customerInfo } = await Purchases.getCustomerInfo();
+        managementUrl = customerInfo.managementURL || managementUrl;
+      } catch {
+        // Fall back to Apple's subscription management URL.
+      }
+    }
+
+    window.open(managementUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user || !confirmDelete) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account", { body: {} });
+      if (error) throw error;
+      await signOut();
+      toast({ title: "Account deleted", description: "Your Intentus account has been deleted." });
+      navigate("/", { replace: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "We could not delete your account. Please try again.";
+      toast({ title: "Account deletion failed", description: message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -286,6 +323,54 @@ const Settings = () => {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Subscription */}
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div>
+              <h2 className="font-heading font-bold text-foreground mb-1">Subscription</h2>
+              <p className="text-sm text-muted-foreground">
+                Manage or cancel your Apple subscription through your Apple ID subscription settings.
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleManageSubscription}>
+              <ExternalLink className="h-4 w-4 mr-2" /> Manage subscription
+            </Button>
+          </div>
+
+          {/* Account deletion */}
+          <div className="bg-card rounded-2xl border border-destructive/30 p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-lg bg-destructive/10 p-2 text-destructive">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="font-heading font-bold text-foreground mb-1">Delete account</h2>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete your Intentus account and associated app data. This cannot be undone. Active subscriptions must still be cancelled through your Apple ID subscription settings.
+                </p>
+              </div>
+            </div>
+            <label className="flex items-start gap-3 rounded-xl border border-border bg-background p-4 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={confirmDelete}
+                onChange={(e) => setConfirmDelete(e.target.checked)}
+                className="mt-1"
+              />
+              <span>I understand this will permanently delete my Intentus account and app data.</span>
+            </label>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={!confirmDelete || deleting}>
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Deleting account...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete account
+                </>
+              )}
+            </Button>
           </div>
 
           {/* Save button (bottom) */}
