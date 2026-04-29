@@ -10,7 +10,7 @@ import {
   Compass, Send, ArrowLeft, Loader2, MessageSquare,
   TrendingUp, AlertTriangle, Target, Sparkles
 } from "lucide-react";
-import { formatLensLabel } from "@/lib/intentus-architecture";
+import { formatLensLabel, type AdaptiveLens } from "@/lib/intentus-architecture";
 
 interface Message {
   role: "user" | "assistant";
@@ -28,7 +28,7 @@ const Coaching = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [activeLens, setActiveLens] = useState<string | null>(null);
+  const [activeLens, setActiveLens] = useState<AdaptiveLens | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -116,7 +116,9 @@ const Coaching = () => {
                 return [...prev, { role: "assistant", content: assistantText }];
               });
             }
-          } catch {}
+          } catch {
+            // Ignore incomplete SSE chunks; the next chunk usually completes the frame.
+          }
         }
       }
     } catch (e) {
@@ -133,7 +135,7 @@ const Coaching = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col h-screen">
+    <div className="min-h-[100dvh] bg-background flex flex-col h-[100dvh]">
       {/* Header */}
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
@@ -145,7 +147,7 @@ const Coaching = () => {
               <img src={logo} alt="Intentus" className="h-8 w-auto object-contain md:h-10" />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground hidden sm:block">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens as any)}` : ""}</p>
+          <p className="text-xs text-muted-foreground hidden sm:block">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
         </div>
       </nav>
 
@@ -166,7 +168,7 @@ const Coaching = () => {
                   Ask me about your progress, drift, decision clarity, blind spots, or what the next move should be.
                 </p>
                 {activeLens && (
-                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens as any).toLowerCase()}.</p>
+                  <p className="text-xs text-primary font-medium">Currently weighted toward {formatLensLabel(activeLens).toLowerCase()}.</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
