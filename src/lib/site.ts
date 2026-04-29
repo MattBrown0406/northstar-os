@@ -1,7 +1,7 @@
 export const SITE_NAME = "Intentus";
 export const SITE_URL = "https://intentus.ai";
-export const DEFAULT_TITLE = "Intentus | AI operating accountability software for founders and executives";
-export const DEFAULT_DESCRIPTION = "Intentus helps founders, executives, and operators run an honest operating audit, choose the few metrics that matter, and stay accountable to a focused 90-day plan.";
+export const DEFAULT_TITLE = "Intentus | AI operating accountability software for founders and leaders";
+export const DEFAULT_DESCRIPTION = "Intentus helps founders, leaders, operators, and anyone serious about growth run an honest operating audit, choose the few metrics that matter, and stay accountable to a focused 90-day plan.";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 export type JsonLd = Record<string, unknown> | Array<Record<string, unknown>>;
@@ -30,7 +30,7 @@ export const softwareJsonLd = {
   },
   audience: {
     "@type": "BusinessAudience",
-    audienceType: "Founders, executives, operators, and coaches",
+    audienceType: "Founders, leaders, operators, coaches, and anyone serious about growth",
   },
 };
 
@@ -38,7 +38,7 @@ export const faqItems = [
   {
     question: "Who is Intentus for?",
     answer:
-      "Intentus is built primarily for founders, executives, and operators who want a tighter operating rhythm. Coaches can also use it to run branded accountability programs for clients.",
+      "Intentus is built for founders, leaders, operators, and anyone with serious growth goals who want a tighter operating rhythm. Coaches can also use it to run branded accountability programs for clients.",
   },
   {
     question: "What happens after the operating audit?",

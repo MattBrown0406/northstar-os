@@ -13,7 +13,7 @@ const HeroSection = () => {
       <div className="container relative mx-auto px-4">
         <div className="mx-auto max-w-5xl text-center">
           <div className="mb-6 hidden items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary animate-fade-up sm:inline-flex">
-            Executive accountability software for founders, operators, leadership teams, and coach-led programs
+            Accountability software for founders, leaders, operators, and anyone with serious growth goals
           </div>
           <h1 className="mb-6 font-heading text-3xl font-bold tracking-tight sm:text-5xl md:text-7xl animate-fade-up" style={{ animationDelay: "0.1s" }}>
             <span className="text-foreground">Run a more honest</span>
@@ -30,7 +30,7 @@ const HeroSection = () => {
               </Link>
             </Button>
             <Button asChild variant="hero-outline" size="lg" className="hidden px-8 py-6 text-base sm:inline-flex">
-              <Link to="/for-executives">See the executive use case</Link>
+              <Link to="/for-leaders">See how leaders use it</Link>
             </Button>
           </div>
           <div className="mt-6 hidden flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground animate-fade-up sm:flex" style={{ animationDelay: "0.4s" }}>
