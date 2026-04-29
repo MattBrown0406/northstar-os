@@ -9,12 +9,18 @@ import { Compass, Send, ArrowRight } from "lucide-react";
 import { AUDIT_QUESTIONS, AUDIT_SECTIONS } from "@/lib/audit-questions";
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, type IntentProfile } from "@/lib/intentus-architecture";
+import type { Json } from "@/integrations/supabase/types";
 
 interface ChatMessage {
   role: "system" | "user" | "coach";
   text: string;
   streaming?: boolean;
 }
+
+type AuditProfile = {
+  coaching_tone: string | null;
+  display_name: string | null;
+};
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/audit-coach`;
 
@@ -37,11 +43,18 @@ async function streamCoachResponse({
   onDelta: (text: string) => void;
   onDone: () => void;
 }) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    onDone();
+    return;
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     },
     body: JSON.stringify({
       responses,
@@ -145,9 +158,10 @@ const Audit = () => {
         .eq("user_id", user.id)
         .single();
       if (profileData) {
+        const typedProfile = profileData as AuditProfile;
         setProfile({
-          coaching_tone: (profileData as any).coaching_tone || "balanced",
-          display_name: (profileData as any).display_name || "",
+          coaching_tone: typedProfile.coaching_tone || "balanced",
+          display_name: typedProfile.display_name || "",
           intent_profile: null,
         });
       }
@@ -237,7 +251,7 @@ const Audit = () => {
     await supabase
       .from("baseline_audits")
       .update({
-        responses: newResponses as any,
+        responses: newResponses as Json,
         current_section: isLast ? AUDIT_SECTIONS.length - 1 : AUDIT_QUESTIONS[nextQ]?.sectionIndex ?? 0,
         current_question: isLast ? 0 : AUDIT_QUESTIONS[nextQ]?.questionIndex ?? 0,
         ...(isLast ? { status: "completed" as const, completed_at: new Date().toISOString() } : {}),

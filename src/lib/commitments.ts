@@ -157,7 +157,21 @@ interface NinetyDayPlan {
     focus?: string;
     [key: string]: unknown;
   }>;
+  phase_1?: { title?: string; actions?: string[] };
+  phase_2?: { title?: string; actions?: string[] };
+  phase_3?: { title?: string; actions?: string[] };
   [key: string]: unknown;
+}
+
+function getPlanPhases(plan: NinetyDayPlan) {
+  if (Array.isArray(plan.phases)) return plan.phases;
+  return [plan.phase_1, plan.phase_2, plan.phase_3]
+    .filter(Boolean)
+    .map((phase, index) => ({
+      phase: index + 1,
+      title: phase?.title,
+      actions: Array.isArray(phase?.actions) ? phase.actions : [],
+    }));
 }
 
 /**
@@ -180,7 +194,7 @@ export async function getPlanActionsForCurrentPhase(userId: string): Promise<str
   const daysSinceReport = Math.floor((Date.now() - reportCreated.getTime()) / (1000 * 60 * 60 * 24));
 
   // Determine which phase based on days elapsed
-  const phases = plan?.phases;
+  const phases = getPlanPhases(plan);
   if (!Array.isArray(phases) || phases.length === 0) return [];
 
   let targetPhase = phases[0];

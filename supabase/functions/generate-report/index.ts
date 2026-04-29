@@ -1,11 +1,89 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentModelInstructions, buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
+import {
+  COACHING_SAFETY_BOUNDARY,
+  boundedArray,
+  parseToolArguments,
+  truncate,
+} from "../_shared/ai-guardrails.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const VALID_LENSES = new Set([
+  "discipline_execution",
+  "decision_making",
+  "self_awareness",
+  "business_value",
+  "responsibility_meaning",
+]);
+
+function stringList(value: unknown, maxItems: number, maxLength: number) {
+  return boundedArray<unknown>(value, maxItems)
+    .map((item) => truncate(item, maxLength))
+    .filter(Boolean);
+}
+
+function sanitizePhase(value: unknown, fallbackTitle: string) {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  return {
+    title: truncate(raw.title, 140, fallbackTitle),
+    actions: stringList(raw.actions, 4, 220),
+  };
+}
+
+function sanitizeStrategicReport(input: Record<string, unknown>) {
+  const pattern = input.pattern_analysis && typeof input.pattern_analysis === "object"
+    ? input.pattern_analysis as Record<string, unknown>
+    : {};
+  const plan = input.ninety_day_plan && typeof input.ninety_day_plan === "object"
+    ? input.ninety_day_plan as Record<string, unknown>
+    : {};
+  const intentModel = input.intent_model && typeof input.intent_model === "object"
+    ? input.intent_model as Record<string, unknown>
+    : {};
+  const primaryLens = truncate(intentModel.primary_lens, 80, "discipline_execution");
+  const secondaryLens = truncate(intentModel.secondary_lens, 80, "self_awareness");
+
+  return {
+    pattern_analysis: {
+      themes: boundedArray<Record<string, unknown>>(pattern.themes, 5).map((theme) => ({
+        title: truncate(theme.title, 140, "Operating pattern"),
+        description: truncate(theme.description, 900),
+        areas_affected: stringList(theme.areas_affected, 6, 80),
+      })),
+      strengths: stringList(pattern.strengths, 6, 260),
+      blind_spots: stringList(pattern.blind_spots, 6, 260),
+    },
+    contradictions: boundedArray<Record<string, unknown>>(input.contradictions, 5).map((item) => ({
+      stated: truncate(item.stated, 400),
+      actual: truncate(item.actual, 400),
+      impact: truncate(item.impact, 500),
+    })),
+    forced_choice: truncate(input.forced_choice, 800),
+    north_star_focus: truncate(input.north_star_focus, 300),
+    ninety_day_plan: {
+      phase_1: sanitizePhase(plan.phase_1, "Stabilize the operating rhythm"),
+      phase_2: sanitizePhase(plan.phase_2, "Build consistency under pressure"),
+      phase_3: sanitizePhase(plan.phase_3, "Raise the standard and sustain it"),
+    },
+    intent_model: {
+      primary_lens: VALID_LENSES.has(primaryLens) ? primaryLens : "discipline_execution",
+      secondary_lens: VALID_LENSES.has(secondaryLens) ? secondaryLens : "self_awareness",
+      lens_rationale: truncate(intentModel.lens_rationale, 700),
+      anchor_emphasis: boundedArray<Record<string, unknown>>(intentModel.anchor_emphasis, 4).map((anchor) => ({
+        name: truncate(anchor.name, 80),
+        reason: truncate(anchor.reason, 260),
+      })),
+      background_threads: stringList(intentModel.background_threads, 3, 120),
+      coaching_posture: truncate(intentModel.coaching_posture, 240),
+      report_framing: truncate(intentModel.report_framing, 240),
+    },
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -74,13 +152,13 @@ serve(async (req) => {
     for (const section of sections) {
       auditSummary += `\n## ${section.name}\n`;
       for (const key of section.keys) {
-        if (responses[key]) auditSummary += `- ${responses[key]}\n`;
+        if (responses[key]) auditSummary += `- ${truncate(responses[key], 1500)}\n`;
       }
     }
 
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
-    const intentSummary = buildIntentProfileSummary((profile?.intent_profile as any) || null);
+    const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
     const intentModelInstructions = buildIntentModelInstructions();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -119,6 +197,8 @@ Rules:
 - use follow-up answers to disambiguate vague claims and weigh how self-aware they really are
 
 ${intentSummary}
+
+${COACHING_SAFETY_BOUNDARY}
 
 ${intentModelInstructions}`;
 
@@ -239,6 +319,7 @@ ${intentModelInstructions}`;
           },
         ],
         tool_choice: { type: "function", function: { name: "create_strategic_report" } },
+        temperature: 0.25,
       }),
     });
 
@@ -261,7 +342,7 @@ ${intentModelInstructions}`;
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) throw new Error("No tool call in AI response");
 
-    const reportData = JSON.parse(toolCall.function.arguments);
+    const reportData = sanitizeStrategicReport(parseToolArguments(toolCall.function.arguments));
 
     // Save report
     const { data: report, error: reportError } = await supabase

@@ -1,11 +1,37 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
+import { COACHING_SAFETY_BOUNDARY, boundedArray, safeJsonStringify, truncate } from "../_shared/ai-guardrails.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+type PlanPhase = {
+  phase?: string | number;
+  title?: string;
+  days?: string;
+  actions?: string[];
+};
+
+type NinetyDayPlan = {
+  phases?: PlanPhase[];
+  phase_1?: PlanPhase;
+  phase_2?: PlanPhase;
+  phase_3?: PlanPhase;
+};
+
+function getPlanPhases(plan: NinetyDayPlan) {
+  if (Array.isArray(plan.phases)) return plan.phases;
+  const phases = [plan.phase_1, plan.phase_2, plan.phase_3].filter(Boolean) as PlanPhase[];
+  return phases.map((phase, index) => ({
+    phase: index + 1,
+    title: phase.title,
+    days: index === 0 ? "Days 1-30" : index === 1 ? "Days 31-60" : "Days 61-90",
+    actions: Array.isArray(phase.actions) ? phase.actions : [],
+  }));
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -85,10 +111,10 @@ serve(async (req) => {
     let currentPlanPhase: string | null = null;
     let currentPlanActions: string[] = [];
     if (report?.ninety_day_plan) {
-      const plan = report.ninety_day_plan as any;
+      const plan = report.ninety_day_plan as NinetyDayPlan;
       const reportCreated = new Date(report.created_at || todayMs);
       const daysSinceReport = Math.floor((todayMs - reportCreated.getTime()) / (1000 * 60 * 60 * 24));
-      const phases = plan?.phases;
+      const phases = getPlanPhases(plan);
       if (Array.isArray(phases) && phases.length > 0) {
         let targetPhase = phases[0];
         if (daysSinceReport >= 60 && phases.length >= 3) targetPhase = phases[2];
@@ -117,16 +143,16 @@ serve(async (req) => {
     }
     userContext += "\n";
 
-    const intentSummary = buildIntentProfileSummary((profile?.intent_profile as any) || null);
+    const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
     userContext += `${intentSummary}\n\n`;
 
     if (report) {
       userContext += `--- STRATEGIC REPORT ---\n`;
       if (report.north_star_focus) userContext += `Operating Focus: ${report.north_star_focus}\n`;
       if (report.forced_choice) userContext += `Forced Choice: ${report.forced_choice}\n`;
-      if (report.contradictions) userContext += `Key Contradictions: ${JSON.stringify(report.contradictions)}\n`;
-      if (report.pattern_analysis) userContext += `Patterns: ${JSON.stringify(report.pattern_analysis)}\n`;
-      if (report.ninety_day_plan) userContext += `90-Day Plan: ${JSON.stringify(report.ninety_day_plan)}\n`;
+      if (report.contradictions) userContext += `Key Contradictions: ${safeJsonStringify(report.contradictions, 2500)}\n`;
+      if (report.pattern_analysis) userContext += `Patterns: ${safeJsonStringify(report.pattern_analysis, 3000)}\n`;
+      if (report.ninety_day_plan) userContext += `90-Day Plan: ${safeJsonStringify(report.ninety_day_plan, 3000)}\n`;
       
       userContext += "\n";
     }
@@ -136,12 +162,13 @@ serve(async (req) => {
       for (const ci of checkIns.slice(0, 5)) {
         userContext += `${ci.created_at}: Mood=${ci.mood_score}, Energy=${ci.energy_score}`;
         if (ci.drift_detected) userContext += " [DRIFT DETECTED]";
-        if (ci.wins?.length) userContext += `, Wins: ${ci.wins.join("; ")}`;
-        if (ci.blockers?.length) userContext += `, Blockers: ${ci.blockers.join("; ")}`;
-        if (ci.commitments?.length) userContext += `, Commitments: ${ci.commitments.join("; ")}`;
+        if (ci.wins?.length) userContext += `, Wins: ${boundedArray<string>(ci.wins, 4).map((item) => truncate(item, 220)).join("; ")}`;
+        if (ci.blockers?.length) userContext += `, Blockers: ${boundedArray<string>(ci.blockers, 4).map((item) => truncate(item, 220)).join("; ")}`;
+        if (ci.commitments?.length) userContext += `, Commitments: ${boundedArray<string>(ci.commitments, 4).map((item) => truncate(item, 220)).join("; ")}`;
         if (ci.extras && typeof ci.extras === "object" && Object.keys(ci.extras).length > 0) {
           const extrasStr = Object.entries(ci.extras)
-            .map(([k, v]) => `${k}=${typeof v === "string" ? `"${v}"` : v}`)
+            .slice(0, 8)
+            .map(([k, v]) => `${k}=${typeof v === "string" ? `"${truncate(v, 260)}"` : safeJsonStringify(v, 260)}`)
             .join("; ");
           userContext += `, Extras: ${extrasStr}`;
         }
@@ -160,7 +187,7 @@ serve(async (req) => {
       if (Object.keys(latestExtras).length > 0) {
         userContext += `\nLatest signal per question:\n`;
         for (const [k, info] of Object.entries(latestExtras)) {
-          userContext += `  • ${k} (${info.created_at}): ${typeof info.value === "string" ? `"${info.value}"` : info.value}\n`;
+          userContext += `  • ${k} (${info.created_at}): ${typeof info.value === "string" ? `"${truncate(info.value, 300)}"` : safeJsonStringify(info.value, 300)}\n`;
         }
       }
 
@@ -185,6 +212,8 @@ serve(async (req) => {
       systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are providing a debrief after ${name}'s check-in. Your tone setting is ${tone}, but your doctrine stays constant: direct because the outcome matters, warm because the person matters.
 
 ${userContext}
+
+${COACHING_SAFETY_BOUNDARY}
 
 COMMITMENT CONTEXT GUIDANCE:
 - If follow-through rate is below 50%: this IS the coaching conversation. Name the pattern directly.
@@ -228,6 +257,8 @@ Keep it concise (4-6 sentences). Be direct, human, and specific. Use their actua
 
 ${userContext}
 
+${COACHING_SAFETY_BOUNDARY}
+
 COMMITMENT COACHING GUIDANCE:
 - If follow-through rate is below 50%: this IS the coaching conversation. Name the pattern directly.
 - If previous outcome was "no": open with curiosity about what happened, not judgment
@@ -264,9 +295,16 @@ You are not a therapist. You are a grounded, emotionally intelligent operating c
 Keep responses focused and conversational. Do not lecture. Do not be permissive.`;
     }
 
+    const safeMessages = boundedArray<{ role?: string; content?: string }>(messages, 16)
+      .filter((message) => message.role === "user" || message.role === "assistant")
+      .map((message) => ({
+        role: message.role === "assistant" ? "assistant" : "user",
+        content: truncate(message.content, 1800),
+      }));
+
     const aiMessages = [
       { role: "system", content: systemPrompt },
-      ...(messages || []),
+      ...safeMessages,
     ];
 
     if (mode === "check-in-debrief" && (!messages || messages.length === 0)) {
@@ -283,6 +321,7 @@ Keep responses focused and conversational. Do not lecture. Do not be permissive.
         model: "google/gemini-2.5-flash",
         messages: aiMessages,
         stream: true,
+        temperature: mode === "check-in-debrief" ? 0.3 : 0.4,
       }),
     });
 
