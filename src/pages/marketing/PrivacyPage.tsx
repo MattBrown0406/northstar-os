@@ -104,8 +104,8 @@ const PrivacyPage = () => {
                 <h2 className="font-heading text-2xl font-bold text-foreground">Questions about privacy?</h2>
                 <p className="mt-2 text-muted-foreground">Contact support and include the email address associated with your account.</p>
               </div>
-              <a href="mailto:support@intentus.ai" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                <Mail className="h-4 w-4" /> support@intentus.ai
+              <a href="mailto:support@intentusai.com" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                <Mail className="h-4 w-4" /> support@intentusai.com
               </a>
             </div>
           </div>

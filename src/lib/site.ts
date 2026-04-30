@@ -1,5 +1,5 @@
 export const SITE_NAME = "Intentus";
-export const SITE_URL = "https://intentus.ai";
+export const SITE_URL = "https://intentusai.com";
 export const DEFAULT_TITLE = "Intentus | AI operating accountability software for founders and leaders";
 export const DEFAULT_DESCRIPTION = "Intentus helps founders, leaders, operators, and anyone serious about growth run an honest operating audit, choose the few metrics that matter, and stay accountable to a focused 90-day plan.";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;

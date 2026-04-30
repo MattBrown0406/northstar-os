@@ -9,7 +9,7 @@ const supportItems = [
   {
     icon: Mail,
     title: "Contact support",
-    body: "For app access, account, or product questions, email support@intentus.ai. Include the email address on your account and a short description of what happened.",
+    body: "For app access, account, or product questions, email support@intentusai.com. Include the email address on your account and a short description of what happened.",
   },
   {
     icon: Receipt,
@@ -77,7 +77,7 @@ const SupportPage = () => {
               <p className="mt-2 text-muted-foreground">Send us the issue and the account email so we can look in the right place.</p>
             </div>
             <Button asChild variant="hero" size="lg">
-              <a href="mailto:support@intentus.ai">
+              <a href="mailto:support@intentusai.com">
                 Email support <ArrowRight className="h-4 w-4" />
               </a>
             </Button>

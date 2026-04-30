@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://intentus.ai/sitemap.xml
+Sitemap: https://intentusai.com/sitemap.xml
