@@ -18,6 +18,7 @@ const navLinks = [
   { label: "Pricing", href: "/#pricing", isAnchor: true },
   { label: "FAQ", href: "/faq", isAnchor: false },
   { label: "Support", href: "/support", isAnchor: false },
+  { label: "Privacy", href: "/privacy", isAnchor: false },
 ];
 
 const Navbar = () => {

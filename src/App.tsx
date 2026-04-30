@@ -57,6 +57,7 @@ const OperatingAudit = lazyWithRecovery(() => import("./pages/marketing/Operatin
 const AccountabilitySoftware = lazyWithRecovery(() => import("./pages/marketing/AccountabilitySoftware"), "AccountabilitySoftware");
 const FaqPage = lazyWithRecovery(() => import("./pages/marketing/FaqPage"), "FaqPage");
 const SupportPage = lazyWithRecovery(() => import("./pages/marketing/SupportPage"), "SupportPage");
+const PrivacyPage = lazyWithRecovery(() => import("./pages/marketing/PrivacyPage"), "PrivacyPage");
 const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
 const Admin = lazyWithRecovery(() => import("./pages/Admin"), "Admin");
 const NotFound = lazyWithRecovery(() => import("./pages/NotFound"), "NotFound");
@@ -89,6 +90,7 @@ const App = () => (
                 <Route path="/accountability-software" element={<AccountabilitySoftware />} />
                 <Route path="/faq" element={<FaqPage />} />
                 <Route path="/support" element={<SupportPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />

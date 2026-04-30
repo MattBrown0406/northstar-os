@@ -84,7 +84,7 @@ const SupportPage = () => {
           </div>
 
           <div className="mx-auto mt-6 max-w-5xl text-center text-sm text-muted-foreground">
-            Looking for general product questions? Visit the <Link to="/faq" className="text-primary hover:underline">FAQ</Link>.
+            Looking for general product questions? Visit the <Link to="/faq" className="text-primary hover:underline">FAQ</Link>. For data handling, review the <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
           </div>
         </div>
       </section>
