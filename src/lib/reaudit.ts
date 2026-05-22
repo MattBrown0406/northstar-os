@@ -36,7 +36,6 @@ export async function canReaudit(userId: string): Promise<{
   }
 
   // Check cooldown: most recent archived audit
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: history } = await (supabase as any)
     .from("audit_history")
     .select("archived_at")
@@ -89,7 +88,6 @@ export async function archiveAndResetAudit(userId: string): Promise<number> {
   const report = reportRows?.[0] ?? null;
 
   // 3. Determine the next audit_number (count existing history entries + 1)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { count } = await (supabase as any)
     .from("audit_history")
     .select("id", { count: "exact", head: true })
@@ -123,7 +121,6 @@ export async function archiveAndResetAudit(userId: string): Promise<number> {
     completed_at: audit.completed_at ?? new Date().toISOString(),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: insertErr } = await (supabase as any)
     .from("audit_history")
     .insert(historyPayload);
@@ -150,7 +147,6 @@ export async function archiveAndResetAudit(userId: string): Promise<number> {
  * Get the full audit history for a user (oldest first).
  */
 export async function getAuditHistory(userId: string): Promise<AuditHistoryEntry[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("audit_history")
     .select("*")
