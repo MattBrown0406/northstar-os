@@ -46,6 +46,7 @@ const CheckIn = lazyWithRecovery(() => import("./pages/CheckIn"), "CheckIn");
 const Report = lazyWithRecovery(() => import("./pages/Report"), "Report");
 const Coaching = lazyWithRecovery(() => import("./pages/Coaching"), "Coaching");
 const Subscribe = lazyWithRecovery(() => import("./pages/Subscribe"), "Subscribe");
+const AppReviewDemo = lazyWithRecovery(() => import("./pages/AppReviewDemo"), "AppReviewDemo");
 const CoachDashboard = lazyWithRecovery(() => import("./pages/CoachDashboard"), "CoachDashboard");
 const CoachClientReport = lazyWithRecovery(() => import("./pages/CoachClientReport"), "CoachClientReport");
 const CoachClientAudit = lazyWithRecovery(() => import("./pages/CoachClientAudit"), "CoachClientAudit");
@@ -92,6 +93,7 @@ const App = () => (
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/review-demo" element={<AppReviewDemo />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                 <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />

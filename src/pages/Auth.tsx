@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite");
+  const showAppReviewDemo = Capacitor.isNativePlatform() || searchParams.get("review") === "1";
 
   useEffect(() => {
     if (inviteCode) setIsLogin(false);
@@ -139,6 +141,11 @@ const Auth = () => {
             </form>
 
             <div className="mt-4 space-y-2 text-center">
+              {showAppReviewDemo && !showReset && (
+                <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/review-demo")}>
+                  Continue with App Review Demo
+                </Button>
+              )}
               {!showReset && isLogin && (
                 <button type="button" onClick={() => setShowReset(true)} className="text-sm text-primary hover:underline">
                   Forgot password?
