@@ -18,7 +18,7 @@ const sections = [
   },
   {
     title: "Subscription Plans",
-    body: "Executive: $29.99/month — AI operating coach chat, AI check-in debriefs, drift tracking, and accountability history. Premium: $99.99/month — Everything in Executive plus Mirror Mode, rotating coaching signals, and quarterly plan refreshes. Coach: $399.99/month — Everything in Premium plus coach/client workflows and unlimited client accounts. Prices are in USD and may vary by region. Current pricing is shown on the subscription screen before purchase.",
+    body: "Executive: $39.99/month — AI operating coach chat, AI check-in debriefs, drift tracking, and accountability history. Premium: $79.99/month — Everything in Executive plus Mirror Mode, rotating coaching signals, and quarterly plan refreshes. Coach: $299.99/month — Everything in Premium plus coach/client workflows and unlimited client accounts. Prices are in USD and may vary by region. Current pricing is shown on the subscription screen before purchase.",
   },
   {
     title: "Free Tier",

@@ -34,19 +34,19 @@ const reviewPlans: ReviewPlan[] = [
   {
     name: "Executive",
     productId: REVENUECAT_PRODUCT_IDS.pro,
-    fallbackPrice: "$29.99/mo",
+    fallbackPrice: "$39.99/mo",
     description: "AI operating coach chat, AI check-in debriefs, drift tracking, and accountability history.",
   },
   {
     name: "Premium",
     productId: REVENUECAT_PRODUCT_IDS.premium,
-    fallbackPrice: "$99.99/mo",
+    fallbackPrice: "$79.99/mo",
     description: "Everything in Executive plus Mirror Mode, rotating coaching signals, and quarterly plan refreshes.",
   },
   {
     name: "Coach",
     productId: REVENUECAT_PRODUCT_IDS.coach,
-    fallbackPrice: "$399.99/mo",
+    fallbackPrice: "$299.99/mo",
     description: "Premium AI plus coach/client accountability workflows and client tier assignment.",
   },
 ];

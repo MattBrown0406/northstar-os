@@ -61,6 +61,7 @@ const SupportPage = lazyWithRecovery(() => import("./pages/marketing/SupportPage
 const PrivacyPage = lazyWithRecovery(() => import("./pages/marketing/PrivacyPage"), "PrivacyPage");
 const TermsPage = lazyWithRecovery(() => import("./pages/marketing/TermsPage"), "TermsPage");
 const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
+const NorthStarGoals = lazyWithRecovery(() => import('./pages/NorthStarGoals'), 'NorthStarGoals');
 const Admin = lazyWithRecovery(() => import("./pages/Admin"), "Admin");
 const NotFound = lazyWithRecovery(() => import("./pages/NotFound"), "NotFound");
 
@@ -105,6 +106,7 @@ const App = () => (
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/coaching" element={<ProtectedRoute><Coaching /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
+                <Route path="/goals" element={<ProtectedRoute><NorthStarGoals /></ProtectedRoute>} />
                 <Route path="/coach" element={<ProtectedRoute><CoachDashboard /></ProtectedRoute>} />
                 <Route path="/coach/client/:clientId/report" element={<ProtectedRoute><CoachClientReport /></ProtectedRoute>} />
                 <Route path="/coach/client/:clientId/audit" element={<ProtectedRoute><CoachClientAudit /></ProtectedRoute>} />

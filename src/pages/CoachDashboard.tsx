@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import CoachBrandingSettings from "@/components/coach/CoachBrandingSettings";
+import { CoachSessionPrep } from '@/components/coach/CoachSessionPrep';
 import { useNavigate } from "react-router-dom";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
@@ -441,6 +442,16 @@ const CoachDashboard = () => {
                       <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">Report ready</span>
                     )}
                   </div>
+
+                  <CoachSessionPrep
+                    client={{
+                      user_id: client.client_user_id,
+                      profile: client.profile ?? { display_name: null },
+                      last_check_in: client.last_check_in ?? null,
+                      check_in_count: client.check_in_count ?? 0,
+                    }}
+                    coachId={user?.id || ''}
+                  />
 
                   <div className="flex gap-2">
                     {client.audit_status === "completed" && (

@@ -219,6 +219,9 @@ const Dashboard = () => {
           <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/audit")}>Audit</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/check-in")}>Check-in</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/goals")}>
+              <Target className="h-4 w-4 mr-1" /> North Star
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/subscribe")}>
               <Sparkles className="h-4 w-4 mr-1" /> Plan
             </Button>
@@ -246,6 +249,9 @@ const Dashboard = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/check-in")} title="Check-in">
               <CheckCircle className="h-4 w-4" />
             </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/goals")} title="North Star">
+              <Target className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/coaching")} title="Coach">
               <MessageSquare className="h-4 w-4" />
             </Button>
@@ -272,6 +278,11 @@ const Dashboard = () => {
                     <SheetClose asChild>
                       <Button variant="ghost" className="justify-start" onClick={() => navigate("/check-in")}>
                         <CheckCircle className="h-4 w-4 mr-2" /> Check-in
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button variant="ghost" className="justify-start" onClick={() => navigate("/goals")}>
+                        <Target className="h-4 w-4 mr-2" /> North Star
                       </Button>
                     </SheetClose>
                     <SheetClose asChild>

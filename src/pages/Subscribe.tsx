@@ -32,7 +32,7 @@ const plans: Plan[] = [
     tier: "pro",
     name: "Executive",
     productId: REVENUECAT_PRODUCT_IDS.pro,
-    fallbackPrice: "$29.99",
+    fallbackPrice: "$39.99",
     summary: "Full AI operating coach for execution rhythm.",
     featured: true,
     features: [
@@ -46,7 +46,7 @@ const plans: Plan[] = [
     tier: "premium",
     name: "Premium",
     productId: REVENUECAT_PRODUCT_IDS.premium,
-    fallbackPrice: "$99.99",
+    fallbackPrice: "$79.99",
     summary: "Sharper Mirror Mode and plan refresh support.",
     features: [
       "Everything in Executive",
@@ -59,7 +59,7 @@ const plans: Plan[] = [
     tier: "coach",
     name: "Coach",
     productId: REVENUECAT_PRODUCT_IDS.coach,
-    fallbackPrice: "$399.99",
+    fallbackPrice: "$299.99",
     summary: "Premium AI plus client accountability workflows.",
     features: [
       "Everything in Premium",

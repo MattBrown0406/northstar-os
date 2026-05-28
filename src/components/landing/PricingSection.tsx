@@ -20,7 +20,7 @@ const plans = [
   },
   {
     name: "Executive",
-    price: "$29.99",
+    price: "$39.99",
     period: "/mo",
     desc: "For operators who want a tighter execution rhythm around the priorities and numbers that matter.",
     features: [
@@ -40,7 +40,7 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "$99.99",
+    price: "$79.99",
     period: "/mo",
     desc: "A stricter mirror and faster drift correction for serious operators.",
     features: [
@@ -56,7 +56,7 @@ const plans = [
   },
   {
     name: "Coach",
-    price: "$399.99",
+    price: "$299.99",
     period: "/mo",
     desc: "For professional coaches running a branded accountability layer for clients.",
     features: [

@@ -55,7 +55,7 @@ The app now includes the following required subscription disclosure links:
 
 Each plan card on the Subscribe screen displays:
 - **Plan name** (Executive, Premium, Coach)
-- **Price per month** (loaded live from StoreKit; fallback prices shown if StoreKit unavailable: $29.99, $99.99, $399.99)
+- **Price per month** (loaded live from StoreKit; fallback prices shown if StoreKit unavailable: $39.99, $79.99, $299.99)
 - **Billing period** (/mo label on each price)
 - Subscriptions are auto-renewing monthly subscriptions managed by Apple
 
@@ -65,9 +65,9 @@ The footer on the Subscribe screen states: *"Payment is handled by Apple. Manage
 
 The three subscription products must be created and submitted for review in App Store Connect before this build can be approved. Product identifiers:
 
-- `intentus_executive_monthly` — Intentus Executive, $29.99/month
-- `intentus_premium_monthly` — Intentus Premium, $99.99/month
-- `intentus_coach_monthly` — Intentus Coach, $399.99/month
+- `intentus_executive_monthly` — Intentus Executive, $39.99/month
+- `intentus_premium_monthly` — Intentus Premium, $79.99/month
+- `intentus_coach_monthly` — Intentus Coach, $299.99/month
 
 All three must be attached to the app version being reviewed in App Store Connect (App Store Connect → App → Subscriptions → add to version). An App Review screenshot is required for each product.
 

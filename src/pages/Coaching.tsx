@@ -9,7 +9,7 @@ import { brandLogo as logo } from "@/lib/brand";
 import { getTierCapability, normalizePlanTier, type PlanTier } from "@/lib/tier-policy";
 import {
   Send, ArrowLeft, Loader2, MessageSquare,
-  TrendingUp, AlertTriangle, Target, Sparkles
+  TrendingUp, AlertTriangle, Target, Sparkles, RotateCcw
 } from "lucide-react";
 import { formatLensLabel, type AdaptiveLens } from "@/lib/intentus-architecture";
 
@@ -54,6 +54,23 @@ const Coaching = () => {
   }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+    const loadHistory = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('coaching_messages')
+        .select('role, content, created_at')
+        .eq('user_id', user.id)
+        .eq('session_date', today)
+        .order('created_at', { ascending: true });
+      if (data && data.length > 0) {
+        setMessages(data.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })));
+      }
+    };
+    loadHistory();
+  }, [user]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -61,7 +78,8 @@ const Coaching = () => {
     const tierCapability = getTierCapability(planTier);
     if (!text.trim() || isStreaming || !tierCapability.canUseAiChat) return;
 
-    const userMsg: Message = { role: "user", content: text.trim() };
+    const trimmedInput = text.trim();
+    const userMsg: Message = { role: "user", content: trimmedInput };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
@@ -140,6 +158,14 @@ const Coaching = () => {
         }]);
       }
     }
+    // Persist to DB
+    if (user && assistantText) {
+      const today = new Date().toISOString().split('T')[0];
+      await supabase.from('coaching_messages').insert([
+        { user_id: user.id, role: 'user', content: trimmedInput, session_date: today },
+        { user_id: user.id, role: 'assistant', content: assistantText, session_date: today },
+      ]);
+    }
     setIsStreaming(false);
     inputRef.current?.focus();
   };
@@ -159,7 +185,20 @@ const Coaching = () => {
               <img src={logo} alt="Intentus" className="h-8 w-auto object-contain md:h-10" />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground hidden sm:block">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground hidden sm:block">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setMessages([])}
+                title="New session"
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-1" /> New session
+              </Button>
+            )}
+          </div>
         </div>
       </nav>
 

@@ -9,7 +9,11 @@ import {
   ArrowLeft, Printer, Target, AlertTriangle,
   Crosshair, Calendar, TrendingUp, Eye, Zap, CheckCircle, Layers, BrainCircuit,
   RefreshCw, ChevronDown, ChevronUp, Clock,
+  RotateCcw, CheckCircle2, Circle, Download, Loader2, Pencil,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { brandLogo as logo } from "@/lib/brand";
 import { formatLensLabel, type IntentModel } from "@/lib/intentus-architecture";
 import { canReaudit, archiveAndResetAudit, getAuditHistory, type AuditHistoryEntry } from "@/lib/reaudit";
@@ -68,6 +72,16 @@ const Report = () => {
   const [auditHistory, setAuditHistory] = useState<AuditHistoryEntry[]>([]);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null);
+
+  const [completions, setCompletions] = useState<Record<string, boolean>>({});
+  const [editedPlan, setEditedPlan] = useState<any[] | null>(null);
+  const [editingPhase, setEditingPhase] = useState<number | null>(null);
+  const [editingAction, setEditingAction] = useState<{phase: number; action: number} | null>(null);
+  const [editActionText, setEditActionText] = useState('');
+  const [refreshingPlan, setRefreshingPlan] = useState(false);
+  const [patternIntel, setPatternIntel] = useState<any>(null);
+  const [loadingPatternIntel, setLoadingPatternIntel] = useState(false);
+  const [patternIntelLoaded, setPatternIntelLoaded] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -164,6 +178,28 @@ const Report = () => {
     loadReauditData();
   }, [user]);
 
+  // Load action completions
+  useEffect(() => {
+    if (!user || !report) return;
+    const loadCompletions = async () => {
+      const { data } = await supabase
+        .from('plan_action_completions')
+        .select('phase_index, action_index')
+        .eq('user_id', user.id)
+        .eq('report_id', report.id);
+      if (data) {
+        const map: Record<string, boolean> = {};
+        data.forEach(c => { map[`${c.phase_index}-${c.action_index}`] = true; });
+        setCompletions(map);
+      }
+    };
+    loadCompletions();
+    // Load edited plan if exists
+    if (report.edited_ninety_day_plan) {
+      setEditedPlan(report.edited_ninety_day_plan as any[]);
+    }
+  }, [user, report]);
+
   const handleConfirmReaudit = async () => {
     if (!user) return;
     setReauditInProgress(true);
@@ -180,6 +216,121 @@ const Report = () => {
     }
   };
 
+  const activePlan = editedPlan || (report?.ninety_day_plan ? [
+    { ...(report.ninety_day_plan as any).phase_1, phase_label: 'Days 1–30', _phaseIdx: 0 },
+    { ...(report.ninety_day_plan as any).phase_2, phase_label: 'Days 31–60', _phaseIdx: 1 },
+    { ...(report.ninety_day_plan as any).phase_3, phase_label: 'Days 61–90', _phaseIdx: 2 },
+  ] : null);
+
+  const toggleActionComplete = async (phaseIdx: number, actionIdx: number) => {
+    if (!user || !report) return;
+    const key = `${phaseIdx}-${actionIdx}`;
+    const isDone = completions[key];
+    if (isDone) {
+      await supabase.from('plan_action_completions').delete()
+        .eq('user_id', user.id).eq('report_id', report.id)
+        .eq('phase_index', phaseIdx).eq('action_index', actionIdx);
+      setCompletions(prev => { const n = {...prev}; delete n[key]; return n; });
+    } else {
+      await supabase.from('plan_action_completions').insert({
+        user_id: user.id, report_id: report.id,
+        phase_index: phaseIdx, action_index: actionIdx,
+      });
+      setCompletions(prev => ({...prev, [key]: true}));
+    }
+  };
+
+  const saveActionEdit = async (phaseIdx: number, actionIdx: number) => {
+    if (!report || !editActionText.trim()) return;
+    const base = (editedPlan || [
+      { ...(report.ninety_day_plan as any).phase_1, phase_label: 'Days 1–30', _phaseIdx: 0 },
+      { ...(report.ninety_day_plan as any).phase_2, phase_label: 'Days 31–60', _phaseIdx: 1 },
+      { ...(report.ninety_day_plan as any).phase_3, phase_label: 'Days 61–90', _phaseIdx: 2 },
+    ]) as any[];
+    const updated = base.map((phase: any, pi: number) => pi !== phaseIdx ? phase : {
+      ...phase,
+      actions: phase.actions.map((a: string, ai: number) => ai !== actionIdx ? a : editActionText.trim()),
+    });
+    setEditedPlan(updated);
+    await supabase.from('strategic_reports').update({
+      edited_ninety_day_plan: updated, last_edited_at: new Date().toISOString(), last_edited_by: user?.id,
+    }).eq('id', report.id);
+    setEditingAction(null);
+    setEditActionText('');
+    toast({ title: 'Action updated' });
+  };
+
+  const handleRefreshPlan = async () => {
+    if (!user || !report) return;
+    setRefreshingPlan(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/refresh-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ reportId: report.id }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setEditedPlan(json.refreshed_plan);
+        toast({ title: 'Plan refreshed', description: 'Your 90-day plan has been updated based on your check-in patterns.' });
+      } else {
+        toast({ title: 'Refresh failed', description: json.error || 'Unable to refresh plan.', variant: 'destructive' });
+      }
+    } catch (e) {
+      toast({ title: 'Refresh failed', variant: 'destructive' });
+    } finally {
+      setRefreshingPlan(false);
+    }
+  };
+
+  const handleLoadPatternIntel = async () => {
+    if (!user || patternIntelLoaded) return;
+    setLoadingPatternIntel(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pattern-intelligence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({}),
+      });
+      const json = await res.json();
+      setPatternIntel(json);
+      setPatternIntelLoaded(true);
+    } catch (e) {
+      toast({ title: 'Could not load pattern analysis', variant: 'destructive' });
+    } finally {
+      setLoadingPatternIntel(false);
+    }
+  };
+
+  const handleExportText = () => {
+    if (!report) return;
+    const plan = activePlan as any[];
+    const lines = [
+      `INTENTUS OPERATING PLAN`,
+      `Generated: ${new Date(report.created_at).toLocaleDateString()}`,
+      ``,
+      `NORTH STAR FOCUS`,
+      report.north_star_focus,
+      ``,
+      `90-DAY PLAN`,
+      ...(plan || []).flatMap((phase: any) => [
+        ``,
+        `${phase.phase_label}: ${phase.title}`,
+        ...(phase.actions || []).map((a: string, i: number) => `  ${i + 1}. ${a}`),
+      ]),
+      ``,
+      `FORCED CHOICE`,
+      report.forced_choice,
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'intentus-plan.txt'; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -187,7 +338,6 @@ const Report = () => {
       </div>
     );
   }
-
   if (generating) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -388,28 +538,84 @@ const Report = () => {
 
         {/* 90-Day Plan */}
         <section className="mb-8 print:break-inside-avoid">
-          <h2 className="font-heading text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" /> 90-Day Plan
-          </h2>
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <h2 className="font-heading text-xl font-bold text-foreground flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" /> 90-Day Plan
+            </h2>
+            {editedPlan && (
+              <Badge variant="outline" className="text-xs text-primary border-primary/40">Refreshed</Badge>
+            )}
+            <div className="flex-1" />
+            <Button variant="ghost" size="sm" onClick={handleExportText} className="print:hidden">
+              <Download className="h-4 w-4 mr-1.5" /> Export
+            </Button>
+            {isPremiumTier && (
+              <Button variant="outline" size="sm" onClick={handleRefreshPlan} disabled={refreshingPlan} className="print:hidden">
+                {refreshingPlan ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-1.5" />}
+                Refresh Plan
+              </Button>
+            )}
+          </div>
           <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { phase: ninety_day_plan.phase_1, label: "Days 1–30", color: "primary" },
-              { phase: ninety_day_plan.phase_2, label: "Days 31–60", color: "primary" },
-              { phase: ninety_day_plan.phase_3, label: "Days 61–90", color: "primary" },
-            ].map(({ phase, label }) => (
-              <div key={label} className="bg-card rounded-xl border border-border p-5 print:break-inside-avoid">
-                <p className="text-xs text-primary uppercase tracking-wider font-semibold mb-1">{label}</p>
-                <h3 className="font-heading font-bold text-foreground mb-3">{phase.title}</h3>
-                <ul className="space-y-2">
-                  {phase.actions.map((a, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <Target className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span className="text-foreground">{a}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {(activePlan as any[] | null || []).map((phase: any, phaseIdx: number) => {
+              const phaseLabel = phase.phase_label || (phaseIdx === 0 ? 'Days 1–30' : phaseIdx === 1 ? 'Days 31–60' : 'Days 61–90');
+              const actions: string[] = phase.actions || [];
+              const doneCount = actions.filter((_: string, ai: number) => completions[`${phaseIdx}-${ai}`]).length;
+              return (
+                <div key={phaseIdx} className="bg-card rounded-xl border border-border p-5 print:break-inside-avoid">
+                  <p className="text-xs text-primary uppercase tracking-wider font-semibold mb-1">{phaseLabel}</p>
+                  <h3 className="font-heading font-bold text-foreground mb-1">{phase.title}</h3>
+                  {doneCount > 0 && (
+                    <p className="text-xs text-muted-foreground mb-3">{doneCount}/{actions.length} complete</p>
+                  )}
+                  {doneCount === 0 && <div className="mb-3" />}
+                  <ul className="space-y-2">
+                    {actions.map((a: string, actionIdx: number) => {
+                      const key = `${phaseIdx}-${actionIdx}`;
+                      const isDone = !!completions[key];
+                      const isEditing = editingAction?.phase === phaseIdx && editingAction?.action === actionIdx;
+                      return (
+                        <li key={actionIdx} className="text-sm group">
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editActionText}
+                                onChange={e => setEditActionText(e.target.value)}
+                                className="text-sm"
+                                autoFocus
+                              />
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="default" onClick={() => saveActionEdit(phaseIdx, actionIdx)}>Save</Button>
+                                <Button size="sm" variant="ghost" onClick={() => { setEditingAction(null); setEditActionText(''); }}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-start gap-2">
+                              <button
+                                className="mt-0.5 shrink-0 print:hidden"
+                                onClick={() => toggleActionComplete(phaseIdx, actionIdx)}
+                              >
+                                {isDone
+                                  ? <CheckCircle2 className="h-4 w-4 text-primary" />
+                                  : <Circle className="h-4 w-4 text-muted-foreground" />
+                                }
+                              </button>
+                              <span className={isDone ? 'line-through text-muted-foreground flex-1' : 'text-foreground flex-1'}>{a}</span>
+                              <button
+                                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 print:hidden"
+                                onClick={() => { setEditingAction({ phase: phaseIdx, action: actionIdx }); setEditActionText(a); }}
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                              </button>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -534,6 +740,68 @@ const Report = () => {
               </div>
             )}
           </div>
+        )}
+        {/* Pattern Intelligence (Premium/Coach only) */}
+        {isPremiumTier && (
+          <Card className="border-border mb-8 print:hidden">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-heading">Pattern Intelligence</CardTitle>
+                {!patternIntelLoaded && (
+                  <Button variant="outline" size="sm" onClick={handleLoadPatternIntel} disabled={loadingPatternIntel}>
+                    {loadingPatternIntel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TrendingUp className="mr-2 h-4 w-4" />}
+                    Analyze Patterns
+                  </Button>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">Behavioral patterns across all your audit cycles.</p>
+            </CardHeader>
+            <CardContent>
+              {!patternIntelLoaded && !loadingPatternIntel && (
+                <p className="text-sm text-muted-foreground">Click Analyze Patterns to generate longitudinal intelligence from your audit history. Requires at least 2 completed audit cycles.</p>
+              )}
+              {patternIntel?.insufficient_data && (
+                <p className="text-sm text-muted-foreground">{patternIntel.message}</p>
+              )}
+              {patternIntel && !patternIntel.insufficient_data && (
+                <div className="space-y-5">
+                  <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
+                    <p className="text-sm font-semibold text-foreground">{patternIntel.executive_summary}</p>
+                    <p className="mt-2 text-sm text-primary font-medium">→ {patternIntel.recommended_focus}</p>
+                  </div>
+                  {patternIntel.recurring_blind_spots?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-2">Recurring Blind Spots</h4>
+                      <div className="space-y-2">
+                        {patternIntel.recurring_blind_spots.map((b: any, i: number) => (
+                          <div key={i} className="rounded-lg border border-border bg-card p-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium text-foreground">{b.pattern}</p>
+                              <Badge variant="outline" className="text-xs">{b.cycles_present} cycles</Badge>
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">{b.evidence}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {patternIntel.growth_areas?.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground mb-2">Growth Areas</h4>
+                      <div className="space-y-2">
+                        {patternIntel.growth_areas.map((g: any, i: number) => (
+                          <div key={i} className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                            <p className="text-sm font-medium text-emerald-400">{g.area}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{g.evidence}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
 

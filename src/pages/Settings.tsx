@@ -107,6 +107,31 @@ const Settings = () => {
     load();
   }, [user]);
 
+  useEffect(() => {
+    if (!user || loading) return;
+    const checkReminder = async () => {
+      const { data: lastCheckin } = await supabase
+        .from('check_ins')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (!lastCheckin) return;
+      const lastDate = new Date(lastCheckin.created_at);
+      const now = new Date();
+      const daysDiff = Math.floor((now.getTime() - lastDate.getTime()) / 86400000);
+      const threshold = cadence === 'weekly' ? 7 : cadence === 'every_other_day' ? 2 : 1;
+      if (daysDiff >= threshold) {
+        toast({
+          title: 'Check-in reminder',
+          description: `You're due for a check-in. Your last one was ${daysDiff} day${daysDiff !== 1 ? 's' : ''} ago.`,
+        });
+      }
+    };
+    checkReminder();
+  }, [user, loading]);
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
@@ -298,6 +323,9 @@ const Settings = () => {
                 </button>
               ))}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Intentus checks your cadence each time you open Settings and reminds you when you're overdue.
+            </p>
           </div>
 
           {/* Timezone */}
