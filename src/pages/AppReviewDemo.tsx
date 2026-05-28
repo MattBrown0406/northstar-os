@@ -253,6 +253,15 @@ const AppReviewDemo = () => {
           </div>
         </section>
       </main>
+      <footer className="container mx-auto px-4 pb-10">
+        <p className="text-center text-xs text-muted-foreground">
+          By subscribing, you agree to our{" "}
+          <Link to="/terms" className="underline hover:text-foreground transition-colors">Terms of Use</Link>
+          {" "}and{" "}
+          <Link to="/privacy" className="underline hover:text-foreground transition-colors">Privacy Policy</Link>.
+          {" "}Subscriptions auto-renew monthly. Manage or cancel in Apple ID settings.
+        </p>
+      </footer>
     </div>
   );
 };

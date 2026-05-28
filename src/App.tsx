@@ -59,6 +59,7 @@ const AccountabilitySoftware = lazyWithRecovery(() => import("./pages/marketing/
 const FaqPage = lazyWithRecovery(() => import("./pages/marketing/FaqPage"), "FaqPage");
 const SupportPage = lazyWithRecovery(() => import("./pages/marketing/SupportPage"), "SupportPage");
 const PrivacyPage = lazyWithRecovery(() => import("./pages/marketing/PrivacyPage"), "PrivacyPage");
+const TermsPage = lazyWithRecovery(() => import("./pages/marketing/TermsPage"), "TermsPage");
 const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
 const Admin = lazyWithRecovery(() => import("./pages/Admin"), "Admin");
 const NotFound = lazyWithRecovery(() => import("./pages/NotFound"), "NotFound");
@@ -92,6 +93,7 @@ const App = () => (
                 <Route path="/faq" element={<FaqPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/review-demo" element={<AppReviewDemo />} />
                 <Route path="/reset-password" element={<ResetPassword />} />

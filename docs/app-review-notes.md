@@ -35,6 +35,42 @@ To review the purchase process:
 
 All iOS subscription purchases are handled with Apple In-App Purchase through RevenueCat. The iOS app does not send users to an external web checkout for these digital subscriptions.
 
+## Terms of Use and Privacy Policy (Guideline 3.1.2c)
+
+The app now includes the following required subscription disclosure links:
+
+- **Terms of Use** — available at `/terms` in the app and at https://intentusai.com/terms
+- **Privacy Policy** — available at `/privacy` in the app and at https://intentusai.com/privacy
+
+**Where they appear in the purchase flow:**
+1. On the **Subscribe** screen (`/subscribe`), the disclosure footer beneath the plan cards reads: *"By subscribing, you agree to our Terms of Use and Privacy Policy."* Both are tappable links.
+2. On the **App Review Demo** screen (`/review-demo`), the footer below the purchase section reads: *"By subscribing, you agree to our Terms of Use and Privacy Policy. Subscriptions auto-renew monthly. Manage or cancel in Apple ID settings."*
+
+**To verify in the reviewed build:**
+1. From the sign-in screen, tap **Continue with App Review Demo** → scroll to the bottom of the screen → tap **Terms of Use** → Terms page loads.
+2. Tap **Privacy Policy** → Privacy page loads.
+3. Sign in with the demo account → navigate to **Subscribe** → scroll to the bottom → tap **Terms of Use** and **Privacy Policy** → both pages load.
+
+## Subscription Disclosure (Guideline 3.1.2c)
+
+Each plan card on the Subscribe screen displays:
+- **Plan name** (Executive, Premium, Coach)
+- **Price per month** (loaded live from StoreKit; fallback prices shown if StoreKit unavailable: $29.99, $99.99, $399.99)
+- **Billing period** (/mo label on each price)
+- Subscriptions are auto-renewing monthly subscriptions managed by Apple
+
+The footer on the Subscribe screen states: *"Payment is handled by Apple. Manage or cancel subscriptions in your Apple ID subscription settings."*
+
+## IAP Products (Guideline 2.1b)
+
+The three subscription products must be created and submitted for review in App Store Connect before this build can be approved. Product identifiers:
+
+- `intentus_executive_monthly` — Intentus Executive, $29.99/month
+- `intentus_premium_monthly` — Intentus Premium, $99.99/month
+- `intentus_coach_monthly` — Intentus Coach, $399.99/month
+
+All three must be attached to the app version being reviewed in App Store Connect (App Store Connect → App → Subscriptions → add to version). An App Review screenshot is required for each product.
+
 ## Business Model Answers
 
 1. **Who uses the paid subscriptions in the app?**
@@ -70,3 +106,5 @@ All iOS subscription purchases are handled with Apple In-App Purchase through Re
 
 - Intentus is a coaching and self-reflection product for adults. It is not medical advice, mental health treatment, legal advice, financial advice, or crisis support.
 - If a reviewer sees a product-unavailable message, please confirm the reviewed build is attached to the App Store Connect IAP products and that the RevenueCat current offering includes the three product identifiers listed above.
+- Terms of Use: https://intentusai.com/terms
+- Privacy Policy: https://intentusai.com/privacy

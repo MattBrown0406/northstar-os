@@ -280,7 +280,11 @@ const Subscribe = () => {
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p>
             Payment is handled by Apple. Manage or cancel subscriptions in your Apple ID subscription settings.
-            Intentus provides coaching and self-reflection tools, not medical, legal, financial, or crisis advice.
+            Intentus provides coaching and self-reflection tools, not medical, legal, financial, or crisis advice.{" "}
+            By subscribing, you agree to our{" "}
+            <Link to="/terms" className="underline hover:text-foreground transition-colors">Terms of Use</Link>
+            {" "}and{" "}
+            <Link to="/privacy" className="underline hover:text-foreground transition-colors">Privacy Policy</Link>.
           </p>
         </div>
       </main>
