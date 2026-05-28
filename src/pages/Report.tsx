@@ -51,7 +51,9 @@ interface StrategicReport {
   north_star_focus: string;
   ninety_day_plan: NinetyDayPlan;
   intent_model?: IntentModel | null;
+  edited_ninety_day_plan?: any[] | null;
 }
+
 
 const Report = () => {
   const { user } = useAuth();
