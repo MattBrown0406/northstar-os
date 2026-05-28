@@ -125,6 +125,45 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_annotations: {
+        Row: {
+          annotation_type: string
+          client_user_id: string
+          coach_id: string
+          content: string
+          context_id: string | null
+          context_type: string | null
+          created_at: string
+          id: string
+          resolved: boolean
+          updated_at: string
+        }
+        Insert: {
+          annotation_type: string
+          client_user_id: string
+          coach_id: string
+          content: string
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          resolved?: boolean
+          updated_at?: string
+        }
+        Update: {
+          annotation_type?: string
+          client_user_id?: string
+          coach_id?: string
+          content?: string
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          id?: string
+          resolved?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coach_branding: {
         Row: {
           brand_foreground: string | null
@@ -230,6 +269,33 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_date: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_date?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commitment_callbacks: {
         Row: {
           check_in_id: string
@@ -267,6 +333,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      north_star_goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          horizon: string
+          id: string
+          is_active: boolean
+          success_looks_like: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          why: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          horizon: string
+          id?: string
+          is_active?: boolean
+          success_looks_like?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          why?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          horizon?: string
+          id?: string
+          is_active?: boolean
+          success_looks_like?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          why?: string | null
+        }
+        Relationships: []
+      }
+      plan_action_completions: {
+        Row: {
+          action_index: number
+          completed_at: string
+          id: string
+          phase_index: number
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          action_index: number
+          completed_at?: string
+          id?: string
+          phase_index: number
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          action_index?: number
+          completed_at?: string
+          id?: string
+          phase_index?: number
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -321,8 +453,11 @@ export type Database = {
           audit_id: string | null
           contradictions: Json | null
           created_at: string
+          edited_ninety_day_plan: Json | null
           forced_choice: string | null
           id: string
+          last_edited_at: string | null
+          last_edited_by: string | null
           ninety_day_plan: Json | null
           north_star_focus: string | null
           pattern_analysis: Json | null
@@ -333,8 +468,11 @@ export type Database = {
           audit_id?: string | null
           contradictions?: Json | null
           created_at?: string
+          edited_ninety_day_plan?: Json | null
           forced_choice?: string | null
           id?: string
+          last_edited_at?: string | null
+          last_edited_by?: string | null
           ninety_day_plan?: Json | null
           north_star_focus?: string | null
           pattern_analysis?: Json | null
@@ -345,8 +483,11 @@ export type Database = {
           audit_id?: string | null
           contradictions?: Json | null
           created_at?: string
+          edited_ninety_day_plan?: Json | null
           forced_choice?: string | null
           id?: string
+          last_edited_at?: string | null
+          last_edited_by?: string | null
           ninety_day_plan?: Json | null
           north_star_focus?: string | null
           pattern_analysis?: Json | null
