@@ -41,33 +41,34 @@ const BrandedAuth = () => {
   useEffect(() => {
     if (!slug) return;
     const load = async () => {
-      const { data, error } = await supabase
-        .from("coach_branding")
-        .select("*")
-        .eq("slug", slug)
-        .single();
+      const { data, error } = await supabase.rpc("get_public_coach_branding", {
+        _slug: slug,
+      });
 
-      if (error || !data) {
+      const row = Array.isArray(data) ? data[0] : null;
+      if (error || !row) {
         setNotFound(true);
         setLoadingBranding(false);
         return;
       }
 
-      const b = data as any;
-      setBranding(b);
-
-      // Get coach display name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("user_id", b.coach_user_id)
-        .single();
-
-      if (profile) setCoachName((profile as any).display_name || "");
+      setBranding({
+        coach_user_id: row.coach_user_id,
+        slug: row.slug,
+        company_name: row.company_name,
+        logo_url: row.logo_url,
+        headshot_url: row.headshot_url,
+        brand_primary: row.brand_primary,
+        brand_secondary: row.brand_secondary,
+        brand_foreground: row.brand_foreground,
+        tagline: row.tagline,
+      });
+      setCoachName(row.coach_display_name || "");
       setLoadingBranding(false);
     };
     load();
   }, [slug]);
+
 
   if (user) return <Navigate to="/onboarding" replace />;
 
