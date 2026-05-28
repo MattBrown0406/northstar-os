@@ -1,110 +1,203 @@
 # Intentus App Review Notes
 
-Use this text in App Store Connect App Review Information. Replace credential placeholders with the actual demo account values configured in Supabase/App Store Connect. Do not commit real passwords.
+Use this text in the App Store Connect App Review Information field.
+Replace [REDACTED] placeholders with actual credentials before submission. Do not commit real passwords to this file.
+
+---
+
+## What Intentus Does
+
+Intentus is an AI-powered operating system for founders, executives, and professional coaches. It helps leaders clarify priorities, track behavioral patterns, and build execution rhythm through structured self-reflection, recurring check-ins, and an AI coaching conversation. It is not medical advice, therapy, financial advice, or crisis support.
+
+---
 
 ## Demo Access
 
-Primary demo account:
-- Username: [REDACTED]
+**Primary demo account:**
+- Email: [REDACTED]
 - Password: [REDACTED]
 
-If the demo account cannot be used for any reason, the iOS build also includes a reviewer-only demonstration path:
+**If the demo account is unavailable**, use the built-in reviewer path:
 
-1. Open Intentus on the iPad/iPhone review device.
-2. Tap **Sign in**.
-3. Tap **Continue with App Review Demo**.
-4. The app opens **Intentus App Review Demo Mode**, a read-only reviewer flow showing the core features, AI disclosures, subscription tiers, Restore Purchases, and the in-app purchase buttons.
+1. Open Intentus on the review device.
+2. Tap **Sign In**.
+3. Tap **Continue with App Review Demo** (visible on the sign-in screen).
+4. The app opens App Review Demo Mode — a dedicated reviewer flow with pre-populated feature walkthroughs, AI disclosure details, and all three subscription purchase buttons.
 
-This mode is included specifically so App Review can inspect the app even if the production demo account state or password has expired.
+This path is always available regardless of production account state or password expiry.
 
-## Expired Subscription / Purchase Flow Review
+---
 
-Expired/unsubscribed review state:
-- Username: [REDACTED]
-- Password: [REDACTED]
-- Subscription state: expired / no active entitlement
+## Subscription Purchase Flow
 
-To review the purchase process:
+**Product identifiers and prices:**
 
-1. Sign in with the expired-subscription demo account and open **Subscribe**, or use **Continue with App Review Demo** from the sign-in screen.
-2. In App Review Demo Mode, the subscription state starts as unsubscribed/expired.
-3. Tap **Load products** to load the current RevenueCat/App Store Connect offering.
+| Product | ID | Price |
+|---|---|---|
+| Intentus Executive | `intentus_executive_monthly` | $39.99/month |
+| Intentus Premium | `intentus_premium_monthly` | $79.99/month |
+| Intentus Coach | `intentus_coach_monthly` | $299.99/month |
+
+All three are auto-renewing monthly subscriptions. All purchases are handled by Apple In-App Purchase through RevenueCat. The iOS app does not use external web checkout for digital subscriptions.
+
+**To review the purchase flow:**
+
+1. Tap **Continue with App Review Demo** from the sign-in screen, or sign in with the expired-subscription demo account.
+2. The starting state has no active entitlement.
+3. Tap **Load products** to fetch the current RevenueCat/App Store Connect offering.
 4. Tap **Review Executive Purchase**, **Review Premium Purchase**, or **Review Coach Purchase**.
-5. The app calls RevenueCat/StoreKit and opens Apple's native sandbox purchase sheet.
-6. Tap **Restore Purchases** to inspect restore behavior.
+5. Apple's native StoreKit sandbox purchase sheet opens.
+6. Tap **Restore Purchases** to verify restore behavior.
 
-All iOS subscription purchases are handled with Apple In-App Purchase through RevenueCat. The iOS app does not send users to an external web checkout for these digital subscriptions.
+**To review the purchase flow from within the app:**
+
+1. Sign in with the demo account.
+2. Tap **Subscribe** from the dashboard or nav.
+3. Plan cards show live StoreKit prices ($39.99 / $79.99 / $299.99 as fallback if StoreKit is unavailable).
+4. Each card shows: plan name, price per month (/mo), and feature list.
+5. Footer reads: *"Payment is handled by Apple. Manage or cancel subscriptions in your Apple ID subscription settings. By subscribing, you agree to our Terms of Use and Privacy Policy."*
+6. Both **Terms of Use** and **Privacy Policy** are tappable links.
+
+---
 
 ## Terms of Use and Privacy Policy (Guideline 3.1.2c)
 
-The app now includes the following required subscription disclosure links:
+**In the purchase flow:**
+- Subscribe screen (`/subscribe`): footer beneath plan cards includes tappable **Terms of Use** and **Privacy Policy** links, plus the text: *"By subscribing, you agree to our Terms of Use and Privacy Policy."*
+- App Review Demo screen (`/review-demo`): footer reads: *"By subscribing, you agree to our Terms of Use and Privacy Policy. Subscriptions auto-renew monthly. Manage or cancel in Apple ID settings."*
 
-- **Terms of Use** — available at `/terms` in the app and at https://intentusai.com/terms
-- **Privacy Policy** — available at `/privacy` in the app and at https://intentusai.com/privacy
+**Standalone pages:**
+- Terms of Use: `/terms` in-app · https://intentusai.com/terms
+- Privacy Policy: `/privacy` in-app · https://intentusai.com/privacy
 
-**Where they appear in the purchase flow:**
-1. On the **Subscribe** screen (`/subscribe`), the disclosure footer beneath the plan cards reads: *"By subscribing, you agree to our Terms of Use and Privacy Policy."* Both are tappable links.
-2. On the **App Review Demo** screen (`/review-demo`), the footer below the purchase section reads: *"By subscribing, you agree to our Terms of Use and Privacy Policy. Subscriptions auto-renew monthly. Manage or cancel in Apple ID settings."*
-
-**To verify in the reviewed build:**
-1. From the sign-in screen, tap **Continue with App Review Demo** → scroll to the bottom of the screen → tap **Terms of Use** → Terms page loads.
+**Verification steps:**
+1. Open App Review Demo → scroll to subscription section → scroll to bottom → tap **Terms of Use** → Terms page loads with auto-renewal language, pricing, and account deletion info.
 2. Tap **Privacy Policy** → Privacy page loads.
-3. Sign in with the demo account → navigate to **Subscribe** → scroll to the bottom → tap **Terms of Use** and **Privacy Policy** → both pages load.
+3. Sign in → go to `/subscribe` → scroll to bottom → both links functional.
 
-## Subscription Disclosure (Guideline 3.1.2c)
+---
 
-Each plan card on the Subscribe screen displays:
-- **Plan name** (Executive, Premium, Coach)
-- **Price per month** (loaded live from StoreKit; fallback prices shown if StoreKit unavailable: $39.99, $79.99, $299.99)
-- **Billing period** (/mo label on each price)
-- Subscriptions are auto-renewing monthly subscriptions managed by Apple
+## Subscription Disclosure Summary (Guideline 3.1.2c)
 
-The footer on the Subscribe screen states: *"Payment is handled by Apple. Manage or cancel subscriptions in your Apple ID subscription settings."*
+Each plan card on the Subscribe screen shows:
+- **Title**: Intentus Executive / Premium / Coach
+- **Billing period**: Monthly (displayed as `/mo`)
+- **Price**: Live from StoreKit; fallback: $39.99 / $79.99 / $299.99
+- **Auto-renewal notice**: Footer states Apple manages billing and cancellation
+- **Links**: Terms of Use and Privacy Policy in the purchase footer
 
-## IAP Products (Guideline 2.1b)
+The Terms of Use page (`/terms`) includes a dedicated **Subscriptions and Auto-Renewal** section that covers: auto-renewal mechanics, cancellation via Apple ID settings, no partial-period refunds, and current pricing.
 
-The three subscription products must be created and submitted for review in App Store Connect before this build can be approved. Product identifiers:
+---
 
-- `intentus_executive_monthly` — Intentus Executive, $39.99/month
-- `intentus_premium_monthly` — Intentus Premium, $79.99/month
-- `intentus_coach_monthly` — Intentus Coach, $299.99/month
+## Features and What Each Tier Unlocks
 
-All three must be attached to the app version being reviewed in App Store Connect (App Store Connect → App → Subscriptions → add to version). An App Review screenshot is required for each product.
+### Starter (Free)
+- Operating audit (24 structured self-reflection questions)
+- AI-generated 90-day operating snapshot
+- Basic dashboard with recent check-ins
+- No AI coaching chat
 
-## Business Model Answers
+### Executive ($39.99/month)
+- Full AI operating audit and strategic report
+- AI check-in debriefs after every check-in
+- AI Operating Coach chat (persistent conversation history)
+- Drift detection and commitment tracking
+- Exportable operating plan (.txt)
+- North Star goal setting (1/3/5-year goals)
+- 90-day plan milestone tracking and inline editing
 
-1. **Who uses the paid subscriptions in the app?**
-   - Individual founders, executives, business owners, and leaders use Executive or Premium subscriptions for ongoing AI operating coaching, check-ins, drift detection, and strategic report depth.
-   - Professional coaches or accountability providers use the Coach subscription for coach/client workflows and client accountability review.
+### Premium ($79.99/month)
+- Everything in Executive
+- Mirror Mode: sharper AI call-outs on contradictions, avoidance, and drift
+- Rotating coaching signal questions (smart staleness rotation)
+- Quarterly re-audits with audit history comparison
+- AI Plan Refresh: updates remaining 90-day plan phases based on actual check-in patterns
+- Pattern Intelligence: longitudinal behavioral analysis across multiple audit cycles
 
-2. **Where can users purchase subscriptions that can be accessed in the app?**
-   - In the iOS app, users purchase subscriptions only through Apple In-App Purchase.
-   - Subscription products are configured in App Store Connect and served to the app through RevenueCat.
+### Coach ($299.99/month)
+- Everything in Premium
+- Unlimited client accounts
+- Assign clients to any subscription tier
+- View client audits, reports, and check-ins
+- Coach annotation layer: notes, flags, session prep items, and action items per client
+- Session prep card: mood trends, recurring blockers, drift warnings before each client session
+- White-label branding support
+- Shareable client invite links
 
-3. **What specific types of previously purchased subscriptions can a user access in the app?**
-   - Intentus Executive monthly: `intentus_executive_monthly`
-   - Intentus Premium monthly: `intentus_premium_monthly`
-   - Intentus Coach monthly: `intentus_coach_monthly`
-   - Users can restore these purchases in the iOS app using **Restore Purchases**.
+---
 
-4. **What paid content, subscriptions, or features are unlocked within the app that do not use In-App Purchase?**
-   - None for iOS digital content. Paid iOS app features are unlocked by Apple In-App Purchase entitlements.
-   - The free Starter experience includes limited audit/reflection functionality. Executive, Premium, and Coach features require active subscription entitlement.
+## AI Features
 
-## AI Data Processing Answers
+**AI service:** Lovable AI Gateway → Google Gemini 2.5 Pro (report generation, plan refresh, pattern intelligence) and Gemini 2.5 Flash (coaching chat, audit coaching, check-in debrief).
 
-1. **What AI service processes data?**
-   - Intentus uses Lovable AI Gateway for AI calls. Current server functions call the gateway with Google Gemini 2.5 Pro for strategic report generation and coaching responses.
+**All AI calls are server-side.** The iOS app does not call AI providers directly. Requests go from the app to Supabase Edge Functions, which route to the AI gateway. No AI SDK is embedded in the iOS binary.
 
-2. **What type of data is processed by the AI service?**
-   - User-provided onboarding preferences, operating-audit answers, check-in responses, weekly commitments, previous strategic report context, coaching tone preference, and app-generated accountability context needed to produce the requested coaching/report response.
+**Data processed by AI (minimum necessary per feature):**
 
-3. **What personal data is processed by the AI service?**
-   - Supabase-authenticated account context, optional display name, coaching preferences, self-reflection text entered by the user, check-in history, commitments, and prior report context. Intentus does not require health, financial, legal, or crisis data and tells users it is not medical, mental-health, legal, financial, or crisis advice.
+| Feature | Data sent to AI |
+|---|---|
+| Strategic report generation | Audit answers (24 questions), coaching tone preference |
+| AI coaching chat | Check-in history, strategic report, weekly commitments, follow-through rate, coaching tone |
+| Check-in debrief | Current check-in answers, recent check-in trends, weekly commitment |
+| Plan refresh | Original 90-day plan, last 12 check-ins, 8 weeks of commitment outcomes |
+| Pattern intelligence | All strategic report summaries across audit cycles |
+| Audit coaching | Current question + answer, section context, coaching tone |
+
+**No health data, financial data, legal data, or crisis information is required or requested.**
+**User data is not sold or used for advertising.**
+
+---
+
+## Account Creation and Deletion
+
+Account creation requires email + password or an invite link from a coach.
+
+Account deletion:
+1. Sign in → Dashboard → tap profile icon → **Settings**.
+2. Scroll to the bottom → **Delete Account**.
+3. Check the confirmation checkbox → tap **Delete my account**.
+4. App calls the `delete-account` edge function, removes all user data, and signs out.
+
+Active Apple subscriptions must be cancelled separately through Apple ID settings. The Terms of Use and in-app deletion screen both state this.
+
+---
+
+## Permissions
+
+| Permission | Why it's used | When it's requested |
+|---|---|---|
+| None currently required | Intentus does not request microphone, camera, location, contacts, or notifications | — |
+
+The app does not use push notifications, location services, camera, microphone, or HealthKit in the current build.
+
+---
+
+## Business Model Q&A
+
+**Who uses paid subscriptions?**
+Individual leaders (founders, executives, business owners) subscribe to Executive or Premium for personal operating coaching. Professional coaches and accountability providers subscribe to Coach for client management and oversight workflows.
+
+**Where are iOS subscriptions purchased?**
+Exclusively through Apple In-App Purchase. RevenueCat manages entitlement state. No external web checkout is used for iOS digital content.
+
+**What subscriptions can be restored?**
+- `intentus_executive_monthly`
+- `intentus_premium_monthly`
+- `intentus_coach_monthly`
+
+Restore Purchases is available on the Subscribe screen and in App Review Demo.
+
+**Is any paid content unlocked outside of IAP?**
+No. All paid iOS features are gated by Apple IAP entitlements managed through RevenueCat. The free Starter tier provides limited audit and reflection functionality without a subscription.
+
+---
 
 ## Notes for Reviewers
 
-- Intentus is a coaching and self-reflection product for adults. It is not medical advice, mental health treatment, legal advice, financial advice, or crisis support.
-- If a reviewer sees a product-unavailable message, please confirm the reviewed build is attached to the App Store Connect IAP products and that the RevenueCat current offering includes the three product identifiers listed above.
+- Intentus is a self-reflection and coaching tool for adults. It is not medical care, therapy, mental health treatment, legal advice, financial advice, or crisis support.
+- If a product-unavailable error appears, confirm the build is attached to all three App Store Connect IAP products and that the RevenueCat offering includes the product identifiers listed above.
+- The App Review Demo path (`/review-demo`) does not require a signed-in account and always starts in an unsubscribed state — it is specifically designed for reviewer access to the purchase flow.
 - Terms of Use: https://intentusai.com/terms
 - Privacy Policy: https://intentusai.com/privacy
+- Support: support@intentusai.com
