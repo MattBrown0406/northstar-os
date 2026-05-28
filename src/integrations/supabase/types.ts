@@ -422,6 +422,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_coach_branding: {
+        Args: { _slug: string }
+        Returns: {
+          brand_foreground: string
+          brand_primary: string
+          brand_secondary: string
+          coach_display_name: string
+          coach_user_id: string
+          company_name: string
+          headshot_url: string
+          logo_url: string
+          slug: string
+          tagline: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
