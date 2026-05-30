@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -176,6 +176,9 @@ const Auth = () => {
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
+            By creating an account, you agree to our{" "}
+            <Link to="/terms" className="underline hover:text-foreground transition-colors">Terms of Use</Link>{" "}and{" "}
+            <Link to="/privacy" className="underline hover:text-foreground transition-colors">Privacy Policy</Link>.{" "}
             Intentus provides coaching and self-reflection tools. It is not medical advice or mental health treatment.
           </p>
         </div>
