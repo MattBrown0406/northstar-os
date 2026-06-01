@@ -31,6 +31,9 @@ async function streamCoachResponse({
   coachingTone,
   displayName,
   intentProfile,
+  mode,
+  clarificationRequest,
+  currentQuestionText,
   onDelta,
   onDone,
 }: {
@@ -40,6 +43,9 @@ async function streamCoachResponse({
   coachingTone: string;
   displayName: string;
   intentProfile?: IntentProfile | null;
+  mode?: "feedback" | "clarification";
+  clarificationRequest?: string;
+  currentQuestionText?: string;
   onDelta: (text: string) => void;
   onDone: () => void;
 }) {
