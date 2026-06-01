@@ -599,7 +599,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      audit_status: "in_progress" | "completed"
+      audit_status: "in_progress" | "completed" | "archived"
       check_in_cadence: "daily" | "every_other_day" | "weekly"
       coaching_tone: "direct" | "supportive" | "balanced"
       plan_tier: "free" | "pro" | "premium" | "coach"
@@ -731,7 +731,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      audit_status: ["in_progress", "completed"],
+      audit_status: ["in_progress", "completed", "archived"],
       check_in_cadence: ["daily", "every_other_day", "weekly"],
       coaching_tone: ["direct", "supportive", "balanced"],
       plan_tier: ["free", "pro", "premium", "coach"],
