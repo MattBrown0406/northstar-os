@@ -73,7 +73,7 @@ const Dashboard = () => {
         supabase.from("baseline_audits").select("status").eq("user_id", user.id).eq("status", "completed").limit(1),
         supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
-      if (profileRes.data) setProfile(profileRes.data as Profile);
+      if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
       if (checkInsRes.data) setCheckIns(checkInsRes.data as CheckIn[]);
       setAuditCompleted((auditRes.data?.length ?? 0) > 0);
       if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
