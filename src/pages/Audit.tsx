@@ -624,6 +624,16 @@ const Audit = () => {
                   {msg.text}
                   {msg.streaming && <span className="inline-block w-1.5 h-4 bg-accent/60 animate-pulse ml-0.5 align-text-bottom" />}
                 </p>
+                {msg.shallowConfirm && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <Button size="sm" variant="outline" onClick={() => handleExpandShallow(i)}>
+                      Expand my answer
+                    </Button>
+                    <Button size="sm" variant="hero" onClick={() => handleAcceptShallow(i)}>
+                      That's my answer
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
