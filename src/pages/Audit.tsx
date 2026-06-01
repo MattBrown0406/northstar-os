@@ -459,17 +459,39 @@ const Audit = () => {
       return;
     }
 
-    if (AUDIT_QUESTIONS[currentQ]?.type === "text" && isShallowResponse(input)) {
+    if (AUDIT_QUESTIONS[currentQ]?.type === "text" && isShallowResponse(trimmed)) {
       setMessages((prev) => [
         ...prev,
+        { role: "user", text: trimmed },
         {
           role: "coach",
-          text: "That answer feels thin or guarded. Intentus works best when you're specific enough to be coachable. If you can't give this question a real answer right now, step away and come back when you can.",
+          text: "That's a short one — want to add more detail, or are you good with that answer?",
+          shallowConfirm: { pendingAnswer: trimmed },
         },
       ]);
+      setInput("");
       return;
     }
     await processAnswer(trimmed);
+  };
+
+  const handleExpandShallow = (messageIndex: number) => {
+    setMessages((prev) => {
+      const target = prev[messageIndex];
+      const pending = target?.shallowConfirm?.pendingAnswer ?? "";
+      // Strip the confirm chips and the user's short message so they can rewrite
+      const next = prev.filter((_, i) => i !== messageIndex && i !== messageIndex - 1);
+      setInput(pending);
+      return next;
+    });
+  };
+
+  const handleAcceptShallow = async (messageIndex: number) => {
+    const pending = messages[messageIndex]?.shallowConfirm?.pendingAnswer;
+    if (!pending) return;
+    // Remove the coach prompt and the duplicate user bubble — processAnswer re-adds the user message
+    setMessages((prev) => prev.filter((_, i) => i !== messageIndex && i !== messageIndex - 1));
+    await processAnswer(pending);
   };
 
   const handleScaleClick = async (n: number) => {
