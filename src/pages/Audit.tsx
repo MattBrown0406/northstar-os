@@ -155,7 +155,7 @@ const Audit = () => {
   const isShallowResponse = (value: string) => {
     const trimmed = value.trim();
     const words = trimmed.split(/\s+/).filter(Boolean);
-    return trimmed.length < 18 || words.length < 4;
+    return trimmed.length < 10 || words.length < 2;
   };
 
   const isClarificationRequest = (value: string) => {
