@@ -396,8 +396,68 @@ const Audit = () => {
     }
   };
 
+  const handleClarification = async (userText: string) => {
+    const question = AUDIT_QUESTIONS[currentQ];
+    if (!question) return;
+
+    setMessages((prev) => [...prev, { role: "user", text: userText }]);
+    setInput("");
+
+    setCoachStreaming(true);
+    let coachText = "";
+    setMessages((prev) => [...prev, { role: "coach", text: "", streaming: true }]);
+
+    try {
+      await streamCoachResponse({
+        responses,
+        currentQuestion: question.id,
+        currentSection: question.section,
+        coachingTone: profile.coaching_tone,
+        displayName: profile.display_name,
+        intentProfile: profile.intent_profile,
+        mode: "clarification",
+        clarificationRequest: userText,
+        currentQuestionText: question.text,
+        onDelta: (chunk) => {
+          coachText += chunk;
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "coach", text: coachText, streaming: true };
+            return updated;
+          });
+        },
+        onDone: () => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "coach", text: coachText };
+            return updated;
+          });
+          setCoachStreaming(false);
+        },
+      });
+    } catch {
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: "coach",
+          text: "Take the question at face value — share what's actually true for you right now, in your own words.",
+        };
+        return updated;
+      });
+      setCoachStreaming(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || coachStreaming) return;
+    const trimmed = input.trim();
+
+    // Clarification check runs before shallow check and before processAnswer
+    if (isClarificationRequest(trimmed)) {
+      await handleClarification(trimmed);
+      return;
+    }
+
     if (AUDIT_QUESTIONS[currentQ]?.type === "text" && isShallowResponse(input)) {
       setMessages((prev) => [
         ...prev,
@@ -408,7 +468,7 @@ const Audit = () => {
       ]);
       return;
     }
-    await processAnswer(input.trim());
+    await processAnswer(trimmed);
   };
 
   const handleScaleClick = async (n: number) => {
