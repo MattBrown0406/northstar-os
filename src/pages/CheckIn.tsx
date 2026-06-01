@@ -306,12 +306,45 @@ const CheckIn = () => {
         setHasPreviousCommitment(true);
       } else {
         setHasPreviousCommitment(false);
-        // Skip step 0 — jump to step 1
-        setStep(1);
+        // Skip step 0 — jump to step 1 (unless a draft already restored a later step)
+        if (!initialDraft) setStep(1);
       }
     };
     checkPrevious();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Auto-save draft on any change
+  useEffect(() => {
+    if (done) return;
+    const draft: CheckInDraft = {
+      step, mood, energy, wins, blockers, commitments,
+      oneThing, callbackOutcome, callbackReflection,
+      extras: extraValues,
+      savedAt: Date.now(),
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // ignore quota errors
+    }
+  }, [step, mood, energy, wins, blockers, commitments, oneThing, callbackOutcome, callbackReflection, extraValues, done]);
+
+  const dismissResumeBanner = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setShowResumeBanner(false);
+    setMood(5);
+    setEnergy(5);
+    setWins([]);
+    setBlockers([]);
+    setCommitments([]);
+    setOneThing("");
+    setCallbackOutcome(null);
+    setCallbackReflection("");
+    setExtraValues({});
+    setStep(hasPreviousCommitment ? 0 : 1);
+  };
+
 
   const hasThinCheckIn = () => {
     const totalItems = wins.length + blockers.length + commitments.length;
