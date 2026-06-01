@@ -409,6 +409,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          intent_profile: Json
           is_active: boolean
           onboarding_completed: boolean | null
           plan_tier: Database["public"]["Enums"]["plan_tier"] | null
@@ -424,6 +425,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          intent_profile?: Json
           is_active?: boolean
           onboarding_completed?: boolean | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"] | null
@@ -439,6 +441,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          intent_profile?: Json
           is_active?: boolean
           onboarding_completed?: boolean | null
           plan_tier?: Database["public"]["Enums"]["plan_tier"] | null
@@ -456,6 +459,7 @@ export type Database = {
           edited_ninety_day_plan: Json | null
           forced_choice: string | null
           id: string
+          intent_model: Json
           last_edited_at: string | null
           last_edited_by: string | null
           ninety_day_plan: Json | null
@@ -471,6 +475,7 @@ export type Database = {
           edited_ninety_day_plan?: Json | null
           forced_choice?: string | null
           id?: string
+          intent_model?: Json
           last_edited_at?: string | null
           last_edited_by?: string | null
           ninety_day_plan?: Json | null
@@ -486,6 +491,7 @@ export type Database = {
           edited_ninety_day_plan?: Json | null
           forced_choice?: string | null
           id?: string
+          intent_model?: Json
           last_edited_at?: string | null
           last_edited_by?: string | null
           ninety_day_plan?: Json | null
