@@ -244,7 +244,7 @@ const CheckIn = () => {
           .limit(14),
       ]);
 
-      const profile = profileRes.data as CheckInProfile | null;
+      const profile = profileRes.data as unknown as CheckInProfile | null;
       if (profile?.intent_profile) setIntentProfile(profile.intent_profile as IntentProfile);
       const userTier = normalizePlanTier(profile?.plan_tier) as Tier;
       setTier(userTier);
