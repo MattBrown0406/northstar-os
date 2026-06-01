@@ -195,15 +195,50 @@ const OneThingStep = ({
   </div>
 );
 
+// ── Draft persistence ────────────────────────────────────────────────────────
+const DRAFT_KEY = "intentus_checkin_draft";
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
+type CheckInDraft = {
+  step: number;
+  mood: number;
+  energy: number;
+  wins: string[];
+  blockers: string[];
+  commitments: string[];
+  oneThing: string;
+  callbackOutcome: "yes" | "partially" | "no" | null;
+  callbackReflection: string;
+  extras: Record<string, string | number>;
+  savedAt: number;
+};
+
+const loadDraft = (): CheckInDraft | null => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CheckInDraft;
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+      localStorage.removeItem(DRAFT_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 // ── Main Component ───────────────────────────────────────────────────────────
 const CheckIn = () => {
+  const initialDraft = (typeof window !== "undefined") ? loadDraft() : null;
+
   // Step index: 0 = commitment callback (or skipped), 1–5 = original steps, 6 = one-thing
-  const [step, setStep] = useState(0);
-  const [mood, setMood] = useState(5);
-  const [energy, setEnergy] = useState(5);
-  const [wins, setWins] = useState<string[]>([]);
-  const [blockers, setBlockers] = useState<string[]>([]);
-  const [commitments, setCommitments] = useState<string[]>([]);
+  const [step, setStep] = useState(initialDraft?.step ?? 0);
+  const [mood, setMood] = useState(initialDraft?.mood ?? 5);
+  const [energy, setEnergy] = useState(initialDraft?.energy ?? 5);
+  const [wins, setWins] = useState<string[]>(initialDraft?.wins ?? []);
+  const [blockers, setBlockers] = useState<string[]>(initialDraft?.blockers ?? []);
+  const [commitments, setCommitments] = useState<string[]>(initialDraft?.commitments ?? []);
   const [inputVal, setInputVal] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -212,20 +247,21 @@ const CheckIn = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [showCenteringGuide, setShowCenteringGuide] = useState(false);
   const [showThinPrompt, setShowThinPrompt] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(!!initialDraft);
 
   // Commitment callback state
   const [previousCommitment, setPreviousCommitment] = useState<WeeklyCommitment | null>(null);
-  const [callbackOutcome, setCallbackOutcome] = useState<"yes" | "partially" | "no" | null>(null);
-  const [callbackReflection, setCallbackReflection] = useState("");
+  const [callbackOutcome, setCallbackOutcome] = useState<"yes" | "partially" | "no" | null>(initialDraft?.callbackOutcome ?? null);
+  const [callbackReflection, setCallbackReflection] = useState(initialDraft?.callbackReflection ?? "");
   const [hasPreviousCommitment, setHasPreviousCommitment] = useState<boolean | null>(null); // null = loading
 
   // One-thing state
-  const [oneThing, setOneThing] = useState("");
+  const [oneThing, setOneThing] = useState(initialDraft?.oneThing ?? "");
 
   // Extras (rotating coaching questions)
   const [tier, setTier] = useState<Tier>("free");
   const [extraQuestions, setExtraQuestions] = useState<CoachingQuestion[]>([]);
-  const [extraValues, setExtraValues] = useState<Record<string, string | number>>({});
+  const [extraValues, setExtraValues] = useState<Record<string, string | number>>(initialDraft?.extras ?? {});
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -270,12 +306,45 @@ const CheckIn = () => {
         setHasPreviousCommitment(true);
       } else {
         setHasPreviousCommitment(false);
-        // Skip step 0 — jump to step 1
-        setStep(1);
+        // Skip step 0 — jump to step 1 (unless a draft already restored a later step)
+        if (!initialDraft) setStep(1);
       }
     };
     checkPrevious();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Auto-save draft on any change
+  useEffect(() => {
+    if (done) return;
+    const draft: CheckInDraft = {
+      step, mood, energy, wins, blockers, commitments,
+      oneThing, callbackOutcome, callbackReflection,
+      extras: extraValues,
+      savedAt: Date.now(),
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // ignore quota errors
+    }
+  }, [step, mood, energy, wins, blockers, commitments, oneThing, callbackOutcome, callbackReflection, extraValues, done]);
+
+  const dismissResumeBanner = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setShowResumeBanner(false);
+    setMood(5);
+    setEnergy(5);
+    setWins([]);
+    setBlockers([]);
+    setCommitments([]);
+    setOneThing("");
+    setCallbackOutcome(null);
+    setCallbackReflection("");
+    setExtraValues({});
+    setStep(hasPreviousCommitment ? 0 : 1);
+  };
+
 
   const hasThinCheckIn = () => {
     const totalItems = wins.length + blockers.length + commitments.length;
@@ -420,6 +489,7 @@ const CheckIn = () => {
     }
 
     setLoading(false);
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     setDone(true);
     if (getTierCapability(tier).canUseAiDebrief) streamDebrief();
   };
@@ -691,6 +761,18 @@ const CheckIn = () => {
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg space-y-4">
+          {showResumeBanner && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm text-foreground">
+              <span>Resuming your saved check-in.</span>
+              <button
+                onClick={dismissResumeBanner}
+                aria-label="Dismiss and start fresh"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           {step >= 1 && (
             <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
               <p>Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.</p>
