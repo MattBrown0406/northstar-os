@@ -39,7 +39,7 @@ serve(async (req) => {
       });
     }
 
-    const { responses, current_question, current_section, all_questions } = await req.json();
+    const { responses, current_question, current_section, all_questions, mode, clarification_request, current_question_text } = await req.json();
 
     if (!responses || !current_question) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
