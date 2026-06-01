@@ -379,6 +379,58 @@ const Audit = () => {
     await processAnswer(String(n));
   };
 
+  const handleStartFresh = async () => {
+    if (!user) return;
+    try {
+      // Archive prior completed audits
+      await supabase
+        .from("baseline_audits")
+        .update({ status: "archived" as never })
+        .eq("user_id", user.id)
+        .eq("status", "completed");
+
+      // Reset local state
+      setCompleted(false);
+      setAuditId(null);
+      setCurrentQ(0);
+      setMessages([]);
+      setResponses({});
+      setInput("");
+
+      // Create a new audit
+      const { data: newAudit, error } = await supabase
+        .from("baseline_audits")
+        .insert({ user_id: user.id })
+        .select()
+        .single();
+
+      if (error || !newAudit) {
+        toast({
+          title: "Couldn't start a fresh assessment",
+          description: error?.message ?? "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setAuditId(newAudit.id);
+      setMessages([
+        {
+          role: "system",
+          text: "Before you start: do this when you can be fully present. We begin by getting oriented, then pressure-test reality, then go after blind spots, then force prioritization. Honest, thoughtful answers are what make that progression useful.",
+        },
+        { role: "system", text: AUDIT_QUESTIONS[0].text },
+      ]);
+    } catch (err) {
+      toast({
+        title: "Couldn't start a fresh assessment",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   const currentSection = currentQ < AUDIT_QUESTIONS.length ? AUDIT_QUESTIONS[currentQ].sectionIndex : AUDIT_SECTIONS.length - 1;
   const progress = (currentQ / AUDIT_QUESTIONS.length) * 100;
 
@@ -463,9 +515,14 @@ const Audit = () => {
       <div className="border-t border-border bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto max-w-2xl px-4 py-4">
           {completed ? (
-            <Button variant="hero" className="w-full" onClick={() => navigate("/report")}>
-              View your Operating Report <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="space-y-2">
+              <Button variant="hero" className="w-full" onClick={() => navigate("/report")}>
+                View your Operating Report <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button variant="outline" className="w-full" onClick={handleStartFresh}>
+                Start Fresh Assessment
+              </Button>
+            </div>
           ) : coachStreaming ? (
             <div className="flex items-center justify-center py-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
