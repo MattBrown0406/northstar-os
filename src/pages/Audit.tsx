@@ -31,6 +31,9 @@ async function streamCoachResponse({
   coachingTone,
   displayName,
   intentProfile,
+  mode,
+  clarificationRequest,
+  currentQuestionText,
   onDelta,
   onDone,
 }: {
@@ -40,6 +43,9 @@ async function streamCoachResponse({
   coachingTone: string;
   displayName: string;
   intentProfile?: IntentProfile | null;
+  mode?: "feedback" | "clarification";
+  clarificationRequest?: string;
+  currentQuestionText?: string;
   onDelta: (text: string) => void;
   onDone: () => void;
 }) {
@@ -64,6 +70,9 @@ async function streamCoachResponse({
       coaching_tone: coachingTone,
       display_name: displayName,
       intent_profile: intentProfile,
+      mode: mode ?? "feedback",
+      clarification_request: clarificationRequest,
+      current_question_text: currentQuestionText,
     }),
   });
 
@@ -146,6 +155,34 @@ const Audit = () => {
     const trimmed = value.trim();
     const words = trimmed.split(/\s+/).filter(Boolean);
     return trimmed.length < 18 || words.length < 4;
+  };
+
+  const isClarificationRequest = (value: string) => {
+    const t = value.trim().toLowerCase();
+    if (!t) return false;
+    const patterns = [
+      "clarify",
+      "clarification",
+      "what do you mean",
+      "what does that mean",
+      "don't understand",
+      "dont understand",
+      "do not understand",
+      "can you explain",
+      "could you explain",
+      "please explain",
+      "need more context",
+      "more context",
+      "not sure what",
+      "what are you asking",
+      "rephrase",
+      "in plain english",
+      "what is this asking",
+    ];
+    if (patterns.some((p) => t.includes(p))) return true;
+    // Short question ending in "?"
+    if (t.endsWith("?") && t.split(/\s+/).length <= 14) return true;
+    return false;
   };
 
   useEffect(() => {
@@ -359,8 +396,68 @@ const Audit = () => {
     }
   };
 
+  const handleClarification = async (userText: string) => {
+    const question = AUDIT_QUESTIONS[currentQ];
+    if (!question) return;
+
+    setMessages((prev) => [...prev, { role: "user", text: userText }]);
+    setInput("");
+
+    setCoachStreaming(true);
+    let coachText = "";
+    setMessages((prev) => [...prev, { role: "coach", text: "", streaming: true }]);
+
+    try {
+      await streamCoachResponse({
+        responses,
+        currentQuestion: question.id,
+        currentSection: question.section,
+        coachingTone: profile.coaching_tone,
+        displayName: profile.display_name,
+        intentProfile: profile.intent_profile,
+        mode: "clarification",
+        clarificationRequest: userText,
+        currentQuestionText: question.text,
+        onDelta: (chunk) => {
+          coachText += chunk;
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "coach", text: coachText, streaming: true };
+            return updated;
+          });
+        },
+        onDone: () => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "coach", text: coachText };
+            return updated;
+          });
+          setCoachStreaming(false);
+        },
+      });
+    } catch {
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          role: "coach",
+          text: "Take the question at face value — share what's actually true for you right now, in your own words.",
+        };
+        return updated;
+      });
+      setCoachStreaming(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || coachStreaming) return;
+    const trimmed = input.trim();
+
+    // Clarification check runs before shallow check and before processAnswer
+    if (isClarificationRequest(trimmed)) {
+      await handleClarification(trimmed);
+      return;
+    }
+
     if (AUDIT_QUESTIONS[currentQ]?.type === "text" && isShallowResponse(input)) {
       setMessages((prev) => [
         ...prev,
@@ -371,7 +468,7 @@ const Audit = () => {
       ]);
       return;
     }
-    await processAnswer(input.trim());
+    await processAnswer(trimmed);
   };
 
   const handleScaleClick = async (n: number) => {
