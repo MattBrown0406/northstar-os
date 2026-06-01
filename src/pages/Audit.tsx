@@ -70,6 +70,9 @@ async function streamCoachResponse({
       coaching_tone: coachingTone,
       display_name: displayName,
       intent_profile: intentProfile,
+      mode: mode ?? "feedback",
+      clarification_request: clarificationRequest,
+      current_question_text: currentQuestionText,
     }),
   });
 
