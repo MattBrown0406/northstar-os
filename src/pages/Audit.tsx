@@ -15,6 +15,7 @@ interface ChatMessage {
   role: "system" | "user" | "coach";
   text: string;
   streaming?: boolean;
+  shallowConfirm?: { pendingAnswer: string };
 }
 
 type AuditProfile = {
