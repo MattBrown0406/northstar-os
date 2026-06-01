@@ -157,6 +157,34 @@ const Audit = () => {
     return trimmed.length < 18 || words.length < 4;
   };
 
+  const isClarificationRequest = (value: string) => {
+    const t = value.trim().toLowerCase();
+    if (!t) return false;
+    const patterns = [
+      "clarify",
+      "clarification",
+      "what do you mean",
+      "what does that mean",
+      "don't understand",
+      "dont understand",
+      "do not understand",
+      "can you explain",
+      "could you explain",
+      "please explain",
+      "need more context",
+      "more context",
+      "not sure what",
+      "what are you asking",
+      "rephrase",
+      "in plain english",
+      "what is this asking",
+    ];
+    if (patterns.some((p) => t.includes(p))) return true;
+    // Short question ending in "?"
+    if (t.endsWith("?") && t.split(/\s+/).length <= 14) return true;
+    return false;
+  };
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
