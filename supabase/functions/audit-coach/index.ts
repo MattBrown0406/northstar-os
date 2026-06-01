@@ -123,7 +123,18 @@ Rules:
 
 This is not therapy. You are a grounded, emotionally intelligent operating coach invested in their success.`;
 
-    const userPrompt = `Here is the full conversation so far:\n\n${conversationContext}\nThe most recent answer was to the question in the "${truncate(current_section, 120)}" section. Give your brief coaching response.`;
+    const isClarification = mode === "clarification";
+    const userPrompt = isClarification
+      ? `The user is asking for clarification on the current audit question — they are NOT giving an answer yet.
+
+Current question (section: "${truncate(current_section, 120)}"):
+"${truncate(current_question_text || "", 400)}"
+
+The user said:
+"${truncate(clarification_request || "", 600)}"
+
+Your job: explain this question to them in plain, grounded language. Cover (1) what the question is really getting at and why it matters in an operating audit, (2) one short example of the kind of thing a thoughtful answer might touch on — without putting words in their mouth or steering toward a specific answer. Keep it to 3-5 sentences. Do not give feedback on an answer (they haven't given one). Do not advance to the next question. End by inviting them to take their time and answer when ready.`
+      : `Here is the full conversation so far:\n\n${conversationContext}\nThe most recent answer was to the question in the "${truncate(current_section, 120)}" section. Give your brief coaching response.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
