@@ -761,6 +761,18 @@ const CheckIn = () => {
 
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg space-y-4">
+          {showResumeBanner && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm text-foreground">
+              <span>Resuming your saved check-in.</span>
+              <button
+                onClick={dismissResumeBanner}
+                aria-label="Dismiss and start fresh"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           {step >= 1 && (
             <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground space-y-1">
               <p>Do this check-in when you can be honest and undistracted. If you are multitasking, rushing, or half-present, wait.</p>
