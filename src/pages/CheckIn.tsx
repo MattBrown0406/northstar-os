@@ -489,6 +489,7 @@ const CheckIn = () => {
     }
 
     setLoading(false);
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     setDone(true);
     if (getTierCapability(tier).canUseAiDebrief) streamDebrief();
   };
