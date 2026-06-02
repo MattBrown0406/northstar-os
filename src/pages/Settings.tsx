@@ -379,7 +379,10 @@ const Settings = () => {
                 >
                   <p className="font-semibold text-foreground">{g.label}</p>
                 </button>
-              ))}
+            </div>
+          </div>
+
+
 
           {/* Subscription */}
           <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
