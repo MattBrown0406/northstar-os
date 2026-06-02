@@ -153,7 +153,7 @@ const CoachDashboard = () => {
 
   const tierDistribution = [
     { name: "Free", value: clients.filter((client) => client.assigned_tier === "free").length },
-    { name: "Pro", value: clients.filter((client) => client.assigned_tier === "pro").length },
+    { name: "Executive", value: clients.filter((client) => client.assigned_tier === "exec" || client.assigned_tier === "pro").length },
     { name: "Premium", value: clients.filter((client) => client.assigned_tier === "premium").length },
   ];
   const activityData = clients
