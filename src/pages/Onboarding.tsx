@@ -122,19 +122,26 @@ const Onboarding = () => {
 
       <div className="space-y-3">
         <p className="text-sm font-medium text-foreground">Your timezone</p>
-        <div className="grid gap-2">
-          {TIMEZONES.map((tz) => (
-            <button
-              key={tz}
-              onClick={() => setTimezone(tz)}
-              className={`text-left px-4 py-3 rounded-xl border transition-all ${
-                timezone === tz
-                  ? "border-primary bg-primary/5 text-foreground"
-                  : "border-border text-muted-foreground hover:border-primary/50"
-              }`}
-            >
-              {tz.replace(/_/g, " ")}
-            </button>
+        <div className="grid gap-4">
+          {TIMEZONE_GROUPS.map((group) => (
+            <div key={group.region} className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{group.region}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {group.zones.map((tz) => (
+                  <button
+                    key={tz}
+                    onClick={() => setTimezone(tz)}
+                    className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                      timezone === tz
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    {formatTimezoneLabel(tz)}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
