@@ -807,7 +807,7 @@ const CheckIn = () => {
               Continue <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="hero" className="flex-1" onClick={handleSubmit} disabled={loading}>
+            <Button variant="hero" className="flex-1" onClick={() => handleSubmit()} disabled={loading}>
               {loading ? "Saving..." : "Complete check-in"}
             </Button>
           )}
