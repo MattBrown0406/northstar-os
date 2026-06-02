@@ -76,8 +76,15 @@ const Auth = () => {
             });
           } catch (err) {
             console.error("Failed to process coach invite:", err);
+            toast({
+              title: "Coach link failed",
+              description:
+                "Your account was created but we could not link your coach. Contact your coach for a new invite link.",
+              variant: "destructive",
+            });
           }
         }
+
         toast({
           title: "Check your email",
           description: "We sent you a confirmation link. Please verify your email to continue.",
