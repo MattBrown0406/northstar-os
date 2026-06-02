@@ -17,7 +17,15 @@ import {
 import { format, differenceInDays } from "date-fns";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
-import { getCurrentWeekCommitment, getPreviousWeekCommitment, setWeeklyCommitment, type WeeklyCommitment } from "@/lib/commitments";
+import {
+  getCurrentWeekCommitment,
+  getPreviousWeekCommitment,
+  getRecentCommitments,
+  computeFollowThroughStreak,
+  setWeeklyCommitment,
+  type WeeklyCommitment,
+} from "@/lib/commitments";
+import confetti from "canvas-confetti";
 import { canReaudit } from "@/lib/reaudit";
 import { CalibrationWidget } from "@/components/dashboard/CalibrationWidget";
 
