@@ -17,7 +17,15 @@ import {
 import { format, differenceInDays } from "date-fns";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
-import { getCurrentWeekCommitment, getPreviousWeekCommitment, setWeeklyCommitment, type WeeklyCommitment } from "@/lib/commitments";
+import {
+  getCurrentWeekCommitment,
+  getPreviousWeekCommitment,
+  getRecentCommitments,
+  computeFollowThroughStreak,
+  setWeeklyCommitment,
+  type WeeklyCommitment,
+} from "@/lib/commitments";
+import confetti from "canvas-confetti";
 import { canReaudit } from "@/lib/reaudit";
 import { CalibrationWidget } from "@/components/dashboard/CalibrationWidget";
 
@@ -47,6 +55,55 @@ interface CheckIn {
   created_at: string;
 }
 
+const OneThingStreak = ({ history }: { history: WeeklyCommitment[] }) => {
+  const streak = computeFollowThroughStreak(history);
+  const dots = history.slice(-7);
+  const dotColor = (o: string | null) => {
+    if (o === "yes") return "bg-green-500";
+    if (o === "partially") return "bg-yellow-500";
+    if (o === "no") return "bg-destructive";
+    return "bg-muted";
+  };
+  useEffect(() => {
+    // Confetti when 3+ consecutive "yes" outcomes (most recent runs)
+    let consecutiveYes = 0;
+    for (let i = history.length - 1; i >= 0; i--) {
+      const o = history[i].outcome;
+      if (o === null && i === history.length - 1) continue;
+      if (o === "yes") consecutiveYes += 1;
+      else break;
+    }
+    if (consecutiveYes >= 3) {
+      const key = `intentus_streak_confetti_${history[history.length - 1]?.week_start}`;
+      if (typeof window !== "undefined" && !window.sessionStorage.getItem(key)) {
+        window.sessionStorage.setItem(key, "1");
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      }
+    }
+  }, [history]);
+
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        {streak > 0 ? (
+          <>
+            <span className="text-base">🔥</span>
+            <span className="text-sm font-semibold text-foreground">{streak}-week streak</span>
+          </>
+        ) : (
+          <span className="text-sm text-muted-foreground">Start your streak this week</span>
+        )}
+      </div>
+      <div className="flex items-center gap-1">
+        {Array.from({ length: 7 }).map((_, i) => {
+          const c = dots[i];
+          return <span key={i} className={`h-2 w-2 rounded-full ${dotColor(c?.outcome ?? null)}`} />;
+        })}
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +115,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentCommitment, setCurrentCommitment] = useState<WeeklyCommitment | null>(null);
   const [lastCommitment, setLastCommitment] = useState<WeeklyCommitment | null>(null);
+  const [recentCommitmentHistory, setRecentCommitmentHistory] = useState<WeeklyCommitment[]>([]);
   const [showOneThingModal, setShowOneThingModal] = useState(false);
   const [oneThingInput, setOneThingInput] = useState("");
   const [oneThingSaving, setOneThingSaving] = useState(false);
@@ -83,14 +141,17 @@ const Dashboard = () => {
 
     const loadCommitments = async () => {
       if (!user) return;
-      const [curr, prev] = await Promise.all([
+      const [curr, prev, recent] = await Promise.all([
         getCurrentWeekCommitment(user.id),
         getPreviousWeekCommitment(user.id),
+        getRecentCommitments(user.id, 7),
       ]);
       setCurrentCommitment(curr);
       setLastCommitment(prev);
+      setRecentCommitmentHistory(recent);
     };
     loadCommitments();
+
 
     const loadReaudit = async () => {
       if (!user) return;
@@ -495,6 +556,11 @@ const Dashboard = () => {
                     </div>
                     <Target className="h-4 w-4 text-primary" />
                   </div>
+
+                  {/* One Thing streak */}
+                  <OneThingStreak history={recentCommitmentHistory} />
+
+
 
                   {/* The one thing */}
                   {currentCommitment ? (

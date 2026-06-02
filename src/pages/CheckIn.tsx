@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wind } from "lucide-react";
+import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wind, Zap, ListChecks } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, getBlockerPrompt, getCommitmentPrompt, getFocusPrompt, type IntentProfile } from "@/lib/intentus-architecture";
 import { brandLogo as logo } from "@/lib/brand";
@@ -232,6 +232,10 @@ const loadDraft = (): CheckInDraft | null => {
 const CheckIn = () => {
   const initialDraft = (typeof window !== "undefined") ? loadDraft() : null;
 
+  // Mode picker: 'full' (existing flow) or 'quick' (3-step mood/energy + one thing).
+  // null means we still need to ask the user.
+  const [mode, setMode] = useState<"full" | "quick" | null>(null);
+
   // Step index: 0 = commitment callback (or skipped), 1–5 = original steps, 6 = one-thing
   const [step, setStep] = useState(initialDraft?.step ?? 0);
   const [mood, setMood] = useState(initialDraft?.mood ?? 5);
@@ -257,6 +261,9 @@ const CheckIn = () => {
 
   // One-thing state
   const [oneThing, setOneThing] = useState(initialDraft?.oneThing ?? "");
+
+  // Quick-mode local step (0 = mood/energy, 1 = one thing)
+  const [quickStep, setQuickStep] = useState(0);
 
   // Extras (rotating coaching questions)
   const [tier, setTier] = useState<Tier>("free");
@@ -424,9 +431,11 @@ const CheckIn = () => {
     setAiLoading(false);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (options?: { quick?: boolean }) => {
     if (!user) return;
-    if (hasThinCheckIn() && !showThinPrompt) {
+    const isQuick = options?.quick === true;
+    // Thin-check-in guard only applies to the full flow.
+    if (!isQuick && hasThinCheckIn() && !showThinPrompt) {
       setShowThinPrompt(true);
       return;
     }
@@ -445,11 +454,12 @@ const CheckIn = () => {
       user_id: user.id,
       mood_score: mood,
       energy_score: energy,
-      wins,
-      blockers,
-      commitments,
+      wins: isQuick ? [] : wins,
+      blockers: isQuick ? [] : blockers,
+      commitments: isQuick ? [] : commitments,
       drift_detected: mood <= 4 || energy <= 4,
-      extras: cleanedExtras as Json,
+      extras: isQuick ? ({} as Json) : (cleanedExtras as Json),
+      is_quick: isQuick,
     }).select().single();
 
     if (error) {
@@ -458,13 +468,10 @@ const CheckIn = () => {
       return;
     }
 
-    // 2. Record commitment callback if we had a previous commitment + outcome
-    if (previousCommitment && callbackOutcome && checkInData) {
+    // 2. Record commitment callback if we had a previous commitment + outcome (full flow only)
+    if (!isQuick && previousCommitment && callbackOutcome && checkInData) {
       try {
-        // Update the commitment record with the outcome
         await recordCommitmentOutcome(previousCommitment.id, callbackOutcome, callbackReflection || undefined);
-
-        // Also insert a commitment_callback record linking the check-in
         await supabase.from("commitment_callbacks").insert({
           user_id: user.id,
           check_in_id: checkInData.id,
@@ -474,25 +481,25 @@ const CheckIn = () => {
         });
       } catch (cbErr) {
         console.error("Commitment callback error:", cbErr);
-        // Non-fatal: proceed
       }
     }
 
-    // 3. Save "one thing" commitment for this week
+    // 3. Save "one thing" commitment for this week (both flows)
     if (oneThing.trim()) {
       try {
         await setWeeklyCommitment(user.id, oneThing.trim());
       } catch (otErr) {
         console.error("One thing save error:", otErr);
-        // Non-fatal: proceed
       }
     }
 
     setLoading(false);
     try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     setDone(true);
-    if (getTierCapability(tier).canUseAiDebrief) streamDebrief();
+    // Quick check-ins skip the AI debrief.
+    if (!isQuick && getTierCapability(tier).canUseAiDebrief) streamDebrief();
   };
+
 
   const resetAndRetry = () => {
     setWins([]);
@@ -513,6 +520,158 @@ const CheckIn = () => {
       </div>
     );
   }
+
+  // ── Mode picker (shown once, before either flow starts) ───────────────────
+  if (!done && mode === null) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <img src={logo} alt="Intentus" className="h-7 w-auto object-contain" />
+              <span className="font-heading text-lg font-bold text-foreground">Check-in</span>
+            </Link>
+          </div>
+        </div>
+        <AppBreadcrumb />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="font-heading text-2xl font-bold text-foreground">How are you checking in?</h2>
+              <p className="text-sm text-muted-foreground">
+                Pick the depth that matches the time you actually have right now.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setMode("full")}
+              className="w-full text-left rounded-2xl border border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary hover:bg-primary/10"
+            >
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-primary/15 p-2 text-primary">
+                  <ListChecks className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-heading font-bold text-foreground">Full check-in</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Wins, blockers, commitments, "one thing" — plus AI debrief. ~5–8 min.
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setMode("quick");
+                // Quick mode ignores the commitment-callback step
+                setQuickStep(0);
+              }}
+              className="w-full text-left rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40"
+            >
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-accent/15 p-2 text-accent">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-heading font-bold text-foreground">Quick check-in</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Just mood, energy, and one thing for the week. ~60 seconds. No AI debrief.
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Quick check-in flow ────────────────────────────────────────────────────
+  if (!done && mode === "quick") {
+    const totalQuickSteps = 2;
+    const displayQuickStep = quickStep + 1;
+    const quickCanContinue = quickStep === 0 ? mood > 0 && energy > 0 : oneThing.trim().length > 0;
+
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link to="/" className="flex items-center">
+                <img src={logo} alt="Intentus" className="h-7 w-auto object-contain cursor-pointer" />
+              </Link>
+              <span className="font-heading text-lg font-bold text-foreground">Quick check-in</span>
+            </div>
+            <span className="text-sm text-muted-foreground">{displayQuickStep} of {totalQuickSteps}</span>
+          </div>
+          <div className="h-1 bg-border">
+            <div
+              className="h-full bg-gradient-primary transition-all duration-500"
+              style={{ width: `${(displayQuickStep / totalQuickSteps) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <AppBreadcrumb />
+
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg space-y-6">
+            {quickStep === 0 ? (
+              <div className="space-y-8">
+                <ScaleSelector
+                  value={mood}
+                  onChange={setMood}
+                  label="Mood"
+                  helper="How clear and steady are you right now?"
+                  emoji={["😔 Off your game", "😐 Mixed", "😊 Locked in"]}
+                />
+                <ScaleSelector
+                  value={energy}
+                  onChange={setEnergy}
+                  label="Energy"
+                  helper="How much execution fuel do you have?"
+                  emoji={["🔋 Running on empty", "⚡ Moderate energy", "🚀 Fully charged"]}
+                />
+              </div>
+            ) : (
+              <OneThingStep oneThing={oneThing} setOneThing={setOneThing} />
+            )}
+          </div>
+        </div>
+
+        <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
+          <div className="container mx-auto max-w-lg flex gap-3">
+            {quickStep === 0 ? (
+              <Button variant="outline" className="flex-1" onClick={() => setMode(null)}>Back</Button>
+            ) : (
+              <Button variant="outline" className="flex-1" onClick={() => setQuickStep(0)}>Back</Button>
+            )}
+            {quickStep < totalQuickSteps - 1 ? (
+              <Button
+                variant="hero"
+                className="flex-1"
+                disabled={!quickCanContinue}
+                onClick={() => setQuickStep(quickStep + 1)}
+              >
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="hero"
+                className="flex-1"
+                disabled={loading || !quickCanContinue}
+                onClick={() => handleSubmit({ quick: true })}
+              >
+                {loading ? "Saving..." : "Submit quick check-in"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
 
   if (showThinPrompt) {
     return (
@@ -800,7 +959,7 @@ const CheckIn = () => {
               Continue <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="hero" className="flex-1" onClick={handleSubmit} disabled={loading}>
+            <Button variant="hero" className="flex-1" onClick={() => handleSubmit()} disabled={loading}>
               {loading ? "Saving..." : "Complete check-in"}
             </Button>
           )}

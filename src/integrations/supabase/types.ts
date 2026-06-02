@@ -93,6 +93,7 @@ export type Database = {
           energy_score: number | null
           extras: Json
           id: string
+          is_quick: boolean | null
           mood_score: number | null
           user_id: string
           wins: string[] | null
@@ -106,6 +107,7 @@ export type Database = {
           energy_score?: number | null
           extras?: Json
           id?: string
+          is_quick?: boolean | null
           mood_score?: number | null
           user_id: string
           wins?: string[] | null
@@ -119,6 +121,7 @@ export type Database = {
           energy_score?: number | null
           extras?: Json
           id?: string
+          is_quick?: boolean | null
           mood_score?: number | null
           user_id?: string
           wins?: string[] | null
@@ -454,6 +457,30 @@ export type Database = {
         }
         Relationships: []
       }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       revenuecat_events: {
         Row: {
           app_user_id: string
@@ -498,6 +525,7 @@ export type Database = {
           ninety_day_plan: Json | null
           north_star_focus: string | null
           pattern_analysis: Json | null
+          pattern_intelligence: Json | null
           updated_at: string
           user_id: string
         }
@@ -514,6 +542,7 @@ export type Database = {
           ninety_day_plan?: Json | null
           north_star_focus?: string | null
           pattern_analysis?: Json | null
+          pattern_intelligence?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -530,6 +559,7 @@ export type Database = {
           ninety_day_plan?: Json | null
           north_star_focus?: string | null
           pattern_analysis?: Json | null
+          pattern_intelligence?: Json | null
           updated_at?: string
           user_id?: string
         }

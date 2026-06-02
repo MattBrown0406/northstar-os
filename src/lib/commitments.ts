@@ -148,6 +148,44 @@ export async function getFollowThroughSummary(
   return { rate, pattern, recentOutcomes };
 }
 
+/**
+ * Get the user's last `weeks` weekly_commitment rows in chronological order
+ * (oldest → newest). Used by the dashboard streak/sparkline.
+ */
+export async function getRecentCommitments(
+  userId: string,
+  weeks = 7,
+): Promise<WeeklyCommitment[]> {
+  const { data, error } = await supabase
+    .from("weekly_commitments")
+    .select("*")
+    .eq("user_id", userId)
+    .order("week_start", { ascending: false })
+    .limit(weeks);
+  if (error || !data) return [];
+  return (data as WeeklyCommitment[]).slice().reverse();
+}
+
+/**
+ * Compute the consecutive (most-recent backwards) streak of weeks where
+ * outcome is "yes" or "partially". Stops at the first miss or null.
+ * Excludes the current (in-progress) week which typically has no outcome yet.
+ */
+export function computeFollowThroughStreak(commitments: WeeklyCommitment[]): number {
+  let streak = 0;
+  for (let i = commitments.length - 1; i >= 0; i--) {
+    const o = commitments[i].outcome;
+    // Skip an in-progress (no-outcome) week at the very end without breaking the streak.
+    if (o === null) {
+      if (i === commitments.length - 1) continue;
+      break;
+    }
+    if (o === "yes" || o === "partially") streak += 1;
+    else break;
+  }
+  return streak;
+}
+
 interface NinetyDayPlan {
   phases?: Array<{
     phase?: string | number;
