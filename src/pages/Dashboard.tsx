@@ -452,6 +452,24 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Quarterly Re-Audit Discovery Banner */}
+          {auditCompleted &&
+            (planTier === "premium" || planTier === "coach") &&
+            lastAuditAt &&
+            differenceInDays(new Date(), lastAuditAt) >= 90 && (
+              <div className="mx-4 mt-4 md:mx-6 flex flex-col gap-3 rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/15 via-background to-background p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-heading font-bold text-foreground">🔄 Quarterly Audit Available</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Your operating reality has shifted. Run your Q{auditCount + 1} audit to refresh your report and 90-day plan.
+                  </p>
+                </div>
+                <Button variant="hero" size="sm" onClick={() => navigate("/audit?reaudit=true")}>
+                  Start Re-Audit <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
           {/* Audit / Report CTA Banner — inside the card */}
           {!auditCompleted ? (
             <div className="mx-4 mt-4 md:mx-6 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-background to-background p-4">
