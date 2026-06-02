@@ -416,7 +416,7 @@ const CoachDashboard = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="free">Free</SelectItem>
-                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="exec">Executive</SelectItem>
                           <SelectItem value="premium">Premium</SelectItem>
                         </SelectContent>
                       </Select>
