@@ -778,6 +778,23 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* AI Coach teaser — free tier only */}
+              {planTier === "free" && (
+                <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold text-foreground">Executive unlocks this</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    AI coaching, check-in debriefs, and drift accountability. $39.99/mo
+                  </p>
+                  <Button variant="hero" size="sm" className="w-full" onClick={() => navigate("/subscribe")}>
+                    See plans <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+
+
               {/* Recent check-ins */}
               <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
                 <div className="mb-3 flex items-center gap-2">
