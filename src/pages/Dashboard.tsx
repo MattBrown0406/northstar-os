@@ -508,6 +508,11 @@ const Dashboard = () => {
                     <Target className="h-4 w-4 text-primary" />
                   </div>
 
+                  {/* One Thing streak */}
+                  <OneThingStreak history={recentCommitmentHistory} />
+
+
+
                   {/* The one thing */}
                   {currentCommitment ? (
                     <div className="mb-3 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
