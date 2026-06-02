@@ -33,7 +33,7 @@ function getReviewAppUserId() {
 const reviewPlans: ReviewPlan[] = [
   {
     name: "Executive",
-    productId: REVENUECAT_PRODUCT_IDS.pro,
+    productId: REVENUECAT_PRODUCT_IDS.exec,
     fallbackPrice: "$39.99/mo",
     description: "AI operating coach chat, AI check-in debriefs, drift tracking, and accountability history.",
   },
