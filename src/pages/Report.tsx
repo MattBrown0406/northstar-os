@@ -773,18 +773,21 @@ const Report = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-heading">Pattern Intelligence</CardTitle>
-                {!patternIntelLoaded && (
-                  <Button variant="outline" size="sm" onClick={handleLoadPatternIntel} disabled={loadingPatternIntel}>
-                    {loadingPatternIntel ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TrendingUp className="mr-2 h-4 w-4" />}
-                    Analyze Patterns
-                  </Button>
-                )}
               </div>
               <p className="text-sm text-muted-foreground">Behavioral patterns across all your audit cycles.</p>
             </CardHeader>
             <CardContent>
-              {!patternIntelLoaded && !loadingPatternIntel && (
-                <p className="text-sm text-muted-foreground">Click Analyze Patterns to generate longitudinal intelligence from your audit history. Requires at least 2 completed audit cycles.</p>
+              {auditHistory.length < 2 && !patternIntelLoaded && (
+                <p className="text-sm text-muted-foreground">
+                  Pattern Intelligence activates after your second quarterly audit.
+                </p>
+              )}
+              {auditHistory.length >= 2 && loadingPatternIntel && (
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-16 rounded-xl bg-muted/60" />
+                  <div className="h-10 rounded-lg bg-muted/40" />
+                  <div className="h-10 rounded-lg bg-muted/40" />
+                </div>
               )}
               {patternIntel?.insufficient_data && (
                 <p className="text-sm text-muted-foreground">{patternIntel.message}</p>
