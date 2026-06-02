@@ -144,6 +144,7 @@ serve(async (req) => {
     }
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
+    const pronounDirective = buildPronounDirective(profile?.gender);
 
     // Build rich context
     let userContext = `User: ${name}\nCoaching tone preference: ${tone}\n\n`;
