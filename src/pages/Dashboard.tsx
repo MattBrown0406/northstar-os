@@ -121,6 +121,9 @@ const Dashboard = () => {
   const [oneThingSaving, setOneThingSaving] = useState(false);
   const [reauditEligible, setReauditEligible] = useState(false);
   const [reauditNextDate, setReauditNextDate] = useState<Date | undefined>();
+  const [lastAuditAt, setLastAuditAt] = useState<Date | null>(null);
+  const [auditCount, setAuditCount] = useState(1);
+  const { toast } = useToastSafe();
 
   useEffect(() => {
     if (!user) return;
