@@ -129,50 +129,74 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [profileRes, checkInsRes, auditRes, reportRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-        supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
-        supabase.from("baseline_audits").select("status").eq("user_id", user.id).eq("status", "completed").limit(1),
-        supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-      ]);
-      if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
-      if (checkInsRes.data) setCheckIns(checkInsRes.data as CheckIn[]);
-      setAuditCompleted((auditRes.data?.length ?? 0) > 0);
-      if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
-      setLoading(false);
+      try {
+        const [profileRes, checkInsRes, auditRes, reportRes, historyRes] = await Promise.all([
+          supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+          supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
+          supabase.from("baseline_audits").select("status, completed_at").eq("user_id", user.id).eq("status", "completed").order("completed_at", { ascending: false }).limit(1),
+          supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+          (supabase as any).from("audit_history").select("id, completed_at").eq("user_id", user.id).order("completed_at", { ascending: false }),
+        ]);
+        if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+        if (checkInsRes.data) setCheckIns(checkInsRes.data as CheckIn[]);
+        setAuditCompleted((auditRes.data?.length ?? 0) > 0);
+        const latestActive = auditRes.data?.[0]?.completed_at ?? null;
+        const latestArchived = (historyRes.data as any[] | null)?.[0]?.completed_at ?? null;
+        const mostRecent = [latestActive, latestArchived]
+          .filter(Boolean)
+          .map((d) => new Date(d as string))
+          .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+        setLastAuditAt(mostRecent);
+        setAuditCount(((historyRes.data as any[] | null)?.length ?? 0) + ((auditRes.data?.length ?? 0) > 0 ? 1 : 0));
+        if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
+      } catch (err) {
+        toast({ title: "Failed to load", description: "Please refresh and try again.", variant: "destructive" });
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
 
     const loadCommitments = async () => {
       if (!user) return;
-      const [curr, prev, recent] = await Promise.all([
-        getCurrentWeekCommitment(user.id),
-        getPreviousWeekCommitment(user.id),
-        getRecentCommitments(user.id, 7),
-      ]);
-      setCurrentCommitment(curr);
-      setLastCommitment(prev);
-      setRecentCommitmentHistory(recent);
+      try {
+        const [curr, prev, recent] = await Promise.all([
+          getCurrentWeekCommitment(user.id),
+          getPreviousWeekCommitment(user.id),
+          getRecentCommitments(user.id, 7),
+        ]);
+        setCurrentCommitment(curr);
+        setLastCommitment(prev);
+        setRecentCommitmentHistory(recent);
+      } catch (err) {
+        toast({ title: "Failed to load", description: "Please refresh and try again.", variant: "destructive" });
+        console.error(err);
+      }
     };
     loadCommitments();
 
 
     const loadReaudit = async () => {
       if (!user) return;
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("plan_tier")
-        .eq("user_id", user.id)
-        .single();
-      const tier = prof?.plan_tier ?? "free";
-      if (tier === "premium" || tier === "coach") {
-        const result = await canReaudit(user.id);
-        setReauditEligible(result.eligible);
-        setReauditNextDate(result.nextEligibleDate);
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("plan_tier")
+          .eq("user_id", user.id)
+          .single();
+        const tier = prof?.plan_tier ?? "free";
+        if (tier === "premium" || tier === "coach") {
+          const result = await canReaudit(user.id);
+          setReauditEligible(result.eligible);
+          setReauditNextDate(result.nextEligibleDate);
+        }
+      } catch (err) {
+        console.error(err);
       }
     };
     loadReaudit();
-  }, [user]);
+  }, [user, toast]);
 
   const handleSaveOneThing = async () => {
     if (!user || !oneThingInput.trim()) return;
