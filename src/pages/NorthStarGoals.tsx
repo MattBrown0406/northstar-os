@@ -76,7 +76,7 @@ const NorthStarGoals = () => {
       return;
     }
     loadGoals();
-  }, [user]);
+  }, [user, navigate]);
 
   const loadGoals = async () => {
     if (!user) return;
