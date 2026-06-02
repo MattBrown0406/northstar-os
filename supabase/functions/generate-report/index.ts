@@ -8,6 +8,7 @@ import {
   truncate,
 } from "../_shared/ai-guardrails.ts";
 import { buildReportDepthPrompt, buildTierPolicyPrompt, normalizePlanTier } from "../_shared/tier-policy.ts";
+import { buildPronounDirective } from "../_shared/pronouns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
