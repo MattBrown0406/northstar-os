@@ -149,8 +149,10 @@ const NorthStarGoals = () => {
     setSaving(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this goal?')) return;
+  const confirmDelete = async () => {
+    const id = pendingDeleteId;
+    if (!id) return;
+    setPendingDeleteId(null);
     const { error } = await supabase
       .from('north_star_goals')
       .update({ is_active: false })
@@ -163,6 +165,7 @@ const NorthStarGoals = () => {
       toast({ title: 'Goal deleted' });
     }
   };
+
 
   const startEdit = (goal: Goal) => {
     setAddingHorizon(null);
