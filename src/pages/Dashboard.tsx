@@ -205,7 +205,7 @@ const Dashboard = () => {
   const driftRate = checkIns.length > 0 ? Math.round((driftCount / checkIns.length) * 100) : null;
   const recentCommitments = checkIns[0]?.commitments ?? [];
   const planTier = profile?.plan_tier ?? "free";
-  const trendWindow = planTier === "premium" || planTier === "coach" ? 10 : planTier === "pro" ? 7 : 4;
+  const trendWindow = planTier === "premium" || planTier === "coach" ? 10 : planTier === "exec" ? 7 : 4;
   const trendData = [...checkIns]
     .slice(0, trendWindow)
     .reverse()
