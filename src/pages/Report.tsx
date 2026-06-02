@@ -299,12 +299,36 @@ const Report = () => {
       const json = await res.json();
       setPatternIntel(json);
       setPatternIntelLoaded(true);
+      // Persist to DB so subsequent visits skip the AI call.
+      if (report && !json?.insufficient_data) {
+        await supabase
+          .from('strategic_reports')
+          .update({ pattern_intelligence: json })
+          .eq('id', report.id);
+      }
     } catch (e) {
       toast({ title: 'Could not load pattern analysis', variant: 'destructive' });
     } finally {
       setLoadingPatternIntel(false);
     }
   };
+
+  // Auto-load Pattern Intelligence: hydrate from DB if cached, otherwise
+  // trigger generation once when the user has at least 2 audits.
+  useEffect(() => {
+    if (!user || !report) return;
+    const cached = (report as unknown as { pattern_intelligence?: unknown }).pattern_intelligence;
+    if (cached && !patternIntelLoaded) {
+      setPatternIntel(cached);
+      setPatternIntelLoaded(true);
+      return;
+    }
+    if (!patternIntelLoaded && !loadingPatternIntel && auditHistory.length >= 2) {
+      handleLoadPatternIntel();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, report, auditHistory.length]);
+
 
   const handleExportText = () => {
     if (!report) return;
