@@ -14,7 +14,45 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Require authenticated coach-tier caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const {
+      data: { user },
+      error: authError,
+    } = await userSupabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan_tier")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!["coach"].includes(profile?.plan_tier)) {
+      return new Response(JSON.stringify({ error: "Coach tier required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { email, display_name, plan_tier, coach_user_id, coach_name } = await req.json();
 
@@ -32,8 +70,9 @@ serve(async (req) => {
         ...(coach_user_id ? { coach_user_id } : {}),
         ...(coach_name ? { invited_by: coach_name } : {}),
       },
-      redirectTo: `${req.headers.get("origin") || "https://truenorthos.lovable.app"}/onboarding`,
+      redirectTo: `${req.headers.get("origin") || "https://intentus.app"}/onboarding`,
     });
+
 
     if (inviteError) {
       throw inviteError;
