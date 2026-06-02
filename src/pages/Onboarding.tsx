@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers } from "lucide-react";
+import { ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers, User } from "lucide-react";
 import { brandLogo as logo } from "@/lib/brand";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -13,11 +13,15 @@ import {
   SUPPORT_MODE_OPTIONS,
   type AdaptiveLens,
 } from "@/lib/intentus-architecture";
+import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
 
-const TIMEZONES = [
-  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Tokyo", "Asia/Singapore",
-  "Australia/Sydney", "Pacific/Auckland",
+type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "male", label: "He/him" },
+  { value: "female", label: "She/her" },
+  { value: "non_binary", label: "They/them" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
 ];
 
 const TONES = [
