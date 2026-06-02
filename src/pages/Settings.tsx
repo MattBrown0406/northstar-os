@@ -89,7 +89,7 @@ const Settings = () => {
     const load = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, coaching_tone, check_in_cadence, timezone")
+        .select("display_name, coaching_tone, check_in_cadence, timezone, gender")
         .eq("user_id", user.id)
         .single();
 
@@ -99,6 +99,7 @@ const Settings = () => {
         setTone(profile.coaching_tone ?? "balanced");
         setCadence(profile.check_in_cadence ?? "daily");
         setTimezone(profile.timezone ?? "America/New_York");
+        setGender(profile.gender ?? "prefer_not_to_say");
       }
       setLoading(false);
     };
