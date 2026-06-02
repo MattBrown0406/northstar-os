@@ -379,8 +379,10 @@ const Settings = () => {
                 >
                   <p className="font-semibold text-foreground">{g.label}</p>
                 </button>
+              ))}
             </div>
           </div>
+
 
 
 
