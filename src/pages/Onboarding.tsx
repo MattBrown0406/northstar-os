@@ -317,7 +317,7 @@ const Onboarding = () => {
         </div>
       </div>
 
-      <Button variant="hero" className="w-full" onClick={() => setStep(4)}>
+      <Button variant="hero" className="w-full" onClick={() => setStep(5)}>
         Continue <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,
