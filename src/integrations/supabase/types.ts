@@ -408,6 +408,7 @@ export type Database = {
           coaching_tone: Database["public"]["Enums"]["coaching_tone"] | null
           created_at: string
           display_name: string | null
+          gender: string | null
           id: string
           intent_profile: Json
           is_active: boolean
@@ -424,6 +425,7 @@ export type Database = {
           coaching_tone?: Database["public"]["Enums"]["coaching_tone"] | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           intent_profile?: Json
           is_active?: boolean
@@ -440,6 +442,7 @@ export type Database = {
           coaching_tone?: Database["public"]["Enums"]["coaching_tone"] | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           intent_profile?: Json
           is_active?: boolean
@@ -448,6 +451,33 @@ export type Database = {
           timezone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      revenuecat_events: {
+        Row: {
+          app_user_id: string
+          event_type: string
+          id: string
+          processed_at: string
+          product_id: string | null
+          raw_payload: Json | null
+        }
+        Insert: {
+          app_user_id: string
+          event_type: string
+          id?: string
+          processed_at?: string
+          product_id?: string | null
+          raw_payload?: Json | null
+        }
+        Update: {
+          app_user_id?: string
+          event_type?: string
+          id?: string
+          processed_at?: string
+          product_id?: string | null
+          raw_payload?: Json | null
         }
         Relationships: []
       }
