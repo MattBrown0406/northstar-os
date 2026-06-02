@@ -232,6 +232,10 @@ const loadDraft = (): CheckInDraft | null => {
 const CheckIn = () => {
   const initialDraft = (typeof window !== "undefined") ? loadDraft() : null;
 
+  // Mode picker: 'full' (existing flow) or 'quick' (3-step mood/energy + one thing).
+  // null means we still need to ask the user.
+  const [mode, setMode] = useState<"full" | "quick" | null>(null);
+
   // Step index: 0 = commitment callback (or skipped), 1–5 = original steps, 6 = one-thing
   const [step, setStep] = useState(initialDraft?.step ?? 0);
   const [mood, setMood] = useState(initialDraft?.mood ?? 5);
@@ -257,6 +261,9 @@ const CheckIn = () => {
 
   // One-thing state
   const [oneThing, setOneThing] = useState(initialDraft?.oneThing ?? "");
+
+  // Quick-mode local step (0 = mood/energy, 1 = one thing)
+  const [quickStep, setQuickStep] = useState(0);
 
   // Extras (rotating coaching questions)
   const [tier, setTier] = useState<Tier>("free");
