@@ -137,7 +137,7 @@ serve(async (req) => {
     // Get profile for coaching tone + adaptive lens choices
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone, intent_profile, plan_tier")
+      .select("display_name, coaching_tone, intent_profile, plan_tier, gender")
       .eq("user_id", user.id)
       .single();
 
