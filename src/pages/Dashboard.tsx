@@ -123,7 +123,7 @@ const Dashboard = () => {
   const [reauditNextDate, setReauditNextDate] = useState<Date | undefined>();
   const [lastAuditAt, setLastAuditAt] = useState<Date | null>(null);
   const [auditCount, setAuditCount] = useState(1);
-  const { toast } = useToastSafe();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
