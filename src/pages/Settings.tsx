@@ -141,6 +141,7 @@ const Settings = () => {
         coaching_tone: tone,
         check_in_cadence: cadence,
         timezone,
+        gender,
       })
       .eq("user_id", user.id);
 
