@@ -85,6 +85,21 @@ const Coaching = () => {
     setInput("");
     setIsStreaming(true);
 
+    const today = new Date().toISOString().split('T')[0];
+
+    // Persist user message immediately so it isn't lost if the stream fails.
+    if (user) {
+      const { error: userPersistError } = await supabase.from('coaching_messages').insert({
+        user_id: user.id,
+        role: 'user',
+        content: trimmedInput,
+        session_date: today,
+      });
+      if (userPersistError) {
+        console.error("Failed to persist user message:", userPersistError);
+      }
+    }
+
     let assistantText = "";
 
     try {
@@ -158,17 +173,22 @@ const Coaching = () => {
         }]);
       }
     }
-    // Persist to DB
+    // Persist assistant reply after stream completes
     if (user && assistantText) {
-      const today = new Date().toISOString().split('T')[0];
-      await supabase.from('coaching_messages').insert([
-        { user_id: user.id, role: 'user', content: trimmedInput, session_date: today },
-        { user_id: user.id, role: 'assistant', content: assistantText, session_date: today },
-      ]);
+      const { error: asstPersistError } = await supabase.from('coaching_messages').insert({
+        user_id: user.id,
+        role: 'assistant',
+        content: assistantText,
+        session_date: today,
+      });
+      if (asstPersistError) {
+        console.error("Failed to persist assistant message:", asstPersistError);
+      }
     }
     setIsStreaming(false);
     inputRef.current?.focus();
   };
+
 
   const tierCapability = getTierCapability(planTier);
 
