@@ -63,7 +63,7 @@ const Admin = () => {
       return;
     }
     fetchUsers();
-  }, [isAdmin, adminLoading]);
+  }, [isAdmin, adminLoading, navigate]);
 
   const fetchUsers = async () => {
     setLoading(true);
