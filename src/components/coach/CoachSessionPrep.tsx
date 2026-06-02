@@ -57,11 +57,7 @@ export const CoachSessionPrep = ({ client, coachId }: Props) => {
   const [prepCount, setPrepCount] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [client.user_id, coachId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     // Load last 3 check-ins
     const { data: ciData } = await supabase
       .from('check_ins')
@@ -93,7 +89,12 @@ export const CoachSessionPrep = ({ client, coachId }: Props) => {
       .eq('resolved', false);
 
     setPrepCount(count ?? 0);
-  };
+  }, [client.user_id, coachId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
 
   const hasDrift = checkIns.some((ci) => ci.drift_detected);
   const repeatedBlockers = recurringBlockers(checkIns);
