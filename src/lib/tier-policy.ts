@@ -1,4 +1,4 @@
-export type PlanTier = "free" | "pro" | "premium" | "coach";
+export type PlanTier = "free" | "exec" | "premium" | "coach";
 
 export type TierCapability = {
   label: string;
@@ -22,7 +22,7 @@ export const TIER_CAPABILITIES: Record<PlanTier, TierCapability> = {
     hasRotatingCheckInQuestions: false,
     hasMirrorMode: false,
   },
-  pro: {
+  exec: {
     label: "Executive",
     coachingName: "Executive Operating Coach",
     aiBehavior: "Balanced AI coaching for audit insights, check-in debriefs, drift detection, and practical weekly execution.",
@@ -55,7 +55,10 @@ export const TIER_CAPABILITIES: Record<PlanTier, TierCapability> = {
 };
 
 export function normalizePlanTier(value: unknown): PlanTier {
-  return value === "pro" || value === "premium" || value === "coach" ? value : "free";
+  // Backward compatibility: legacy "pro" tier maps to "exec"
+  if (value === "pro" || value === "exec") return "exec";
+  if (value === "premium" || value === "coach") return value;
+  return "free";
 }
 
 export function getTierCapability(value: unknown): TierCapability {
