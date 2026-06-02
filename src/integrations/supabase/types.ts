@@ -462,6 +462,7 @@ export type Database = {
           processed_at: string
           product_id: string | null
           raw_payload: Json | null
+          source: string | null
         }
         Insert: {
           app_user_id: string
@@ -470,6 +471,7 @@ export type Database = {
           processed_at?: string
           product_id?: string | null
           raw_payload?: Json | null
+          source?: string | null
         }
         Update: {
           app_user_id?: string
@@ -478,6 +480,7 @@ export type Database = {
           processed_at?: string
           product_id?: string | null
           raw_payload?: Json | null
+          source?: string | null
         }
         Relationships: []
       }

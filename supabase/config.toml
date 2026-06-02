@@ -2,3 +2,6 @@ project_id = "mfsqlbqlvikyrbsqdsno"
 
 [functions.revenuecat-webhook]
 verify_jwt = false
+
+[functions.square-webhook]
+verify_jwt = false
