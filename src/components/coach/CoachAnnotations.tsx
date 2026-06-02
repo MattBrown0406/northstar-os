@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { Flag, FileText, Star, CheckSquare, Check, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -64,11 +64,7 @@ export const CoachAnnotations = ({
   const [showResolved, setShowResolved] = useState(false);
   const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    loadAnnotations();
-  }, [clientUserId, coachId, contextType, contextId]);
-
-  const loadAnnotations = async () => {
+  const loadAnnotations = useCallback(async () => {
     let query = supabase
       .from('coach_annotations')
       .select('*')
@@ -83,7 +79,12 @@ export const CoachAnnotations = ({
     if (!error && data) {
       setAnnotations(data as Annotation[]);
     }
-  };
+  }, [clientUserId, coachId, contextType, contextId]);
+
+  useEffect(() => {
+    loadAnnotations();
+  }, [loadAnnotations]);
+
 
   const addAnnotation = async () => {
     if (!newContent.trim()) return;

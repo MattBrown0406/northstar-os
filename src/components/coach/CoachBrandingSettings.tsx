@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -44,12 +44,7 @@ const CoachBrandingSettings = () => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [headshotUrl, setHeadshotUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    loadBranding();
-  }, [user]);
-
-  const loadBranding = async () => {
+  const loadBranding = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
       .from("coach_branding")
@@ -83,7 +78,12 @@ const CoachBrandingSettings = () => {
       }
     }
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadBranding();
+  }, [user, loadBranding]);
 
   const extractColors = async () => {
     if (!websiteUrl) return;

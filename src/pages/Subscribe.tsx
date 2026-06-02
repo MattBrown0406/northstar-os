@@ -29,9 +29,9 @@ type Plan = {
 
 const plans: Plan[] = [
   {
-    tier: "pro",
+    tier: "exec",
     name: "Executive",
-    productId: REVENUECAT_PRODUCT_IDS.pro,
+    productId: REVENUECAT_PRODUCT_IDS.exec,
     fallbackPrice: "$39.99",
     summary: "Full AI operating coach for execution rhythm.",
     featured: true,

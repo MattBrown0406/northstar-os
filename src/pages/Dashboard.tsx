@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { brandLogo as logo } from "@/lib/brand";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
 import {
   LogOut, Target, TrendingUp, Flame,
   CheckCircle, AlertTriangle, ArrowRight, BarChart3, Clock,
@@ -121,54 +122,81 @@ const Dashboard = () => {
   const [oneThingSaving, setOneThingSaving] = useState(false);
   const [reauditEligible, setReauditEligible] = useState(false);
   const [reauditNextDate, setReauditNextDate] = useState<Date | undefined>();
+  const [lastAuditAt, setLastAuditAt] = useState<Date | null>(null);
+  const [auditCount, setAuditCount] = useState(1);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [profileRes, checkInsRes, auditRes, reportRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-        supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
-        supabase.from("baseline_audits").select("status").eq("user_id", user.id).eq("status", "completed").limit(1),
-        supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-      ]);
-      if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
-      if (checkInsRes.data) setCheckIns(checkInsRes.data as CheckIn[]);
-      setAuditCompleted((auditRes.data?.length ?? 0) > 0);
-      if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
-      setLoading(false);
+      try {
+        const [profileRes, checkInsRes, auditRes, reportRes, historyRes] = await Promise.all([
+          supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+          supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30),
+          supabase.from("baseline_audits").select("status, completed_at").eq("user_id", user.id).eq("status", "completed").order("completed_at", { ascending: false }).limit(1),
+          supabase.from("strategic_reports").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+          (supabase as any).from("audit_history").select("id, completed_at").eq("user_id", user.id).order("completed_at", { ascending: false }),
+        ]);
+        if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+        if (checkInsRes.data) setCheckIns(checkInsRes.data as CheckIn[]);
+        setAuditCompleted((auditRes.data?.length ?? 0) > 0);
+        const latestActive = auditRes.data?.[0]?.completed_at ?? null;
+        const latestArchived = (historyRes.data as any[] | null)?.[0]?.completed_at ?? null;
+        const mostRecent = [latestActive, latestArchived]
+          .filter(Boolean)
+          .map((d) => new Date(d as string))
+          .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+        setLastAuditAt(mostRecent);
+        setAuditCount(((historyRes.data as any[] | null)?.length ?? 0) + ((auditRes.data?.length ?? 0) > 0 ? 1 : 0));
+        if (reportRes.data?.[0]) setReportSummary(reportRes.data[0] as unknown as StrategicReportSummary);
+      } catch (err) {
+        toast({ title: "Failed to load", description: "Please refresh and try again.", variant: "destructive" });
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
 
     const loadCommitments = async () => {
       if (!user) return;
-      const [curr, prev, recent] = await Promise.all([
-        getCurrentWeekCommitment(user.id),
-        getPreviousWeekCommitment(user.id),
-        getRecentCommitments(user.id, 7),
-      ]);
-      setCurrentCommitment(curr);
-      setLastCommitment(prev);
-      setRecentCommitmentHistory(recent);
+      try {
+        const [curr, prev, recent] = await Promise.all([
+          getCurrentWeekCommitment(user.id),
+          getPreviousWeekCommitment(user.id),
+          getRecentCommitments(user.id, 7),
+        ]);
+        setCurrentCommitment(curr);
+        setLastCommitment(prev);
+        setRecentCommitmentHistory(recent);
+      } catch (err) {
+        toast({ title: "Failed to load", description: "Please refresh and try again.", variant: "destructive" });
+        console.error(err);
+      }
     };
     loadCommitments();
 
 
     const loadReaudit = async () => {
       if (!user) return;
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("plan_tier")
-        .eq("user_id", user.id)
-        .single();
-      const tier = prof?.plan_tier ?? "free";
-      if (tier === "premium" || tier === "coach") {
-        const result = await canReaudit(user.id);
-        setReauditEligible(result.eligible);
-        setReauditNextDate(result.nextEligibleDate);
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("plan_tier")
+          .eq("user_id", user.id)
+          .single();
+        const tier = prof?.plan_tier ?? "free";
+        if (tier === "premium" || tier === "coach") {
+          const result = await canReaudit(user.id);
+          setReauditEligible(result.eligible);
+          setReauditNextDate(result.nextEligibleDate);
+        }
+      } catch (err) {
+        console.error(err);
       }
     };
     loadReaudit();
-  }, [user]);
+  }, [user, toast]);
 
   const handleSaveOneThing = async () => {
     if (!user || !oneThingInput.trim()) return;
@@ -205,7 +233,7 @@ const Dashboard = () => {
   const driftRate = checkIns.length > 0 ? Math.round((driftCount / checkIns.length) * 100) : null;
   const recentCommitments = checkIns[0]?.commitments ?? [];
   const planTier = profile?.plan_tier ?? "free";
-  const trendWindow = planTier === "premium" || planTier === "coach" ? 10 : planTier === "pro" ? 7 : 4;
+  const trendWindow = planTier === "premium" || planTier === "coach" ? 10 : planTier === "exec" ? 7 : 4;
   const trendData = [...checkIns]
     .slice(0, trendWindow)
     .reverse()
@@ -423,6 +451,24 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Quarterly Re-Audit Discovery Banner */}
+          {auditCompleted &&
+            (planTier === "premium" || planTier === "coach") &&
+            lastAuditAt &&
+            differenceInDays(new Date(), lastAuditAt) >= 90 && (
+              <div className="mx-4 mt-4 md:mx-6 flex flex-col gap-3 rounded-2xl border border-accent/30 bg-gradient-to-r from-accent/15 via-background to-background p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-heading font-bold text-foreground">🔄 Quarterly Audit Available</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Your operating reality has shifted. Run your Q{auditCount + 1} audit to refresh your report and 90-day plan.
+                  </p>
+                </div>
+                <Button variant="hero" size="sm" onClick={() => navigate("/audit?reaudit=true")}>
+                  Start Re-Audit <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
           {/* Audit / Report CTA Banner — inside the card */}
           {!auditCompleted ? (
@@ -731,6 +777,23 @@ const Dashboard = () => {
                   ))}
                 </div>
               </div>
+
+              {/* AI Coach teaser — free tier only */}
+              {planTier === "free" && (
+                <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold text-foreground">Executive unlocks this</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    AI coaching, check-in debriefs, and drift accountability. $39.99/mo
+                  </p>
+                  <Button variant="hero" size="sm" className="w-full" onClick={() => navigate("/subscribe")}>
+                    See plans <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+
 
               {/* Recent check-ins */}
               <div className="rounded-2xl border border-border/70 bg-card/90 p-4">

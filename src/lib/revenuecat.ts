@@ -4,13 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { PlanTier } from "@/lib/tier-policy";
 
 export const REVENUECAT_PRODUCT_IDS = {
-  pro: "intentus_executive_monthly",
+  exec: "intentus_executive_monthly",
   premium: "intentus_premium_monthly",
   coach: "intentus_coach_monthly",
 } as const;
 
 export const REVENUECAT_ENTITLEMENTS = {
-  pro: "pro",
+  exec: "exec",
   premium: "premium",
   coach: "coach",
 } as const;
@@ -40,7 +40,8 @@ export function getPlanTierFromCustomerInfo(customerInfo: CustomerInfo): PlanTie
   const active = customerInfo.entitlements.active;
   if (active[REVENUECAT_ENTITLEMENTS.coach]?.isActive) return "coach";
   if (active[REVENUECAT_ENTITLEMENTS.premium]?.isActive) return "premium";
-  if (active[REVENUECAT_ENTITLEMENTS.pro]?.isActive) return "pro";
+  // Accept legacy "pro" entitlement as well (maps to "exec")
+  if (active[REVENUECAT_ENTITLEMENTS.exec]?.isActive || active["pro"]?.isActive) return "exec";
   return null;
 }
 

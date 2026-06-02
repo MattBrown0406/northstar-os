@@ -63,7 +63,7 @@ const Admin = () => {
       return;
     }
     fetchUsers();
-  }, [isAdmin, adminLoading]);
+  }, [isAdmin, adminLoading, navigate]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -177,6 +177,7 @@ const Admin = () => {
   const tierColor = (tier: string | null) => {
     switch (tier) {
       case "premium": return "bg-gold/20 text-gold-dark border-gold/30";
+      case "exec":
       case "pro": return "bg-primary/20 text-primary border-primary/30";
       case "coach": return "bg-purple-100 text-purple-700 border-purple-200";
       default: return "bg-muted text-muted-foreground border-border";
@@ -306,7 +307,7 @@ const Admin = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="free">Free</SelectItem>
-                  <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="exec">Executive</SelectItem>
                   <SelectItem value="premium">Premium</SelectItem>
                 </SelectContent>
               </Select>

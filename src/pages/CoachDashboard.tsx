@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CoachBrandingSettings from "@/components/coach/CoachBrandingSettings";
 import { CoachSessionPrep } from '@/components/coach/CoachSessionPrep';
 import { useNavigate } from "react-router-dom";
@@ -66,9 +66,10 @@ const CoachDashboard = () => {
   useEffect(() => {
     if (!user) return;
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
 
     const [profileRes, clientsRes, linksRes] = await Promise.all([
@@ -112,7 +113,7 @@ const CoachDashboard = () => {
     }
 
     setLoading(false);
-  };
+  }, [user]);
 
   const createInviteLink = async () => {
     if (!user) return;
@@ -153,7 +154,7 @@ const CoachDashboard = () => {
 
   const tierDistribution = [
     { name: "Free", value: clients.filter((client) => client.assigned_tier === "free").length },
-    { name: "Pro", value: clients.filter((client) => client.assigned_tier === "pro").length },
+    { name: "Executive", value: clients.filter((client) => client.assigned_tier === "exec" || client.assigned_tier === "pro").length },
     { name: "Premium", value: clients.filter((client) => client.assigned_tier === "premium").length },
   ];
   const activityData = clients
@@ -336,7 +337,7 @@ const CoachDashboard = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="pro">Pro</SelectItem>
+                      <SelectItem value="exec">Executive</SelectItem>
                       <SelectItem value="premium">Premium</SelectItem>
                     </SelectContent>
                   </Select>
@@ -416,7 +417,7 @@ const CoachDashboard = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="free">Free</SelectItem>
-                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="exec">Executive</SelectItem>
                           <SelectItem value="premium">Premium</SelectItem>
                         </SelectContent>
                       </Select>

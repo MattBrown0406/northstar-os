@@ -119,7 +119,7 @@ export const COACHING_QUESTIONS: CoachingQuestion[] = [
 export const CORE_QUESTION_IDS = COACHING_QUESTIONS.filter((q) => q.core).map((q) => q.id);
 export const ROTATING_QUESTION_IDS = COACHING_QUESTIONS.filter((q) => !q.core).map((q) => q.id);
 
-export type Tier = "free" | "pro" | "premium" | "coach";
+export type Tier = "free" | "exec" | "premium" | "coach";
 
 /**
  * Pick the questions to ask in this check-in based on the user's tier and
@@ -137,7 +137,7 @@ export function selectQuestionsForCheckIn(
 ): CoachingQuestion[] {
   if (tier === "free") return [];
 
-  if (tier === "pro") {
+  if (tier === "exec") {
     // Executive: always ask the core 3
     return COACHING_QUESTIONS.filter((q) => q.core);
   }
