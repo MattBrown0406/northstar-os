@@ -67,6 +67,8 @@ const NorthStarGoals = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<GoalForm>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!user) {
