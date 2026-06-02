@@ -66,9 +66,10 @@ const CoachDashboard = () => {
   useEffect(() => {
     if (!user) return;
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
 
     const [profileRes, clientsRes, linksRes] = await Promise.all([
