@@ -39,6 +39,7 @@ const CADENCES = [
 const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [timezone, setTimezone] = useState("America/New_York");
+  const [gender, setGender] = useState<Gender>("prefer_not_to_say");
   const [tone, setTone] = useState<"direct" | "supportive" | "balanced">("balanced");
   const [cadence, setCadence] = useState<"daily" | "every_other_day" | "weekly">("daily");
   const [primaryLens, setPrimaryLens] = useState<AdaptiveLens>("discipline_execution");
@@ -58,6 +59,7 @@ const Onboarding = () => {
       .from("profiles")
       .update({
         timezone,
+        gender,
         coaching_tone: tone,
         check_in_cadence: cadence,
         intent_profile: {
@@ -78,7 +80,7 @@ const Onboarding = () => {
     }
   };
 
-  const stepCount = 5;
+  const stepCount = 6;
 
   const steps = [
     <div key="welcome" className="text-center space-y-6">
