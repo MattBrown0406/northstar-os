@@ -155,10 +155,9 @@ const Report = () => {
   }, [user]);
 
   // Load re-audit eligibility and history after report is available
-  useEffect(() => {
+  const loadReauditData = useCallback(async () => {
     if (!user) return;
-    const loadReauditData = async () => {
-      // Load plan tier
+    try {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("plan_tier")
@@ -176,14 +175,20 @@ const Report = () => {
         const history = await getAuditHistory(user.id);
         setAuditHistory(history);
       }
-    };
+    } catch (err) {
+      toast({ title: "Failed to load", description: "Please refresh and try again.", variant: "destructive" });
+      console.error(err);
+    }
+  }, [user, toast]);
+
+  useEffect(() => {
     loadReauditData();
-  }, [user]);
+  }, [loadReauditData]);
 
   // Load action completions
-  useEffect(() => {
+  const loadCompletions = useCallback(async () => {
     if (!user || !report) return;
-    const loadCompletions = async () => {
+    try {
       const { data } = await supabase
         .from('plan_action_completions')
         .select('phase_index, action_index')
@@ -194,13 +199,19 @@ const Report = () => {
         data.forEach(c => { map[`${c.phase_index}-${c.action_index}`] = true; });
         setCompletions(map);
       }
-    };
+    } catch (err) {
+      toast({ title: "Failed to load", description: "Please refresh and try again.", variant: "destructive" });
+      console.error(err);
+    }
+  }, [user, report, toast]);
+
+  useEffect(() => {
     loadCompletions();
     // Load edited plan if exists
-    if (report.edited_ninety_day_plan) {
+    if (report?.edited_ninety_day_plan) {
       setEditedPlan(report.edited_ninety_day_plan as any[]);
     }
-  }, [user, report]);
+  }, [loadCompletions, report]);
 
   const handleConfirmReaudit = async () => {
     if (!user) return;
