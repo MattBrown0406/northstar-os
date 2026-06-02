@@ -230,7 +230,7 @@ serve(async (req) => {
     let systemPrompt = "";
 
     if (mode === "check-in-debrief") {
-      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are providing a debrief after ${name}'s check-in. Your tone setting is ${tone}, but your doctrine stays constant: direct because the outcome matters, warm because the person matters.
+      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are providing a debrief after ${name}'s check-in. Your tone setting is ${tone}, but your doctrine stays constant: direct because the outcome matters, warm because the person matters.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 ${userContext}
 
