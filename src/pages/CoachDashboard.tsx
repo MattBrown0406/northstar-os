@@ -113,7 +113,7 @@ const CoachDashboard = () => {
     }
 
     setLoading(false);
-  };
+  }, [user]);
 
   const createInviteLink = async () => {
     if (!user) return;
