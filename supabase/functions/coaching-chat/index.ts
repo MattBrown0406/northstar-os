@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 import { COACHING_SAFETY_BOUNDARY, boundedArray, safeJsonStringify, truncate } from "../_shared/ai-guardrails.ts";
 import { buildTierPolicyPrompt, canUseAiChat, canUseAiDebrief, normalizePlanTier } from "../_shared/tier-policy.ts";
+import { buildPronounDirective } from "../_shared/pronouns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -143,6 +144,7 @@ serve(async (req) => {
     }
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
+    const pronounDirective = buildPronounDirective(profile?.gender);
 
     // Build rich context
     let userContext = `User: ${name}\nCoaching tone preference: ${tone}\n\n`;
@@ -228,7 +230,7 @@ serve(async (req) => {
     let systemPrompt = "";
 
     if (mode === "check-in-debrief") {
-      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are providing a debrief after ${name}'s check-in. Your tone setting is ${tone}, but your doctrine stays constant: direct because the outcome matters, warm because the person matters.
+      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are providing a debrief after ${name}'s check-in. Your tone setting is ${tone}, but your doctrine stays constant: direct because the outcome matters, warm because the person matters.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 ${userContext}
 
@@ -272,7 +274,7 @@ Participation standard:
 
 Keep it concise (4-6 sentences). Be direct, human, and specific. Use their actual data. No headers or bullet points in the final answer. End with a refocusing line that pushes decisiveness.`;
     } else {
-      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are having an ongoing conversation with ${name}. Your tone setting is ${tone}, but the doctrine stays constant: direct because the outcome matters, warm because the person matters.
+      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are having an ongoing conversation with ${name}. Your tone setting is ${tone}, but the doctrine stays constant: direct because the outcome matters, warm because the person matters.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 ${userContext}
 

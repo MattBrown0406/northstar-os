@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers } from "lucide-react";
+import { ArrowRight, Clock, MessageCircle, Calendar, CheckCircle, Brain, ShieldCheck, Layers, User } from "lucide-react";
 import { brandLogo as logo } from "@/lib/brand";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -13,11 +13,15 @@ import {
   SUPPORT_MODE_OPTIONS,
   type AdaptiveLens,
 } from "@/lib/intentus-architecture";
+import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
 
-const TIMEZONES = [
-  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Tokyo", "Asia/Singapore",
-  "Australia/Sydney", "Pacific/Auckland",
+type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "male", label: "He/him" },
+  { value: "female", label: "She/her" },
+  { value: "non_binary", label: "They/them" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
 ];
 
 const TONES = [
@@ -35,6 +39,7 @@ const CADENCES = [
 const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [timezone, setTimezone] = useState("America/New_York");
+  const [gender, setGender] = useState<Gender>("prefer_not_to_say");
   const [tone, setTone] = useState<"direct" | "supportive" | "balanced">("balanced");
   const [cadence, setCadence] = useState<"daily" | "every_other_day" | "weekly">("daily");
   const [primaryLens, setPrimaryLens] = useState<AdaptiveLens>("discipline_execution");
@@ -54,6 +59,7 @@ const Onboarding = () => {
       .from("profiles")
       .update({
         timezone,
+        gender,
         coaching_tone: tone,
         check_in_cadence: cadence,
         intent_profile: {
@@ -74,7 +80,7 @@ const Onboarding = () => {
     }
   };
 
-  const stepCount = 5;
+  const stepCount = 6;
 
   const steps = [
     <div key="welcome" className="text-center space-y-6">
@@ -116,19 +122,26 @@ const Onboarding = () => {
 
       <div className="space-y-3">
         <p className="text-sm font-medium text-foreground">Your timezone</p>
-        <div className="grid gap-2">
-          {TIMEZONES.map((tz) => (
-            <button
-              key={tz}
-              onClick={() => setTimezone(tz)}
-              className={`text-left px-4 py-3 rounded-xl border transition-all ${
-                timezone === tz
-                  ? "border-primary bg-primary/5 text-foreground"
-                  : "border-border text-muted-foreground hover:border-primary/50"
-              }`}
-            >
-              {tz.replace(/_/g, " ")}
-            </button>
+        <div className="grid gap-4">
+          {TIMEZONE_GROUPS.map((group) => (
+            <div key={group.region} className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{group.region}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {group.zones.map((tz) => (
+                  <button
+                    key={tz}
+                    onClick={() => setTimezone(tz)}
+                    className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                      timezone === tz
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border text-muted-foreground hover:border-primary/50"
+                    }`}
+                  >
+                    {formatTimezoneLabel(tz)}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -162,6 +175,36 @@ const Onboarding = () => {
       </div>
 
       <Button variant="hero" className="w-full" onClick={() => setStep(2)}>
+        Continue <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </div>,
+
+    <div key="gender" className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="bg-primary/10 rounded-xl p-3"><User className="h-6 w-6 text-primary" /></div>
+        <div>
+          <h2 className="font-heading text-xl font-bold text-foreground">A quick personal note</h2>
+          <p className="text-sm text-muted-foreground">This helps your AI coach refer to you naturally.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {GENDER_OPTIONS.map((g) => (
+          <button
+            key={g.value}
+            onClick={() => setGender(g.value)}
+            className={`text-left p-4 rounded-xl border transition-all ${
+              gender === g.value
+                ? "border-primary bg-primary/5 text-foreground"
+                : "border-border text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            <p className="font-semibold text-foreground">{g.label}</p>
+          </button>
+        ))}
+      </div>
+
+      <Button variant="hero" className="w-full" onClick={() => setStep(3)}>
         Continue <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,
@@ -213,7 +256,7 @@ const Onboarding = () => {
         </div>
       </div>
 
-      <Button variant="hero" className="w-full" onClick={() => setStep(3)}>
+      <Button variant="hero" className="w-full" onClick={() => setStep(4)}>
         Continue <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,
@@ -274,7 +317,7 @@ const Onboarding = () => {
         </div>
       </div>
 
-      <Button variant="hero" className="w-full" onClick={() => setStep(4)}>
+      <Button variant="hero" className="w-full" onClick={() => setStep(5)}>
         Continue <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
     </div>,

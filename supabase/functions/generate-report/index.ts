@@ -8,6 +8,7 @@ import {
   truncate,
 } from "../_shared/ai-guardrails.ts";
 import { buildReportDepthPrompt, buildTierPolicyPrompt, normalizePlanTier } from "../_shared/tier-policy.ts";
+import { buildPronounDirective } from "../_shared/pronouns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,7 +137,7 @@ serve(async (req) => {
     // Get profile for coaching tone + adaptive lens choices
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone, intent_profile, plan_tier")
+      .select("display_name, coaching_tone, intent_profile, plan_tier, gender")
       .eq("user_id", user.id)
       .single();
 
@@ -162,11 +163,12 @@ serve(async (req) => {
     const planTier = normalizePlanTier(profile?.plan_tier);
     const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
     const intentModelInstructions = buildIntentModelInstructions();
+    const pronounDirective = buildPronounDirective(profile?.gender);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. Your tone setting is ${tone}. You are generating a Strategic Report for ${name} based on their baseline audit responses.
+    const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. Your tone setting is ${tone}. You are generating a Strategic Report for ${name} based on their baseline audit responses.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 Doctrine:
 - operating system first

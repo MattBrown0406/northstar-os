@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 import { COACHING_SAFETY_BOUNDARY, truncate } from "../_shared/ai-guardrails.ts";
 import { buildTierPolicyPrompt, normalizePlanTier } from "../_shared/tier-policy.ts";
+import { buildPronounDirective } from "../_shared/pronouns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,13 +50,14 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone, intent_profile, plan_tier")
+      .select("display_name, coaching_tone, intent_profile, plan_tier, gender")
       .eq("user_id", user.id)
       .maybeSingle();
 
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
     const planTier = normalizePlanTier(profile?.plan_tier);
+    const pronounDirective = buildPronounDirective(profile?.gender);
 
     // Build conversation context from all answered questions
     let conversationContext = "";
@@ -70,7 +72,7 @@ serve(async (req) => {
 
     const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
 
-    const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are conducting a baseline audit with ${name}. Your tone setting is ${tone}, but the doctrine always stays the same: direct because the outcome matters, warm because the person matters.
+    const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are conducting a baseline audit with ${name}. Your tone setting is ${tone}, but the doctrine always stays the same: direct because the outcome matters, warm because the person matters.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 Core philosophy:
 - operating system first

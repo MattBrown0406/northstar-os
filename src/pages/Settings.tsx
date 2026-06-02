@@ -10,19 +10,15 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Settings as SettingsIcon, Loader2, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { configureRevenueCat, isNativeRevenueCatAvailable } from "@/lib/revenuecat";
+import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
 
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Asia/Tokyo",
-  "Asia/Singapore",
-  "Australia/Sydney",
-  "Pacific/Auckland",
+type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "male", label: "He/him" },
+  { value: "female", label: "She/her" },
+  { value: "non_binary", label: "They/them" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
 ];
 
 const TONES: { value: "direct" | "supportive" | "balanced"; label: string; desc: string; icon: string }[] = [
@@ -69,6 +65,7 @@ interface ProfileData {
   coaching_tone: "direct" | "supportive" | "balanced" | null;
   check_in_cadence: "daily" | "every_other_day" | "weekly" | null;
   timezone: string | null;
+  gender: Gender | null;
 }
 
 const Settings = () => {
@@ -83,6 +80,7 @@ const Settings = () => {
   const [tone, setTone] = useState<"direct" | "supportive" | "balanced">("balanced");
   const [cadence, setCadence] = useState<"daily" | "every_other_day" | "weekly">("daily");
   const [timezone, setTimezone] = useState("America/New_York");
+  const [gender, setGender] = useState<Gender>("prefer_not_to_say");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -91,7 +89,7 @@ const Settings = () => {
     const load = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, coaching_tone, check_in_cadence, timezone")
+        .select("display_name, coaching_tone, check_in_cadence, timezone, gender")
         .eq("user_id", user.id)
         .single();
 
@@ -101,6 +99,7 @@ const Settings = () => {
         setTone(profile.coaching_tone ?? "balanced");
         setCadence(profile.check_in_cadence ?? "daily");
         setTimezone(profile.timezone ?? "America/New_York");
+        setGender(profile.gender ?? "prefer_not_to_say");
       }
       setLoading(false);
     };
@@ -142,6 +141,7 @@ const Settings = () => {
         coaching_tone: tone,
         check_in_cadence: cadence,
         timezone,
+        gender,
       })
       .eq("user_id", user.id);
 
@@ -344,14 +344,47 @@ const Settings = () => {
                 onChange={(e) => setTimezone(e.target.value)}
                 className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz.replace("_", " ")}
-                  </option>
+                {TIMEZONE_GROUPS.map((group) => (
+                  <optgroup key={group.region} label={group.region}>
+                    {group.zones.map((tz) => (
+                      <option key={tz} value={tz}>
+                        {formatTimezoneLabel(tz)}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
           </div>
+
+          {/* Gender / Pronouns */}
+          <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div>
+              <h2 className="font-heading font-bold text-foreground mb-1">Pronouns</h2>
+              <p className="text-sm text-muted-foreground">
+                Helps your AI coach refer to you naturally.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {GENDER_OPTIONS.map((g) => (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => setGender(g.value)}
+                  className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                    gender === g.value
+                      ? "border-primary bg-primary/5 text-foreground"
+                      : "border-border bg-background hover:border-primary/30"
+                  }`}
+                >
+                  <p className="font-semibold text-foreground">{g.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+
+
 
           {/* Subscription */}
           <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
