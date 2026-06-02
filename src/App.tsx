@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import NativeBindings from "@/components/NativeBindings";
 
 type RouteComponent = ComponentType<Record<string, never>>;
 
@@ -82,6 +83,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <NativeBindings />
           <RouteErrorBoundary>
             <Suspense fallback={<RouteFallback />}>
               <Routes>
