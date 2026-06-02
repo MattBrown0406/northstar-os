@@ -92,14 +92,17 @@ const Dashboard = () => {
 
     const loadCommitments = async () => {
       if (!user) return;
-      const [curr, prev] = await Promise.all([
+      const [curr, prev, recent] = await Promise.all([
         getCurrentWeekCommitment(user.id),
         getPreviousWeekCommitment(user.id),
+        getRecentCommitments(user.id, 7),
       ]);
       setCurrentCommitment(curr);
       setLastCommitment(prev);
+      setRecentCommitmentHistory(recent);
     };
     loadCommitments();
+
 
     const loadReaudit = async () => {
       if (!user) return;
