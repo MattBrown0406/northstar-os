@@ -129,7 +129,7 @@ const Settings = () => {
       }
     };
     checkReminder();
-  }, [user, loading]);
+  }, [user, loading, cadence, toast]);
 
   const handleSave = async () => {
     if (!user) return;
