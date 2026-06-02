@@ -66,6 +66,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentCommitment, setCurrentCommitment] = useState<WeeklyCommitment | null>(null);
   const [lastCommitment, setLastCommitment] = useState<WeeklyCommitment | null>(null);
+  const [recentCommitmentHistory, setRecentCommitmentHistory] = useState<WeeklyCommitment[]>([]);
   const [showOneThingModal, setShowOneThingModal] = useState(false);
   const [oneThingInput, setOneThingInput] = useState("");
   const [oneThingSaving, setOneThingSaving] = useState(false);
