@@ -80,6 +80,7 @@ const Settings = () => {
   const [tone, setTone] = useState<"direct" | "supportive" | "balanced">("balanced");
   const [cadence, setCadence] = useState<"daily" | "every_other_day" | "weekly">("daily");
   const [timezone, setTimezone] = useState("America/New_York");
+  const [gender, setGender] = useState<Gender>("prefer_not_to_say");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
