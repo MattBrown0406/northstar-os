@@ -10,19 +10,15 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Settings as SettingsIcon, Loader2, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { configureRevenueCat, isNativeRevenueCatAvailable } from "@/lib/revenuecat";
+import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
 
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Asia/Tokyo",
-  "Asia/Singapore",
-  "Australia/Sydney",
-  "Pacific/Auckland",
+type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "male", label: "He/him" },
+  { value: "female", label: "She/her" },
+  { value: "non_binary", label: "They/them" },
+  { value: "prefer_not_to_say", label: "Prefer not to say" },
 ];
 
 const TONES: { value: "direct" | "supportive" | "balanced"; label: string; desc: string; icon: string }[] = [
