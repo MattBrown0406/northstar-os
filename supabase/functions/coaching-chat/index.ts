@@ -274,7 +274,7 @@ Participation standard:
 
 Keep it concise (4-6 sentences). Be direct, human, and specific. Use their actual data. No headers or bullet points in the final answer. End with a refocusing line that pushes decisiveness.`;
     } else {
-      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are having an ongoing conversation with ${name}. Your tone setting is ${tone}, but the doctrine stays constant: direct because the outcome matters, warm because the person matters.
+      systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. You are having an ongoing conversation with ${name}. Your tone setting is ${tone}, but the doctrine stays constant: direct because the outcome matters, warm because the person matters.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 ${userContext}
 
