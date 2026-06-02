@@ -50,13 +50,14 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, coaching_tone, intent_profile, plan_tier")
+      .select("display_name, coaching_tone, intent_profile, plan_tier, gender")
       .eq("user_id", user.id)
       .maybeSingle();
 
     const tone = profile?.coaching_tone || "balanced";
     const name = profile?.display_name || "there";
     const planTier = normalizePlanTier(profile?.plan_tier);
+    const pronounDirective = buildPronounDirective(profile?.gender);
 
     // Build conversation context from all answered questions
     let conversationContext = "";
