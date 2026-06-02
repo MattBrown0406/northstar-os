@@ -431,9 +431,11 @@ const CheckIn = () => {
     setAiLoading(false);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (options?: { quick?: boolean }) => {
     if (!user) return;
-    if (hasThinCheckIn() && !showThinPrompt) {
+    const isQuick = options?.quick === true;
+    // Thin-check-in guard only applies to the full flow.
+    if (!isQuick && hasThinCheckIn() && !showThinPrompt) {
       setShowThinPrompt(true);
       return;
     }
@@ -452,11 +454,12 @@ const CheckIn = () => {
       user_id: user.id,
       mood_score: mood,
       energy_score: energy,
-      wins,
-      blockers,
-      commitments,
+      wins: isQuick ? [] : wins,
+      blockers: isQuick ? [] : blockers,
+      commitments: isQuick ? [] : commitments,
       drift_detected: mood <= 4 || energy <= 4,
-      extras: cleanedExtras as Json,
+      extras: isQuick ? ({} as Json) : (cleanedExtras as Json),
+      is_quick: isQuick,
     }).select().single();
 
     if (error) {
@@ -465,13 +468,10 @@ const CheckIn = () => {
       return;
     }
 
-    // 2. Record commitment callback if we had a previous commitment + outcome
-    if (previousCommitment && callbackOutcome && checkInData) {
+    // 2. Record commitment callback if we had a previous commitment + outcome (full flow only)
+    if (!isQuick && previousCommitment && callbackOutcome && checkInData) {
       try {
-        // Update the commitment record with the outcome
         await recordCommitmentOutcome(previousCommitment.id, callbackOutcome, callbackReflection || undefined);
-
-        // Also insert a commitment_callback record linking the check-in
         await supabase.from("commitment_callbacks").insert({
           user_id: user.id,
           check_in_id: checkInData.id,
@@ -481,25 +481,25 @@ const CheckIn = () => {
         });
       } catch (cbErr) {
         console.error("Commitment callback error:", cbErr);
-        // Non-fatal: proceed
       }
     }
 
-    // 3. Save "one thing" commitment for this week
+    // 3. Save "one thing" commitment for this week (both flows)
     if (oneThing.trim()) {
       try {
         await setWeeklyCommitment(user.id, oneThing.trim());
       } catch (otErr) {
         console.error("One thing save error:", otErr);
-        // Non-fatal: proceed
       }
     }
 
     setLoading(false);
     try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
     setDone(true);
-    if (getTierCapability(tier).canUseAiDebrief) streamDebrief();
+    // Quick check-ins skip the AI debrief.
+    if (!isQuick && getTierCapability(tier).canUseAiDebrief) streamDebrief();
   };
+
 
   const resetAndRetry = () => {
     setWins([]);
