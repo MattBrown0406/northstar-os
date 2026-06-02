@@ -163,11 +163,12 @@ serve(async (req) => {
     const planTier = normalizePlanTier(profile?.plan_tier);
     const intentSummary = buildIntentProfileSummary(profile?.intent_profile || null);
     const intentModelInstructions = buildIntentModelInstructions();
+    const pronounDirective = buildPronounDirective(profile?.gender);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. Your tone setting is ${tone}. You are generating a Strategic Report for ${name} based on their baseline audit responses.
+    const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. Your tone setting is ${tone}. You are generating a Strategic Report for ${name} based on their baseline audit responses.${pronounDirective ? `\n${pronounDirective}` : ""}
 
 Doctrine:
 - operating system first
