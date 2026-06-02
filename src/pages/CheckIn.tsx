@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wind } from "lucide-react";
+import { Plus, X, ArrowRight, CheckCircle, MessageSquare, Loader2, RefreshCw, Wind, Zap, ListChecks } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, getBlockerPrompt, getCommitmentPrompt, getFocusPrompt, type IntentProfile } from "@/lib/intentus-architecture";
 import { brandLogo as logo } from "@/lib/brand";
