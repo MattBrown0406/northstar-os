@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,32 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Require authenticated caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const {
+      data: { user },
+      error: authError,
+    } = await userSupabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { url } = await req.json();
     if (!url) {
       return new Response(JSON.stringify({ error: "url is required" }), {
@@ -19,8 +46,32 @@ serve(async (req) => {
       });
     }
 
+    // SSRF protections
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid URL" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return new Response(JSON.stringify({ error: "Only http/https URLs allowed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const blocked = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/i;
+    if (blocked.test(parsed.hostname)) {
+      return new Response(JSON.stringify({ error: "Internal URLs not allowed" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Fetch the website HTML
-    const response = await fetch(url, {
+    const response = await fetch(parsed.toString(), {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; BrandExtractor/1.0)" },
     });
     const html = await response.text();
@@ -44,9 +95,14 @@ serve(async (req) => {
     const colorFreq: Record<string, number> = {};
     for (const c of hexMatches) {
       const normalized = c.toLowerCase();
-      // Skip near-white, near-black, and grays
       if (isNeutral(normalized)) continue;
       colorFreq[normalized] = (colorFreq[normalized] || 0) + 1;
+    }
+    for (const rgb of rgbMatches) {
+      const hex = rgbToHex(rgb);
+      if (!hex) continue;
+      if (isNeutral(hex)) continue;
+      colorFreq[hex] = (colorFreq[hex] || 0) + 1;
     }
 
     // Sort by frequency
@@ -58,18 +114,17 @@ serve(async (req) => {
     const allColors = [...new Set([...colors, ...sorted])].slice(0, 5);
 
     // Try to extract logo
-    let logoUrl = null;
+    let logoUrl: string | null = null;
     const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
     if (ogImageMatch) {
       logoUrl = ogImageMatch[1];
       if (logoUrl.startsWith("/")) {
-        const urlObj = new URL(url);
-        logoUrl = `${urlObj.origin}${logoUrl}`;
+        logoUrl = `${parsed.origin}${logoUrl}`;
       }
     }
 
     // Extract site name
-    let siteName = null;
+    let siteName: string | null = null;
     const ogSiteNameMatch = html.match(/<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i);
     if (ogSiteNameMatch) siteName = ogSiteNameMatch[1];
     if (!siteName) {
@@ -100,10 +155,18 @@ function isNeutral(hex: string): boolean {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  // Check if it's very light, very dark, or gray
   const avg = (r + g + b) / 3;
   const maxDiff = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b));
-  if (avg > 230 || avg < 25) return true; // near white/black
-  if (maxDiff < 20) return true; // gray
+  if (avg > 230 || avg < 25) return true;
+  if (maxDiff < 20) return true;
   return false;
+}
+
+function rgbToHex(rgb: string): string | null {
+  const m = rgb.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+  if (!m) return null;
+  const [r, g, b] = [m[1], m[2], m[3]].map((n) => parseInt(n, 10));
+  if ([r, g, b].some((v) => v < 0 || v > 255 || Number.isNaN(v))) return null;
+  const toHex = (v: number) => v.toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toLowerCase();
 }
