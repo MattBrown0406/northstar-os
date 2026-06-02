@@ -179,6 +179,36 @@ const Onboarding = () => {
       </Button>
     </div>,
 
+    <div key="gender" className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="bg-primary/10 rounded-xl p-3"><User className="h-6 w-6 text-primary" /></div>
+        <div>
+          <h2 className="font-heading text-xl font-bold text-foreground">A quick personal note</h2>
+          <p className="text-sm text-muted-foreground">This helps your AI coach refer to you naturally.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {GENDER_OPTIONS.map((g) => (
+          <button
+            key={g.value}
+            onClick={() => setGender(g.value)}
+            className={`text-left p-4 rounded-xl border transition-all ${
+              gender === g.value
+                ? "border-primary bg-primary/5 text-foreground"
+                : "border-border text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            <p className="font-semibold text-foreground">{g.label}</p>
+          </button>
+        ))}
+      </div>
+
+      <Button variant="hero" className="w-full" onClick={() => setStep(3)}>
+        Continue <ArrowRight className="ml-2 h-4 w-4" />
+      </Button>
+    </div>,
+
     <div key="lenses" className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="bg-primary/10 rounded-xl p-3"><Brain className="h-6 w-6 text-primary" /></div>
