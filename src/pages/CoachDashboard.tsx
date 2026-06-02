@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CoachBrandingSettings from "@/components/coach/CoachBrandingSettings";
 import { CoachSessionPrep } from '@/components/coach/CoachSessionPrep';
 import { useNavigate } from "react-router-dom";
