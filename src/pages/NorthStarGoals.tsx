@@ -8,7 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AppBreadcrumb from '@/components/AppBreadcrumb';
@@ -56,6 +67,8 @@ const NorthStarGoals = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<GoalForm>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!user) {
@@ -136,8 +149,10 @@ const NorthStarGoals = () => {
     setSaving(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this goal?')) return;
+  const confirmDelete = async () => {
+    const id = pendingDeleteId;
+    if (!id) return;
+    setPendingDeleteId(null);
     const { error } = await supabase
       .from('north_star_goals')
       .update({ is_active: false })
@@ -150,6 +165,7 @@ const NorthStarGoals = () => {
       toast({ title: 'Goal deleted' });
     }
   };
+
 
   const startEdit = (goal: Goal) => {
     setAddingHorizon(null);
@@ -346,7 +362,7 @@ const NorthStarGoals = () => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                onClick={() => handleDelete(goal.id)}
+                                onClick={() => setPendingDeleteId(goal.id)}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -432,7 +448,23 @@ const NorthStarGoals = () => {
           })}
         </Tabs>
       </main>
+
+      <AlertDialog open={pendingDeleteId !== null} onOpenChange={(open) => !open && setPendingDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this goal?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 };
 
