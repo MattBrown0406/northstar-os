@@ -65,6 +65,7 @@ interface ProfileData {
   coaching_tone: "direct" | "supportive" | "balanced" | null;
   check_in_cadence: "daily" | "every_other_day" | "weekly" | null;
   timezone: string | null;
+  gender: Gender | null;
 }
 
 const Settings = () => {
