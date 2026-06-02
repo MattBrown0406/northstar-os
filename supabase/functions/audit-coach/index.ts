@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 import { COACHING_SAFETY_BOUNDARY, truncate } from "../_shared/ai-guardrails.ts";
 import { buildTierPolicyPrompt, normalizePlanTier } from "../_shared/tier-policy.ts";
+import { buildPronounDirective } from "../_shared/pronouns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
