@@ -148,6 +148,7 @@ const Audit = () => {
     display_name: "",
     intent_profile: null,
   });
+  const [planTier, setPlanTier] = useState<PlanTier>("free");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
