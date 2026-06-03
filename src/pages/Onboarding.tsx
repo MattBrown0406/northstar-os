@@ -14,6 +14,7 @@ import {
   type AdaptiveLens,
 } from "@/lib/intentus-architecture";
 import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
+import { TimezonePicker } from "@/components/TimezonePicker";
 
 type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
 
