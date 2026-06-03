@@ -20,8 +20,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!GOOGLE_AI_API_KEY) throw new Error("GOOGLE_AI_API_KEY not configured");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -138,14 +138,14 @@ The user said:
 Your job: explain this question to them in plain, grounded language. Cover (1) what the question is really getting at and why it matters in an operating audit, (2) one short example of the kind of thing a thoughtful answer might touch on — without putting words in their mouth or steering toward a specific answer. Keep it to 3-5 sentences. Do not give feedback on an answer (they haven't given one). Do not advance to the next question. End by inviting them to take their time and answer when ready.`
       : `Here is the full conversation so far:\n\n${conversationContext}\nThe most recent answer was to the question in the "${truncate(current_section, 120)}" section. Give your brief coaching response.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-preview",
+        model: "gemini-2.5-flash-preview-04-17",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
