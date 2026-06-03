@@ -49,7 +49,6 @@ const Coaching = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
 
