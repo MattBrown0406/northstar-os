@@ -338,20 +338,53 @@ const Coaching = () => {
             </div>
           )}
 
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border text-foreground"
-              }`}>
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-                {msg.role === "assistant" && i === messages.length - 1 && isStreaming && (
-                  <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5 align-middle" />
-                )}
-              </div>
+          {priorSessionDates.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pb-2">
+              <span className="text-xs text-muted-foreground">Previous sessions:</span>
+              {priorSessionDates.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => scrollToDate(d)}
+                  className="text-xs px-2.5 py-1 rounded-full border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {formatDateLabel(d)}
+                </button>
+              ))}
             </div>
-          ))}
+          )}
+
+          {messages.map((msg, i) => {
+            const prev = messages[i - 1];
+            const showDivider = msg.session_date && msg.session_date !== prev?.session_date;
+            const isFirstOfDate = showDivider && msg.session_date;
+            return (
+              <div key={i}>
+                {showDivider && (
+                  <div
+                    ref={(el) => { if (isFirstOfDate) dateRefs.current[msg.session_date!] = el; }}
+                    className="flex items-center gap-3 my-4"
+                  >
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground font-medium">{formatDateLabel(msg.session_date!)}</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                )}
+                <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border text-foreground"
+                  }`}>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "assistant" && i === messages.length - 1 && isStreaming && (
+                      <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5 align-middle" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
 
           {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
             <div className="flex justify-start">
