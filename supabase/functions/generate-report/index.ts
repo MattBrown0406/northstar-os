@@ -165,8 +165,8 @@ serve(async (req) => {
     const intentModelInstructions = buildIntentModelInstructions();
     const pronounDirective = buildPronounDirective(profile?.gender);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    if (!GOOGLE_AI_API_KEY) throw new Error("GOOGLE_AI_API_KEY not configured");
 
     const systemPrompt = `You are Intentus, an AI operating coach for executives, business owners, and aspiring leaders. Your tone setting is ${tone}. You are generating a Strategic Report for ${name} based on their baseline audit responses.${pronounDirective ? `\n${pronounDirective}` : ""}
 
@@ -212,14 +212,14 @@ ${intentModelInstructions}`;
 
     const userPrompt = `Here are the baseline audit responses:\n${auditSummary}\n\nGenerate the strategic report.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
