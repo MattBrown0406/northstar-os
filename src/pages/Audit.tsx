@@ -194,7 +194,7 @@ const Audit = () => {
       // Load profile
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("coaching_tone, display_name")
+        .select("coaching_tone, display_name, plan_tier")
         .eq("user_id", user.id)
         .single();
       if (profileData) {
