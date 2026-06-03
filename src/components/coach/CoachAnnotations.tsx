@@ -293,15 +293,32 @@ export const CoachAnnotations = ({
           }}
         />
 
-        <Button
-          size="sm"
-          onClick={addAnnotation}
-          disabled={!newContent.trim() || adding}
-          className="gap-1.5"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add
-        </Button>
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-border/50">
+          <div className="flex items-center gap-2">
+            {visibleToClient ? (
+              <Eye className="h-3.5 w-3.5 text-primary" />
+            ) : (
+              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <Label htmlFor="visible-to-client" className="text-xs cursor-pointer">
+              Visible to client
+            </Label>
+            <Switch
+              id="visible-to-client"
+              checked={visibleToClient}
+              onCheckedChange={setVisibleToClient}
+            />
+          </div>
+          <Button
+            size="sm"
+            onClick={addAnnotation}
+            disabled={!newContent.trim() || adding}
+            className="gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add
+          </Button>
+        </div>
       </div>
     </div>
   );
