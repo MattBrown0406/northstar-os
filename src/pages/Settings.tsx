@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Settings as SettingsIcon, Loader2, ExternalLink, Trash
 import { useToast } from "@/hooks/use-toast";
 import { configureRevenueCat, isNativeRevenueCatAvailable } from "@/lib/revenuecat";
 import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
+import { TimezonePicker } from "@/components/TimezonePicker";
 
 type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
 
@@ -338,22 +339,9 @@ const Settings = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="timezone">Timezone</Label>
-              <select
-                id="timezone"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {TIMEZONE_GROUPS.map((group) => (
-                  <optgroup key={group.region} label={group.region}>
-                    {group.zones.map((tz) => (
-                      <option key={tz} value={tz}>
-                        {formatTimezoneLabel(tz)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+              <div className="max-w-xs">
+                <TimezonePicker id="timezone" value={timezone} onChange={setTimezone} />
+              </div>
             </div>
           </div>
 
