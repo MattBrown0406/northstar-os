@@ -266,15 +266,30 @@ const Coaching = () => {
           <div className="flex items-center gap-2">
             <p className="text-xs text-muted-foreground hidden sm:block">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
             {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => setMessages([])}
-                title="New session"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" /> New session
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    title="Start fresh"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1" /> Start fresh
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Start a new session?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Your history will be preserved but today's context resets.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleStartFresh}>Start fresh</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         </div>
