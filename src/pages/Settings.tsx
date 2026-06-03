@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Settings as SettingsIcon, Loader2, ExternalLink, Trash
 import { useToast } from "@/hooks/use-toast";
 import { configureRevenueCat, isNativeRevenueCatAvailable } from "@/lib/revenuecat";
 import { TIMEZONE_GROUPS, formatTimezoneLabel } from "@/lib/timezones";
+import { TimezonePicker } from "@/components/TimezonePicker";
 
 type Gender = "male" | "female" | "non_binary" | "prefer_not_to_say";
 
