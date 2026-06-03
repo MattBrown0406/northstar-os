@@ -45,10 +45,36 @@ const Coaching = () => {
   const [activeLens, setActiveLens] = useState<AdaptiveLens | null>(null);
   const [planTier, setPlanTier] = useState<PlanTier>("free");
   const [profileLoading, setProfileLoading] = useState(true);
+  const [freshStart, setFreshStart] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const formatDateLabel = (dateStr: string) => {
+    const d = parseISO(dateStr);
+    if (isToday(d)) return "Today";
+    if (isYesterday(d)) return "Yesterday";
+    return format(d, "EEE MMM d");
+  };
+
+  const priorSessionDates = useMemo(() => {
+    const dates = Array.from(new Set(messages.map(m => m.session_date).filter(Boolean) as string[]));
+    return dates.filter(d => d !== todayStr).slice(-3);
+  }, [messages, todayStr]);
+
+  const scrollToDate = (dateStr: string) => {
+    dateRefs.current[dateStr]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleStartFresh = () => {
+    setFreshStart(true);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  };
 
   useEffect(() => {
     if (!user) return;
