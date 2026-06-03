@@ -123,13 +123,25 @@ const Coaching = () => {
     if (!text.trim() || isStreaming || !tierCapability.canUseAiChat) return;
 
     const trimmedInput = text.trim();
-    const userMsg: Message = { role: "user", content: trimmedInput };
+    const today = new Date().toISOString().split('T')[0];
+    const userMsg: Message = { role: "user", content: trimmedInput, session_date: today };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
     setIsStreaming(true);
 
-    const today = new Date().toISOString().split('T')[0];
+    // Build context: include last 10 from most recent prior session, then current-session messages.
+    // If freshStart, restrict current-session messages to today only.
+    const currentSessionMsgs = freshStart
+      ? updatedMessages.filter(m => !m.session_date || m.session_date === today)
+      : updatedMessages.filter(m => !m.session_date || m.session_date === today);
+    const priorDates = Array.from(new Set(updatedMessages.map(m => m.session_date).filter(Boolean) as string[]))
+      .filter(d => d !== today);
+    const mostRecentPriorDate = priorDates.sort().pop();
+    const priorContextMsgs = mostRecentPriorDate && !freshStart
+      ? updatedMessages.filter(m => m.session_date === mostRecentPriorDate).slice(-10)
+      : [];
+    const outboundMessages = [...priorContextMsgs, ...currentSessionMsgs].map(m => ({ role: m.role, content: m.content }));
 
     // Persist user message immediately so it isn't lost if the stream fails.
     if (user) {
