@@ -69,15 +69,20 @@ const Coaching = () => {
   useEffect(() => {
     if (!user) return;
     const loadHistory = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const { data } = await supabase
         .from('coaching_messages')
-        .select('role, content, created_at')
+        .select('role, content, created_at, session_date')
         .eq('user_id', user.id)
-        .eq('session_date', today)
+        .gte('session_date', sevenDaysAgo.toISOString().split('T')[0])
         .order('created_at', { ascending: true });
       if (data && data.length > 0) {
-        setMessages(data.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })));
+        setMessages(data.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          session_date: m.session_date as string,
+        })));
       }
     };
     loadHistory();
