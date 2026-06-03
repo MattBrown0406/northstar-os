@@ -1,10 +1,22 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { brandLogo as logo } from "@/lib/brand";
 import { getTierCapability, normalizePlanTier, type PlanTier } from "@/lib/tier-policy";
 import {
@@ -16,6 +28,7 @@ import { formatLensLabel, type AdaptiveLens } from "@/lib/intentus-architecture"
 interface Message {
   role: "user" | "assistant";
   content: string;
+  session_date?: string;
 }
 
 const quickPrompts = [
@@ -32,10 +45,35 @@ const Coaching = () => {
   const [activeLens, setActiveLens] = useState<AdaptiveLens | null>(null);
   const [planTier, setPlanTier] = useState<PlanTier>("free");
   const [profileLoading, setProfileLoading] = useState(true);
+  const [freshStart, setFreshStart] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const formatDateLabel = (dateStr: string) => {
+    const d = parseISO(dateStr);
+    if (isToday(d)) return "Today";
+    if (isYesterday(d)) return "Yesterday";
+    return format(d, "EEE MMM d");
+  };
+
+  const priorSessionDates = useMemo(() => {
+    const dates = Array.from(new Set(messages.map(m => m.session_date).filter(Boolean) as string[]));
+    return dates.filter(d => d !== todayStr).slice(-3);
+  }, [messages, todayStr]);
+
+  const scrollToDate = (dateStr: string) => {
+    dateRefs.current[dateStr]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleStartFresh = () => {
+    setFreshStart(true);
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -56,15 +94,20 @@ const Coaching = () => {
   useEffect(() => {
     if (!user) return;
     const loadHistory = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const { data } = await supabase
         .from('coaching_messages')
-        .select('role, content, created_at')
+        .select('role, content, created_at, session_date')
         .eq('user_id', user.id)
-        .eq('session_date', today)
+        .gte('session_date', sevenDaysAgo.toISOString().split('T')[0])
         .order('created_at', { ascending: true });
       if (data && data.length > 0) {
-        setMessages(data.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })));
+        setMessages(data.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          session_date: m.session_date as string,
+        })));
       }
     };
     loadHistory();
@@ -79,13 +122,25 @@ const Coaching = () => {
     if (!text.trim() || isStreaming || !tierCapability.canUseAiChat) return;
 
     const trimmedInput = text.trim();
-    const userMsg: Message = { role: "user", content: trimmedInput };
+    const today = new Date().toISOString().split('T')[0];
+    const userMsg: Message = { role: "user", content: trimmedInput, session_date: today };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
     setIsStreaming(true);
 
-    const today = new Date().toISOString().split('T')[0];
+    // Build context: include last 10 from most recent prior session, then current-session messages.
+    // If freshStart, restrict current-session messages to today only.
+    const currentSessionMsgs = freshStart
+      ? updatedMessages.filter(m => !m.session_date || m.session_date === today)
+      : updatedMessages.filter(m => !m.session_date || m.session_date === today);
+    const priorDates = Array.from(new Set(updatedMessages.map(m => m.session_date).filter(Boolean) as string[]))
+      .filter(d => d !== today);
+    const mostRecentPriorDate = priorDates.sort().pop();
+    const priorContextMsgs = mostRecentPriorDate && !freshStart
+      ? updatedMessages.filter(m => m.session_date === mostRecentPriorDate).slice(-10)
+      : [];
+    const outboundMessages = [...priorContextMsgs, ...currentSessionMsgs].map(m => ({ role: m.role, content: m.content }));
 
     // Persist user message immediately so it isn't lost if the stream fails.
     if (user) {
@@ -115,7 +170,7 @@ const Coaching = () => {
         },
         body: JSON.stringify({
           mode: "chat",
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          messages: outboundMessages,
         }),
       });
 
@@ -124,6 +179,7 @@ const Coaching = () => {
         setMessages(prev => [...prev, {
           role: "assistant",
           content: errData?.error || "Sorry, I couldn't process that right now. Please try again.",
+          session_date: today,
         }]);
         setIsStreaming(false);
         return;
@@ -156,7 +212,7 @@ const Coaching = () => {
                 if (last?.role === "assistant") {
                   return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantText } : m);
                 }
-                return [...prev, { role: "assistant", content: assistantText }];
+                return [...prev, { role: "assistant", content: assistantText, session_date: today }];
               });
             }
           } catch {
@@ -170,6 +226,7 @@ const Coaching = () => {
         setMessages(prev => [...prev, {
           role: "assistant",
           content: "Something went wrong. Please try again.",
+          session_date: today,
         }]);
       }
     }
@@ -208,15 +265,30 @@ const Coaching = () => {
           <div className="flex items-center gap-2">
             <p className="text-xs text-muted-foreground hidden sm:block">Operating coach · Direct, warm, not therapy{activeLens ? ` · ${formatLensLabel(activeLens)}` : ""}</p>
             {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => setMessages([])}
-                title="New session"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" /> New session
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    title="Start fresh"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1" /> Start fresh
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Start a new session?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Your history will be preserved but today's context resets.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleStartFresh}>Start fresh</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         </div>
@@ -265,20 +337,53 @@ const Coaching = () => {
             </div>
           )}
 
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-border text-foreground"
-              }`}>
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-                {msg.role === "assistant" && i === messages.length - 1 && isStreaming && (
-                  <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5 align-middle" />
-                )}
-              </div>
+          {priorSessionDates.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 pb-2">
+              <span className="text-xs text-muted-foreground">Previous sessions:</span>
+              {priorSessionDates.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => scrollToDate(d)}
+                  className="text-xs px-2.5 py-1 rounded-full border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {formatDateLabel(d)}
+                </button>
+              ))}
             </div>
-          ))}
+          )}
+
+          {messages.map((msg, i) => {
+            const prev = messages[i - 1];
+            const showDivider = msg.session_date && msg.session_date !== prev?.session_date;
+            const isFirstOfDate = showDivider && msg.session_date;
+            return (
+              <div key={i}>
+                {showDivider && (
+                  <div
+                    ref={(el) => { if (isFirstOfDate) dateRefs.current[msg.session_date!] = el; }}
+                    className="flex items-center gap-3 my-4"
+                  >
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground font-medium">{formatDateLabel(msg.session_date!)}</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                )}
+                <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border text-foreground"
+                  }`}>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.role === "assistant" && i === messages.length - 1 && isStreaming && (
+                      <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5 align-middle" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
 
           {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
             <div className="flex justify-start">

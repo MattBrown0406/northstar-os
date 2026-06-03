@@ -66,13 +66,14 @@ serve(async (req) => {
     // mode: "check-in-debrief" or "chat"
 
     // Gather user context
-    const [profileRes, checkInsRes, auditRes, reportRes, weeklyCommitmentsRes] = await Promise.all([
+    const [profileRes, checkInsRes, auditRes, reportRes, weeklyCommitmentsRes, goalsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", user.id).single(),
       supabase.from("check_ins").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
       supabase.from("baseline_audits").select("responses, scores, status").eq("user_id", user.id).eq("status", "completed").limit(1),
       supabase.from("strategic_reports").select("north_star_focus, forced_choice, contradictions, pattern_analysis, ninety_day_plan, intent_model, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       // Fetch last 8 weekly_commitments for follow-through context
       supabase.from("weekly_commitments").select("commitment, outcome, week_start").eq("user_id", user.id).order("week_start", { ascending: false }).limit(9),
+      supabase.from("north_star_goals").select("horizon, title, why, success_looks_like").eq("user_id", user.id).eq("is_active", true).order("horizon"),
     ]);
 
     const profile = profileRes.data;
@@ -80,6 +81,7 @@ serve(async (req) => {
     const audit = auditRes.data?.[0];
     const report = reportRes.data?.[0];
     const allCommitments = weeklyCommitmentsRes.data || [];
+    const goals = goalsRes.data || [];
     const planTier = normalizePlanTier(profile?.plan_tier);
 
     if (mode === "chat" && !canUseAiChat(planTier)) {
@@ -176,6 +178,15 @@ serve(async (req) => {
       if (report.ninety_day_plan) userContext += `90-Day Plan: ${safeJsonStringify(report.ninety_day_plan, 3000)}\n`;
       
       userContext += "\n";
+    }
+
+    if (goals.length > 0) {
+      userContext += `North Star Goals:\n`;
+      for (const g of goals) {
+        const horizonLabel = g.horizon === '1_year' ? '1 Year' : g.horizon === '3_year' ? '3 Years' : '5 Years';
+        userContext += `- ${horizonLabel}: ${g.title}${g.why ? ` — Why: ${g.why}` : ''}${g.success_looks_like ? ` — Success: ${g.success_looks_like}` : ''}\n`;
+      }
+      userContext += `\n`;
     }
 
     if (checkIns.length > 0) {
