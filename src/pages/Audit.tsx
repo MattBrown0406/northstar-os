@@ -198,12 +198,13 @@ const Audit = () => {
         .eq("user_id", user.id)
         .single();
       if (profileData) {
-        const typedProfile = profileData as AuditProfile;
+        const typedProfile = profileData as AuditProfile & { plan_tier?: string | null };
         setProfile({
           coaching_tone: typedProfile.coaching_tone || "balanced",
           display_name: typedProfile.display_name || "",
           intent_profile: null,
         });
+        setPlanTier(normalizePlanTier(typedProfile.plan_tier));
       }
 
       // Check for existing in-progress audit
