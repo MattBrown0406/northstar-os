@@ -124,6 +124,7 @@ const Dashboard = () => {
   const [reauditNextDate, setReauditNextDate] = useState<Date | undefined>();
   const [lastAuditAt, setLastAuditAt] = useState<Date | null>(null);
   const [auditCount, setAuditCount] = useState(1);
+  const [coachNotes, setCoachNotes] = useState<{ id: string; content: string; created_at: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
