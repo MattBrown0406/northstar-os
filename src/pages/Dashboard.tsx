@@ -783,13 +783,13 @@ const Dashboard = () => {
                 <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-4">
                   <div className="mb-2 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-semibold text-foreground">Executive unlocks this</p>
+                    <p className="text-sm font-semibold text-foreground">Executive unlocks your AI Operating Coach</p>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    AI coaching, check-in debriefs, and drift accountability. $39.99/mo
+                    Ongoing AI coaching, personalized check-in debriefs, and drift accountability — all tied to your audit and 90-day plan.
                   </p>
                   <Button variant="hero" size="sm" className="w-full" onClick={() => navigate("/subscribe")}>
-                    See plans <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                    See plans — from $39.99/mo <ArrowRight className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </div>
               )}
