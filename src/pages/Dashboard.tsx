@@ -15,7 +15,7 @@ import {
   FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
   RefreshCw, ArrowUpRight, CheckCircle2, Menu as MenuIcon,
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, formatDistanceToNow } from "date-fns";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
 import {
