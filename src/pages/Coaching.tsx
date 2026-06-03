@@ -1,10 +1,22 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { brandLogo as logo } from "@/lib/brand";
 import { getTierCapability, normalizePlanTier, type PlanTier } from "@/lib/tier-policy";
 import {
@@ -16,6 +28,7 @@ import { formatLensLabel, type AdaptiveLens } from "@/lib/intentus-architecture"
 interface Message {
   role: "user" | "assistant";
   content: string;
+  session_date?: string;
 }
 
 const quickPrompts = [
