@@ -29,6 +29,8 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   session_date?: string;
+  created_at?: string;
+  client_ts?: number;
 }
 
 const quickPrompts = [
@@ -46,6 +48,7 @@ const Coaching = () => {
   const [planTier, setPlanTier] = useState<PlanTier>("free");
   const [profileLoading, setProfileLoading] = useState(true);
   const [freshStart, setFreshStart] = useState(false);
+  const [freshStartAt, setFreshStartAt] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -72,6 +75,7 @@ const Coaching = () => {
 
   const handleStartFresh = () => {
     setFreshStart(true);
+    setFreshStartAt(Date.now());
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
@@ -107,6 +111,7 @@ const Coaching = () => {
           role: m.role as 'user' | 'assistant',
           content: m.content,
           session_date: m.session_date as string,
+          created_at: m.created_at as string,
         })));
       }
     };
