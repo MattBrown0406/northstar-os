@@ -114,6 +114,7 @@ export const CoachAnnotations = ({
         annotation_type: newType,
         content: savedContent,
         resolved: false,
+        is_private: !visibleToClient,
         context_type: contextType ?? null,
         context_id: contextId ?? null,
       })
