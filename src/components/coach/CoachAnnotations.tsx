@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { Flag, FileText, Star, CheckSquare, Check, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Flag, FileText, Star, CheckSquare, Check, Trash2, ChevronDown, ChevronUp, Plus, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -63,6 +65,7 @@ export const CoachAnnotations = ({
   const [newType, setNewType] = useState<AnnotationType>(defaultType ?? 'note');
   const [showResolved, setShowResolved] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [visibleToClient, setVisibleToClient] = useState(false);
 
   const loadAnnotations = useCallback(async () => {
     let query = supabase
@@ -111,6 +114,7 @@ export const CoachAnnotations = ({
         annotation_type: newType,
         content: savedContent,
         resolved: false,
+        is_private: !visibleToClient,
         context_type: contextType ?? null,
         context_id: contextId ?? null,
       })
@@ -289,15 +293,32 @@ export const CoachAnnotations = ({
           }}
         />
 
-        <Button
-          size="sm"
-          onClick={addAnnotation}
-          disabled={!newContent.trim() || adding}
-          className="gap-1.5"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add
-        </Button>
+        <div className="flex items-center justify-between gap-3 pt-1 border-t border-border/50">
+          <div className="flex items-center gap-2">
+            {visibleToClient ? (
+              <Eye className="h-3.5 w-3.5 text-primary" />
+            ) : (
+              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+            <Label htmlFor="visible-to-client" className="text-xs cursor-pointer">
+              Visible to client
+            </Label>
+            <Switch
+              id="visible-to-client"
+              checked={visibleToClient}
+              onCheckedChange={setVisibleToClient}
+            />
+          </div>
+          <Button
+            size="sm"
+            onClick={addAnnotation}
+            disabled={!newContent.trim() || adding}
+            className="gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add
+          </Button>
+        </div>
       </div>
     </div>
   );

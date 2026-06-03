@@ -15,7 +15,7 @@ import {
   FileText, Users, MessageSquare, Sparkles, Lock, Settings, Shield, Circle,
   RefreshCw, ArrowUpRight, CheckCircle2, Menu as MenuIcon,
 } from "lucide-react";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, formatDistanceToNow } from "date-fns";
 import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatLensLabel, type IntentModel, type IntentProfile } from "@/lib/intentus-architecture";
 import {
@@ -124,6 +124,7 @@ const Dashboard = () => {
   const [reauditNextDate, setReauditNextDate] = useState<Date | undefined>();
   const [lastAuditAt, setLastAuditAt] = useState<Date | null>(null);
   const [auditCount, setAuditCount] = useState(1);
+  const [coachNotes, setCoachNotes] = useState<{ id: string; content: string; created_at: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -196,6 +197,29 @@ const Dashboard = () => {
       }
     };
     loadReaudit();
+
+    const loadCoachNotes = async () => {
+      if (!user) return;
+      try {
+        const { data: clientLink } = await supabase
+          .from("coach_clients")
+          .select("coach_user_id")
+          .eq("client_user_id", user.id)
+          .maybeSingle();
+        if (!clientLink) return;
+        const { data: notes } = await supabase
+          .from("coach_annotations")
+          .select("id, content, created_at")
+          .eq("client_user_id", user.id)
+          .eq("is_private", false)
+          .eq("resolved", false)
+          .order("created_at", { ascending: false });
+        if (notes) setCoachNotes(notes);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadCoachNotes();
   }, [user, toast]);
 
   const handleSaveOneThing = async () => {
@@ -783,17 +807,37 @@ const Dashboard = () => {
                 <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-4">
                   <div className="mb-2 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-semibold text-foreground">Executive unlocks this</p>
+                    <p className="text-sm font-semibold text-foreground">Executive unlocks your AI Operating Coach</p>
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    AI coaching, check-in debriefs, and drift accountability. $39.99/mo
+                    Ongoing AI coaching, personalized check-in debriefs, and drift accountability — all tied to your audit and 90-day plan.
                   </p>
                   <Button variant="hero" size="sm" className="w-full" onClick={() => navigate("/subscribe")}>
-                    See plans <ArrowRight className="ml-2 h-3.5 w-3.5" />
+                    See plans — from $39.99/mo <ArrowRight className="ml-2 h-3.5 w-3.5" />
                   </Button>
                 </div>
               )}
 
+
+              {/* Coach Notes — only when client has a coach with visible notes */}
+              {coachNotes.length > 0 && (
+                <div className="rounded-2xl border border-primary/30 bg-card/90 p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold text-foreground">From Your Coach</p>
+                  </div>
+                  <div className="space-y-2">
+                    {coachNotes.map((n) => (
+                      <div key={n.id} className="rounded-xl bg-muted/40 px-3 py-2.5">
+                        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{n.content}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Recent check-ins */}
               <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
