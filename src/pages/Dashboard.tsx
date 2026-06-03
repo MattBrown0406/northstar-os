@@ -197,6 +197,29 @@ const Dashboard = () => {
       }
     };
     loadReaudit();
+
+    const loadCoachNotes = async () => {
+      if (!user) return;
+      try {
+        const { data: clientLink } = await supabase
+          .from("coach_clients")
+          .select("coach_user_id")
+          .eq("client_user_id", user.id)
+          .maybeSingle();
+        if (!clientLink) return;
+        const { data: notes } = await supabase
+          .from("coach_annotations")
+          .select("id, content, created_at")
+          .eq("client_user_id", user.id)
+          .eq("is_private", false)
+          .eq("resolved", false)
+          .order("created_at", { ascending: false });
+        if (notes) setCoachNotes(notes);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadCoachNotes();
   }, [user, toast]);
 
   const handleSaveOneThing = async () => {
