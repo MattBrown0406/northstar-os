@@ -29,6 +29,8 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   session_date?: string;
+  created_at?: string;
+  client_ts?: number;
 }
 
 const quickPrompts = [
@@ -46,6 +48,7 @@ const Coaching = () => {
   const [planTier, setPlanTier] = useState<PlanTier>("free");
   const [profileLoading, setProfileLoading] = useState(true);
   const [freshStart, setFreshStart] = useState(false);
+  const [freshStartAt, setFreshStartAt] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -72,6 +75,7 @@ const Coaching = () => {
 
   const handleStartFresh = () => {
     setFreshStart(true);
+    setFreshStartAt(Date.now());
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
@@ -107,6 +111,7 @@ const Coaching = () => {
           role: m.role as 'user' | 'assistant',
           content: m.content,
           session_date: m.session_date as string,
+          created_at: m.created_at as string,
         })));
       }
     };
@@ -123,7 +128,8 @@ const Coaching = () => {
 
     const trimmedInput = text.trim();
     const today = new Date().toISOString().split('T')[0];
-    const userMsg: Message = { role: "user", content: trimmedInput, session_date: today };
+    const nowTs = Date.now();
+    const userMsg: Message = { role: "user", content: trimmedInput, session_date: today, client_ts: nowTs };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
@@ -131,8 +137,13 @@ const Coaching = () => {
 
     // Build context: include last 10 from most recent prior session, then current-session messages.
     // If freshStart, restrict current-session messages to today only.
-    const currentSessionMsgs = freshStart
-      ? updatedMessages.filter(m => !m.session_date || m.session_date === today)
+    const currentSessionMsgs = freshStart && freshStartAt
+      ? updatedMessages.filter(m => {
+        // Always include the message currently being sent.
+        if (m === userMsg) return true;
+        const ts = m.client_ts ?? (m.created_at ? new Date(m.created_at).getTime() : 0);
+        return ts >= freshStartAt;
+      })
       : updatedMessages.filter(m => !m.session_date || m.session_date === today);
     const priorDates = Array.from(new Set(updatedMessages.map(m => m.session_date).filter(Boolean) as string[]))
       .filter(d => d !== today);
@@ -210,9 +221,9 @@ const Coaching = () => {
               setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantText } : m);
+                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantText, client_ts: m.client_ts ?? Date.now() } : m);
                 }
-                return [...prev, { role: "assistant", content: assistantText, session_date: today }];
+                return [...prev, { role: "assistant", content: assistantText, session_date: today, client_ts: Date.now() }];
               });
             }
           } catch {
