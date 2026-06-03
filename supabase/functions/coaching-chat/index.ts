@@ -180,6 +180,15 @@ serve(async (req) => {
       userContext += "\n";
     }
 
+    if (goals.length > 0) {
+      userContext += `North Star Goals:\n`;
+      for (const g of goals) {
+        const horizonLabel = g.horizon === '1_year' ? '1 Year' : g.horizon === '3_year' ? '3 Years' : '5 Years';
+        userContext += `- ${horizonLabel}: ${g.title}${g.why ? ` — Why: ${g.why}` : ''}${g.success_looks_like ? ` — Success: ${g.success_looks_like}` : ''}\n`;
+      }
+      userContext += `\n`;
+    }
+
     if (checkIns.length > 0) {
       userContext += `--- RECENT CHECK-INS (last ${checkIns.length}) ---\n`;
       for (const ci of checkIns.slice(0, 5)) {
