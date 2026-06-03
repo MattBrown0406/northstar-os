@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { Flag, FileText, Star, CheckSquare, Check, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Flag, FileText, Star, CheckSquare, Check, Trash2, ChevronDown, ChevronUp, Plus, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
