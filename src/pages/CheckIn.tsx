@@ -804,9 +804,9 @@ const CheckIn = () => {
           {/* Free-tier upsell card */}
           {!getTierCapability(tier).canUseAiDebrief && (
             <div className="bg-card rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background p-6">
-              <h3 className="font-heading font-bold text-foreground text-sm mb-1">Get your AI debrief</h3>
+              <h3 className="font-heading font-bold text-foreground text-sm mb-1">Want your AI debrief?</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Executive subscribers get a personalized debrief after every check-in.
+                Executive subscribers get a personalized AI debrief after every check-in — what it means, what to watch, what to do next.
               </p>
               <Button variant="hero" size="sm" onClick={() => navigate("/subscribe")}>
                 Try Executive — $39.99/mo <ArrowRight className="ml-2 h-3.5 w-3.5" />
