@@ -138,6 +138,7 @@ export type Database = {
           context_type: string | null
           created_at: string
           id: string
+          is_private: boolean
           resolved: boolean
           updated_at: string
         }
@@ -150,6 +151,7 @@ export type Database = {
           context_type?: string | null
           created_at?: string
           id?: string
+          is_private?: boolean
           resolved?: boolean
           updated_at?: string
         }
@@ -162,6 +164,7 @@ export type Database = {
           context_type?: string | null
           created_at?: string
           id?: string
+          is_private?: boolean
           resolved?: boolean
           updated_at?: string
         }
