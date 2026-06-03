@@ -213,7 +213,7 @@ const Coaching = () => {
                 if (last?.role === "assistant") {
                   return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantText } : m);
                 }
-                return [...prev, { role: "assistant", content: assistantText }];
+                return [...prev, { role: "assistant", content: assistantText, session_date: today }];
               });
             }
           } catch {
