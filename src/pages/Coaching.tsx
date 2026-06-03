@@ -180,6 +180,7 @@ const Coaching = () => {
         setMessages(prev => [...prev, {
           role: "assistant",
           content: errData?.error || "Sorry, I couldn't process that right now. Please try again.",
+          session_date: today,
         }]);
         setIsStreaming(false);
         return;
