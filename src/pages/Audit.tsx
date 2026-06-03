@@ -9,6 +9,7 @@ import { Compass, Send, ArrowRight } from "lucide-react";
 import { AUDIT_QUESTIONS, AUDIT_SECTIONS } from "@/lib/audit-questions";
 import { useToast } from "@/hooks/use-toast";
 import { formatLensLabel, type IntentProfile } from "@/lib/intentus-architecture";
+import { normalizePlanTier, type PlanTier } from "@/lib/tier-policy";
 import type { Json } from "@/integrations/supabase/types";
 
 interface ChatMessage {
