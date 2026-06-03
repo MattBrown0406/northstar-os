@@ -648,10 +648,31 @@ const Audit = () => {
       <div className="border-t border-border bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto max-w-2xl px-4 py-4">
           {completed ? (
-            <div className="space-y-2">
-              <Button variant="hero" className="w-full" onClick={() => navigate("/report")}>
-                View your Operating Report <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+            <div className="space-y-3">
+              {planTier === "free" && (
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Your report is ready — unlock the full picture</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Executive subscribers get AI check-in debriefs, drift tracking, and an AI operating coach. $39.99/mo.
+                    </p>
+                  </div>
+                  <Button variant="hero" className="w-full" onClick={() => navigate("/subscribe")}>
+                    Upgrade to Executive <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                  <button
+                    onClick={() => navigate("/report")}
+                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Continue with Starter →
+                  </button>
+                </div>
+              )}
+              {planTier !== "free" && (
+                <Button variant="hero" className="w-full" onClick={() => navigate("/report")}>
+                  View your Operating Report <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
               <Button variant="outline" className="w-full" onClick={handleStartFresh}>
                 Start Fresh Assessment
               </Button>
