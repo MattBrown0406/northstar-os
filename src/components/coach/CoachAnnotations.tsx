@@ -65,6 +65,7 @@ export const CoachAnnotations = ({
   const [newType, setNewType] = useState<AnnotationType>(defaultType ?? 'note');
   const [showResolved, setShowResolved] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [visibleToClient, setVisibleToClient] = useState(false);
 
   const loadAnnotations = useCallback(async () => {
     let query = supabase
