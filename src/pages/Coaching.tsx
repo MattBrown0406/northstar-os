@@ -227,6 +227,7 @@ const Coaching = () => {
         setMessages(prev => [...prev, {
           role: "assistant",
           content: "Something went wrong. Please try again.",
+          session_date: today,
         }]);
       }
     }
