@@ -171,7 +171,7 @@ const Coaching = () => {
         },
         body: JSON.stringify({
           mode: "chat",
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          messages: outboundMessages,
         }),
       });
 
