@@ -11,7 +11,7 @@ export const ExtraQuestionsStep = ({ questions, values, setValue }: ExtraQuestio
   if (questions.length === 0) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full space-y-6 overflow-hidden">
       <div>
         <h3 className="font-heading text-lg font-bold text-foreground">A few more signals</h3>
         <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
@@ -21,7 +21,7 @@ export const ExtraQuestionsStep = ({ questions, values, setValue }: ExtraQuestio
 
       <div className="space-y-7">
         {questions.map((q) => (
-          <div key={q.id} className="space-y-2.5">
+          <div key={q.id} className="w-full max-w-full space-y-2.5 overflow-hidden">
             <div>
               <label className="font-heading text-base font-semibold text-foreground block">{q.label}</label>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{q.helper}</p>
@@ -51,10 +51,10 @@ export const ExtraQuestionsStep = ({ questions, values, setValue }: ExtraQuestio
                   })}
                 </div>
                 {q.scaleLabels && (
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>{q.scaleLabels[0]}</span>
-                    <span>{q.scaleLabels[1]}</span>
-                    <span>{q.scaleLabels[2]}</span>
+                  <div className="grid min-w-0 grid-cols-3 gap-1 text-[10px] text-muted-foreground">
+                    <span className="min-w-0 break-words text-left">{q.scaleLabels[0]}</span>
+                    <span className="min-w-0 break-words text-center">{q.scaleLabels[1]}</span>
+                    <span className="min-w-0 break-words text-right">{q.scaleLabels[2]}</span>
                   </div>
                 )}
               </div>
@@ -63,7 +63,7 @@ export const ExtraQuestionsStep = ({ questions, values, setValue }: ExtraQuestio
                 value={(values[q.id] as string) ?? ""}
                 onChange={(e) => setValue(q.id, e.target.value)}
                 placeholder={q.placeholder}
-                className={`text-sm resize-none ${q.type === "short_text" ? "min-h-[70px]" : "min-h-[100px]"}`}
+                className={`min-w-0 text-sm resize-none ${q.type === "short_text" ? "min-h-[70px]" : "min-h-[100px]"}`}
               />
             )}
           </div>

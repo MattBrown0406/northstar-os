@@ -40,7 +40,7 @@ type RecentCheckInRow = {
 const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
   value: number; onChange: (n: number) => void; label: string; helper?: string; emoji: string[];
 }) => (
-  <div className="space-y-4">
+  <div className="w-full max-w-full space-y-4 overflow-hidden">
     <div>
       <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
       {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
@@ -62,7 +62,7 @@ const ScaleSelector = ({ value, onChange, label, helper, emoji }: {
         </button>
       ))}
     </div>
-    <p className="text-sm text-muted-foreground text-center">{emoji[Math.min(Math.floor(value / 3), 2)]}</p>
+    <p className="text-sm text-muted-foreground text-center break-words">{emoji[Math.min(Math.floor(value / 3), 2)]}</p>
   </div>
 );
 
@@ -70,19 +70,19 @@ const ListInput = ({ label, helper, examples, items, onAdd, onRemove, inputVal, 
   label: string; helper?: string; examples?: string[]; items: string[]; onAdd: () => void; onRemove: (index: number) => void;
   inputVal: string; setInputVal: (v: string) => void; placeholder: string;
 }) => (
-  <div className="space-y-4">
+  <div className="w-full max-w-full space-y-4 overflow-hidden">
     <div>
       <h3 className="font-heading text-lg font-bold text-foreground">{label}</h3>
       {helper && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{helper}</p>}
       {examples && examples.length > 0 && (
         <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
           {examples.map((ex, i) => (
-            <li key={i} className="flex gap-2"><span className="text-primary">•</span><span className="italic">"{ex}"</span></li>
+            <li key={i} className="flex min-w-0 gap-2"><span className="text-primary">•</span><span className="min-w-0 break-words italic">"{ex}"</span></li>
           ))}
         </ul>
       )}
     </div>
-    <div className="flex gap-2 items-start">
+    <div className="flex min-w-0 gap-2 items-start">
       <Textarea
         value={inputVal}
         onChange={(e) => setInputVal(e.target.value)}
@@ -90,16 +90,16 @@ const ListInput = ({ label, helper, examples, items, onAdd, onRemove, inputVal, 
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onAdd(); }
         }}
         placeholder={placeholder}
-        className="flex-1 min-h-[90px] text-sm resize-none"
+        className="min-h-[90px] min-w-0 flex-1 text-sm resize-none"
       />
-      <Button variant="outline" size="icon" onClick={onAdd}><Plus className="h-4 w-4" /></Button>
+      <Button variant="outline" size="icon" className="shrink-0" onClick={onAdd}><Plus className="h-4 w-4" /></Button>
     </div>
     <p className="text-xs text-muted-foreground -mt-2"><span className="hidden sm:inline">Aim for a full sentence with context. Press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-[10px]">⌘/Ctrl + Enter</kbd> or click + to add.</span><span className="sm:hidden">Tap + to add. Aim for a full sentence with context.</span></p>
     <ul className="space-y-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
-          <span className="flex-1 whitespace-pre-wrap">{item}</span>
-          <button onClick={() => onRemove(i)}><X className="h-4 w-4 text-muted-foreground hover:text-destructive" /></button>
+        <li key={i} className="flex min-w-0 items-start gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground">
+          <span className="min-w-0 flex-1 whitespace-pre-wrap break-words">{item}</span>
+          <button className="shrink-0" onClick={() => onRemove(i)}><X className="h-4 w-4 text-muted-foreground hover:text-destructive" /></button>
         </li>
       ))}
     </ul>
@@ -120,22 +120,22 @@ const CommitmentCallbackStep = ({
   callbackReflection: string;
   setCallbackReflection: (v: string) => void;
 }) => (
-  <div className="space-y-6">
+  <div className="w-full max-w-full space-y-6 overflow-hidden">
     <div>
       <h3 className="font-heading text-lg font-bold text-foreground mb-1">Last week you committed to:</h3>
-      <blockquote className="border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r-lg text-foreground text-base italic">
+      <blockquote className="break-words border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r-lg text-foreground text-base italic">
         "{previousCommitment.commitment}"
       </blockquote>
     </div>
 
     <div className="space-y-3">
       <p className="text-sm font-medium text-foreground">Did this happen?</p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-3 min-[360px]:gap-3">
         {(["yes", "partially", "no"] as const).map((option) => (
           <button
             key={option}
             onClick={() => setCallbackOutcome(option)}
-            className={`py-4 rounded-xl border-2 text-sm font-semibold capitalize transition-all ${
+            className={`min-w-0 py-3 min-[360px]:py-4 rounded-xl border-2 text-sm font-semibold capitalize transition-all ${
               callbackOutcome === option
                 ? option === "yes"
                   ? "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400"
@@ -175,22 +175,22 @@ const OneThingStep = ({
   oneThing: string;
   setOneThing: (v: string) => void;
 }) => (
-  <div className="space-y-4">
+  <div className="w-full max-w-full space-y-4 overflow-hidden">
     <div>
       <h3 className="font-heading text-lg font-bold text-foreground">What's the one thing this week?</h3>
       <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
         If you actually did this — and nothing else — it would make the most difference. Not the easiest thing. Not the most urgent thing. The thing that, if you skip it, you'll feel it for weeks. Be specific enough that someone else could check whether you did it.
       </p>
       <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-        <li className="flex gap-2"><span className="text-primary">•</span><span className="italic">"This week I will sit down and write the one-page strategic narrative I've been avoiding, and share it with two people for honest feedback."</span></li>
-        <li className="flex gap-2"><span className="text-primary">•</span><span className="italic">"This week I will have the direct conversation with my Head of Sales about the underperformance — by Wednesday, in person."</span></li>
+        <li className="flex min-w-0 gap-2"><span className="text-primary">•</span><span className="min-w-0 break-words italic">"This week I will sit down and write the one-page strategic narrative I've been avoiding, and share it with two people for honest feedback."</span></li>
+        <li className="flex min-w-0 gap-2"><span className="text-primary">•</span><span className="min-w-0 break-words italic">"This week I will have the direct conversation with my Head of Sales about the underperformance — by Wednesday, in person."</span></li>
       </ul>
     </div>
     <Textarea
       value={oneThing}
       onChange={(e) => setOneThing(e.target.value)}
       placeholder="This week I will…"
-      className="min-h-[140px] text-sm resize-none"
+      className="min-h-[140px] min-w-0 text-sm resize-none"
     />
   </div>
 );
@@ -524,18 +524,18 @@ const CheckIn = () => {
   // ── Mode picker (shown once, before either flow starts) ───────────────────
   if (!done && mode === null) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen max-w-full overflow-x-hidden bg-background flex flex-col">
         <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
+          <div className="container mx-auto min-w-0 px-4 py-3 flex items-center justify-between">
+            <Link to="/" className="flex min-w-0 items-center gap-2">
               <img src={logo} alt="Intentus" className="h-7 w-auto object-contain" />
-              <span className="font-heading text-lg font-bold text-foreground">Check-in</span>
+              <span className="min-w-0 truncate font-heading text-lg font-bold text-foreground">Check-in</span>
             </Link>
           </div>
         </div>
         <AppBreadcrumb />
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg space-y-6">
+          <div className="w-full min-w-0 max-w-lg space-y-6">
             <div className="text-center space-y-2">
               <h2 className="font-heading text-2xl font-bold text-foreground">How are you checking in?</h2>
               <p className="text-sm text-muted-foreground">
@@ -547,11 +547,11 @@ const CheckIn = () => {
               onClick={() => setMode("full")}
               className="w-full text-left rounded-2xl border border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary hover:bg-primary/10"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <div className="rounded-xl bg-primary/15 p-2 text-primary">
                   <ListChecks className="h-5 w-5" />
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="font-heading font-bold text-foreground">Full check-in</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Wins, blockers, commitments, "one thing" — plus AI debrief. ~5–8 min.
@@ -568,11 +568,11 @@ const CheckIn = () => {
               }}
               className="w-full text-left rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <div className="rounded-xl bg-accent/15 p-2 text-accent">
                   <Zap className="h-5 w-5" />
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="font-heading font-bold text-foreground">Quick check-in</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Just mood, energy, and one thing for the week. ~60 seconds. No AI debrief.
@@ -593,16 +593,16 @@ const CheckIn = () => {
     const quickCanContinue = quickStep === 0 ? mood > 0 && energy > 0 : oneThing.trim().length > 0;
 
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen max-w-full overflow-x-hidden bg-background flex flex-col">
         <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Link to="/" className="flex items-center">
+          <div className="container mx-auto min-w-0 px-4 py-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <Link to="/" className="flex shrink-0 items-center">
                 <img src={logo} alt="Intentus" className="h-7 w-auto object-contain cursor-pointer" />
               </Link>
-              <span className="font-heading text-lg font-bold text-foreground">Quick check-in</span>
+              <span className="min-w-0 truncate font-heading text-lg font-bold text-foreground">Quick check-in</span>
             </div>
-            <span className="text-sm text-muted-foreground">{displayQuickStep} of {totalQuickSteps}</span>
+            <span className="shrink-0 text-sm text-muted-foreground">{displayQuickStep} of {totalQuickSteps}</span>
           </div>
           <div className="h-1 bg-border">
             <div
@@ -615,7 +615,7 @@ const CheckIn = () => {
         <AppBreadcrumb />
 
         <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg space-y-6">
+          <div className="w-full min-w-0 max-w-lg space-y-6">
             {quickStep === 0 ? (
               <div className="space-y-8">
                 <ScaleSelector
@@ -640,16 +640,16 @@ const CheckIn = () => {
         </div>
 
         <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
-          <div className="container mx-auto max-w-lg flex gap-3">
+          <div className="container mx-auto max-w-lg flex min-w-0 gap-2 min-[360px]:gap-3">
             {quickStep === 0 ? (
-              <Button variant="outline" className="flex-1" onClick={() => setMode(null)}>Back</Button>
+              <Button variant="outline" className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm" onClick={() => setMode(null)}>Back</Button>
             ) : (
-              <Button variant="outline" className="flex-1" onClick={() => setQuickStep(0)}>Back</Button>
+              <Button variant="outline" className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm" onClick={() => setQuickStep(0)}>Back</Button>
             )}
             {quickStep < totalQuickSteps - 1 ? (
               <Button
                 variant="hero"
-                className="flex-1"
+                className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm"
                 disabled={!quickCanContinue}
                 onClick={() => setQuickStep(quickStep + 1)}
               >
@@ -658,7 +658,7 @@ const CheckIn = () => {
             ) : (
               <Button
                 variant="hero"
-                className="flex-1"
+                className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm"
                 disabled={loading || !quickCanContinue}
                 onClick={() => handleSubmit({ quick: true })}
               >
@@ -914,16 +914,16 @@ const CheckIn = () => {
   const canAdvanceStep0 = step !== 0 || callbackOutcome !== null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-background flex flex-col">
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="flex items-center">
+        <div className="container mx-auto min-w-0 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <Link to="/" className="flex shrink-0 items-center">
               <img src={logo} alt="Intentus" className="h-7 w-auto object-contain cursor-pointer" />
             </Link>
-            <span className="font-heading text-lg font-bold text-foreground">Check-in</span>
+            <span className="min-w-0 truncate font-heading text-lg font-bold text-foreground">Check-in</span>
           </div>
-          <span className="text-sm text-muted-foreground">{displayStep} of {totalSteps}</span>
+          <span className="shrink-0 text-sm text-muted-foreground">{displayStep} of {totalSteps}</span>
         </div>
         <div className="h-1 bg-border">
           <div className="h-full bg-gradient-primary transition-all duration-500" style={{ width: `${(displayStep / totalSteps) * 100}%` }} />
@@ -933,7 +933,7 @@ const CheckIn = () => {
       <AppBreadcrumb />
 
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg space-y-4">
+        <div className="w-full min-w-0 max-w-lg space-y-4">
           {showResumeBanner && (
             <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm text-foreground">
               <span>Resuming your saved check-in.</span>
@@ -959,21 +959,21 @@ const CheckIn = () => {
       </div>
 
       <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
-        <div className="container mx-auto max-w-lg flex gap-3">
+        <div className="container mx-auto max-w-lg flex min-w-0 gap-2 min-[360px]:gap-3">
           {step > firstStep && (
-            <Button variant="outline" className="flex-1" onClick={() => { setInputVal(""); setStep(step - 1); }}>Back</Button>
+            <Button variant="outline" className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm" onClick={() => { setInputVal(""); setStep(step - 1); }}>Back</Button>
           )}
           {step < LAST_STEP ? (
             <Button
               variant="hero"
-              className="flex-1"
+              className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm"
               disabled={!canAdvanceStep0}
               onClick={() => { setInputVal(""); setStep(step + 1); }}
             >
               Continue <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="hero" className="flex-1" onClick={() => handleSubmit()} disabled={loading}>
+            <Button variant="hero" className="min-w-0 flex-1 px-3 text-xs min-[360px]:text-sm" onClick={() => handleSubmit()} disabled={loading}>
               {loading ? "Saving..." : "Complete check-in"}
             </Button>
           )}
