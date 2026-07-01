@@ -38,19 +38,31 @@ serve(async (req) => {
   const rawBody = await req.text();
 
   try {
-    const signatureKey = Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY");
+    const signatureKey =
+      Deno.env.get("SQUARE_INTENTUS_WEBHOOK_SIGNATURE_KEY") ||
+      Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY");
     const providedSignature = req.headers.get("x-square-hmacsha256-signature");
     const notificationUrl = `${Deno.env.get("SUPABASE_URL")!.replace(/\/$/, "")}/functions/v1/square-webhook`;
 
-    if (!signatureKey || !providedSignature) {
+    if (!providedSignature) {
+      console.warn("square-webhook: missing Square signature header");
       return new Response(JSON.stringify({ error: "Missing signature" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    if (!signatureKey) {
+      console.error("square-webhook: missing SQUARE_INTENTUS_WEBHOOK_SIGNATURE_KEY secret");
+      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const valid = await verifySquareSignature(signatureKey, notificationUrl, rawBody, providedSignature);
     if (!valid) {
+      console.warn("square-webhook: invalid Square signature", { notificationUrl });
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
