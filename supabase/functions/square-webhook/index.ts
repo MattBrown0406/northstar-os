@@ -50,7 +50,13 @@ serve(async (req) => {
       });
     }
 
-    const valid = await verifySquareSignature(signatureKey, notificationUrl, rawBody, providedSignature);
+    let valid = false;
+    if (intentusKey) {
+      valid = await verifySquareSignature(intentusKey, notificationUrl, rawBody, providedSignature);
+    }
+    if (!valid && fallbackKey && fallbackKey !== intentusKey) {
+      valid = await verifySquareSignature(fallbackKey, notificationUrl, rawBody, providedSignature);
+    }
     if (!valid) {
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
