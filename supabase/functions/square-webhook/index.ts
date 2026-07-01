@@ -38,18 +38,25 @@ serve(async (req) => {
   const rawBody = await req.text();
 
   try {
-    const signatureKey = Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY");
+    const intentusKey = Deno.env.get("SQUARE_INTENTUS_WEBHOOK_SIGNATURE_KEY");
+    const fallbackKey = Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY");
     const providedSignature = req.headers.get("x-square-hmacsha256-signature");
     const notificationUrl = `${Deno.env.get("SUPABASE_URL")!.replace(/\/$/, "")}/functions/v1/square-webhook`;
 
-    if (!signatureKey || !providedSignature) {
+    if ((!intentusKey && !fallbackKey) || !providedSignature) {
       return new Response(JSON.stringify({ error: "Missing signature" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const valid = await verifySquareSignature(signatureKey, notificationUrl, rawBody, providedSignature);
+    let valid = false;
+    if (intentusKey) {
+      valid = await verifySquareSignature(intentusKey, notificationUrl, rawBody, providedSignature);
+    }
+    if (!valid && fallbackKey && fallbackKey !== intentusKey) {
+      valid = await verifySquareSignature(fallbackKey, notificationUrl, rawBody, providedSignature);
+    }
     if (!valid) {
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
