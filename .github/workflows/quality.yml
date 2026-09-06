@@ -27,5 +27,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm ci --no-fund
       - run: npm exec --yes --package=deno@2.9.6 -- deno check --no-lock supabase/functions/*/index.ts supabase/functions/_shared/*.ts
       - run: npm exec --yes --package=deno@2.9.6 -- deno test --no-lock --allow-env --allow-read supabase/tests/*_test.ts
