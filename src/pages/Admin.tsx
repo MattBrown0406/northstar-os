@@ -260,7 +260,7 @@ const Admin = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate("/coach")} className="px-2 sm:px-3">
               <Crown className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Coach</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={signOut}>
+            <Button variant="ghost" size="icon" onClick={() => { void signOut().catch(() => toast({ title: "Sign out failed", description: "You are still signed in. Please try again.", variant: "destructive" })); }}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>

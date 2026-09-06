@@ -26,9 +26,15 @@ CREATE TABLE IF NOT EXISTS commitment_callbacks (
 ALTER TABLE weekly_commitments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE commitment_callbacks ENABLE ROW LEVEL SECURITY;
 
--- RLS policies
-CREATE POLICY "Users can manage own weekly_commitments"
-  ON weekly_commitments FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can manage own commitment_callbacks"
-  ON commitment_callbacks FOR ALL USING (auth.uid() = user_id);
+-- This legacy duplicate can follow the timestamped migration on clean replay.
+-- Preserve already-applied policy definitions rather than dropping/recreating.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'weekly_commitments' AND policyname = 'Users can manage own weekly_commitments') THEN
+    CREATE POLICY "Users can manage own weekly_commitments"
+      ON weekly_commitments FOR ALL USING (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'commitment_callbacks' AND policyname = 'Users can manage own commitment_callbacks') THEN
+    CREATE POLICY "Users can manage own commitment_callbacks"
+      ON commitment_callbacks FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;

@@ -4,30 +4,22 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export function useAdminCheck() {
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
+  const userId = user?.id;
+  const [result, setResult] = useState<{ userId?: string; isAdmin: boolean; loading: boolean }>({ isAdmin: false, loading: true });
   useEffect(() => {
-    if (!user) {
-      setIsAdmin(false);
-      setLoading(false);
-      return;
-    }
-
+    let active = true;
+    setResult({ userId, isAdmin: false, loading: !!userId });
+    if (!userId) return;
     const check = async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      setIsAdmin(!!data);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+        if (active) setResult({ userId, isAdmin: !error && !!data, loading: false });
+      } catch {
+        if (active) setResult({ userId, isAdmin: false, loading: false });
+      }
     };
-
-    check();
-  }, [user]);
-
-  return { isAdmin, loading };
+    void check();
+    return () => { active = false; };
+  }, [userId]);
+  return result.userId === userId ? { isAdmin: result.isAdmin, loading: result.loading } : { isAdmin: false, loading: !!userId };
 }

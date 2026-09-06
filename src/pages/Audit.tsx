@@ -136,6 +136,11 @@ async function streamCoachResponse({
 }
 
 const Audit = () => {
+  const answerFlight = useRef(false);
+  const [answerSaving, setAnswerSaving] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [initAttempt, setInitAttempt] = useState(0);
+  const [initializing, setInitializing] = useState(true);
   const [currentQ, setCurrentQ] = useState(0);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [input, setInput] = useState("");
@@ -190,13 +195,19 @@ const Audit = () => {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     const load = async () => {
+      setInitializing(true);
+      setInitError(null);
+      try {
       // Load profile
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("coaching_tone, display_name, plan_tier")
         .eq("user_id", user.id)
         .single();
+      if (cancelled) return;
+      if (profileError) throw profileError;
       if (profileData) {
         const typedProfile = profileData as AuditProfile & { plan_tier?: string | null };
         setProfile({
@@ -208,7 +219,7 @@ const Audit = () => {
       }
 
       // Check for existing in-progress audit
-      const { data } = await supabase
+      const { data, error: auditError } = await supabase
         .from("baseline_audits")
         .select("*")
         .eq("user_id", user.id)
@@ -216,13 +227,18 @@ const Audit = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
+      if (cancelled) return;
+      if (auditError) throw auditError;
       if (data && data.length > 0) {
         const audit = data[0];
         setAuditId(audit.id);
-        const saved = (audit.responses as Record<string, string>) || {};
+        const raw = audit.responses as Record<string, unknown> | null;
+        const saved = Object.fromEntries(AUDIT_QUESTIONS.filter(q => typeof raw?.[q.id] === 'string' && (raw[q.id] as string).trim()).map(q => [q.id, raw![q.id] as string]));
         setResponses(saved);
         const msgs: ChatMessage[] = [];
-        const answeredCount = Object.keys(saved).length;
+        const firstMissing = AUDIT_QUESTIONS.findIndex(q => !saved[q.id]);
+        // A legacy in-progress row with every answer still needs a final acknowledged completion write.
+        const answeredCount = firstMissing < 0 ? AUDIT_QUESTIONS.length - 1 : firstMissing;
         for (let i = 0; i < answeredCount && i < AUDIT_QUESTIONS.length; i++) {
           msgs.push({ role: "system", text: AUDIT_QUESTIONS[i].text });
           if (saved[AUDIT_QUESTIONS[i].id]) {
@@ -236,13 +252,15 @@ const Audit = () => {
         setMessages(msgs);
       } else {
         // Check for completed audit
-        const { data: completedAudit } = await supabase
+        const { data: completedAudit, error: completedError } = await supabase
           .from("baseline_audits")
           .select("id")
           .eq("user_id", user.id)
           .eq("status", "completed")
           .limit(1);
 
+        if (cancelled) return;
+        if (completedError) throw completedError;
         if (completedAudit && completedAudit.length > 0) {
           setCompleted(true);
           setMessages([{ role: "system", text: "✅ Your operating audit is already complete. View your report or start a fresh assessment." }]);
@@ -250,12 +268,15 @@ const Audit = () => {
         }
 
         // Create new audit
-        const { data: newAudit } = await supabase
+        const { data: newAudit, error: createError } = await supabase
           .from("baseline_audits")
           .insert({ user_id: user.id })
           .select()
           .single();
 
+        if (cancelled) return;
+        if (createError) throw createError;
+        if (!newAudit) throw new Error("Audit could not be created");
         if (newAudit) {
           setAuditId(newAudit.id);
           setMessages([
@@ -267,29 +288,35 @@ const Audit = () => {
           ]);
         }
       }
+      } catch (error) {
+        if (!cancelled) setInitError(error instanceof Error ? error.message : 'Unable to load audit. Please retry.');
+      } finally {
+        if (!cancelled) setInitializing(false);
+      }
     };
     load();
-  }, [user]);
+    return () => { cancelled = true; };
+  }, [user?.id, initAttempt]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const processAnswer = async (answer: string) => {
-    if (!auditId) return;
+    if (!auditId || answerFlight.current || initializing || initError) return;
+    answerFlight.current = true;
+    setAnswerSaving(true);
+    try {
 
     const question = AUDIT_QUESTIONS[currentQ];
     const newResponses = { ...responses, [question.id]: answer };
 
-    setMessages((prev) => [...prev, { role: "user", text: answer }]);
-    setInput("");
-    setResponses(newResponses);
-
     // Save progress
-    const nextQ = currentQ + 1;
+    const missing = AUDIT_QUESTIONS.findIndex(q => !newResponses[q.id]);
+    const nextQ = missing < 0 ? AUDIT_QUESTIONS.length : missing;
     const isLast = nextQ >= AUDIT_QUESTIONS.length;
 
-    await supabase
+    const { data: savedAudit, error: saveError } = await supabase
       .from("baseline_audits")
       .update({
         responses: newResponses as Json,
@@ -297,7 +324,16 @@ const Audit = () => {
         current_question: isLast ? 0 : AUDIT_QUESTIONS[nextQ]?.questionIndex ?? 0,
         ...(isLast ? { status: "completed" as const, completed_at: new Date().toISOString() } : {}),
       })
-      .eq("id", auditId);
+      .eq("id", auditId).eq("user_id", user!.id).select("id").single();
+
+    if (saveError || savedAudit?.id !== auditId) {
+      setInput(answer);
+      toast({ title: "Answer not saved", description: saveError?.message || "Audit update was not acknowledged", variant: "destructive" });
+      return;
+    }
+    setMessages((prev) => [...prev, { role: "user", text: answer }]);
+    setInput("");
+    setResponses(newResponses);
 
     if (isLast) {
       setCompleted(true);
@@ -369,19 +405,15 @@ const Audit = () => {
 
           // Show section transition if needed
           if (AUDIT_QUESTIONS[nextQ].sectionIndex !== question.sectionIndex) {
-            setTimeout(() => {
-              setMessages((prev) => [
-                ...prev,
-                { role: "system", text: `Moving on to **${AUDIT_QUESTIONS[nextQ].section}**.` },
-              ]);
-            }, 600);
+            setMessages((prev) => [
+              ...prev,
+              { role: "system", text: `Moving on to **${AUDIT_QUESTIONS[nextQ].section}**.` },
+            ]);
           }
 
           // Show next question after a pause
-          setTimeout(() => {
-            setMessages((prev) => [...prev, { role: "system", text: AUDIT_QUESTIONS[nextQ].text }]);
-            setCurrentQ(nextQ);
-          }, AUDIT_QUESTIONS[nextQ].sectionIndex !== question.sectionIndex ? 1200 : 800);
+          setMessages((prev) => [...prev, { role: "system", text: AUDIT_QUESTIONS[nextQ].text }]);
+          setCurrentQ(nextQ);
         },
       });
     } catch {
@@ -393,10 +425,15 @@ const Audit = () => {
           { role: "system", text: `Moving on to **${AUDIT_QUESTIONS[nextQ].section}**.` },
         ]);
       }
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "system", text: AUDIT_QUESTIONS[nextQ].text }]);
-        setCurrentQ(nextQ);
-      }, 500);
+      setMessages((prev) => [...prev, { role: "system", text: AUDIT_QUESTIONS[nextQ].text }]);
+      setCurrentQ(nextQ);
+    }
+    } catch (error) {
+      setInput(answer);
+      toast({ title: 'Answer not saved', description: error instanceof Error ? error.message : 'Please retry.', variant: 'destructive' });
+    } finally {
+      answerFlight.current = false;
+      setAnswerSaving(false);
     }
   };
 
@@ -453,7 +490,7 @@ const Audit = () => {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || coachStreaming) return;
+    if (!input.trim() || coachStreaming || answerFlight.current || initializing || initError) return;
     const trimmed = input.trim();
 
     // Clarification check runs before shallow check and before processAnswer
@@ -576,6 +613,9 @@ const Audit = () => {
       </div>
 
       <AppBreadcrumb />
+      {initializing && <p role="status">Loading audit…</p>}
+      {initError && <div role="alert">{initError} <Button onClick={() => setInitAttempt(n => n + 1)}>Retry audit</Button></div>}
+      {answerSaving && <p role="status">Saving answer…</p>}
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto">

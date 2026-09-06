@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { brandLogo as logo } from "@/lib/brand";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, bounded, safeDestination } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 import Seo from "@/components/seo/Seo";
 
 const Auth = () => {
@@ -19,6 +20,7 @@ const Auth = () => {
   const [showReset, setShowReset] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite");
@@ -28,69 +30,31 @@ const Auth = () => {
     if (inviteCode) setIsLogin(false);
   }, [inviteCode]);
 
-  if (user) return <Navigate to="/onboarding" replace />;
+  if (user) return <Navigate to={safeDestination(location.state?.from)} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-
-    if (showReset) {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
+    try {
+      if (showReset) {
+        const { error } = await bounded(supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` }));
+        if (error) throw error;
         toast({ title: "Check your email", description: "We sent you a password reset link." });
         setShowReset(false);
-      }
-      return;
-    }
-
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      } else if (isLogin) {
+        const { error } = await bounded(supabase.auth.signInWithPassword({ email, password }));
+        if (error) throw error;
       } else {
-        navigate("/dashboard");
+        const { data, error } = await bounded(supabase.auth.signUp({ email, password, options: {
+          data: { display_name: displayName, invite_code: inviteCode || undefined }, emailRedirectTo: `${window.location.origin}/auth`,
+        } }));
+        if (error) throw error;
+        if (!data.session) toast({ title: "Check your email", description: "Confirm your email, then sign in to finish linking your coach." });
       }
-    } else {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { display_name: displayName, invite_code: inviteCode || undefined },
-          emailRedirectTo: window.location.origin,
-        },
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-      } else {
-        if (inviteCode && data.user) {
-          try {
-            await supabase.functions.invoke("process-coach-invite", {
-              body: { invite_code: inviteCode, client_user_id: data.user.id },
-            });
-          } catch (err) {
-            console.error("Failed to process coach invite:", err);
-            toast({
-              title: "Coach link failed",
-              description:
-                "Your account was created but we could not link your coach. Contact your coach for a new invite link.",
-              variant: "destructive",
-            });
-          }
-        }
-
-        toast({
-          title: "Check your email",
-          description: "We sent you a confirmation link. Please verify your email to continue.",
-        });
-      }
-    }
+    } catch (error) {
+      toast({ title: "Authentication failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally { setLoading(false); }
   };
 
   return (

@@ -14,12 +14,12 @@ export interface WeeklyCommitment {
 /**
  * Returns the ISO date string of the Monday of the week containing `date`.
  */
-function getMondayOfWeek(date: Date): string {
+export function getMondayOfWeek(date: Date): string {
   const d = new Date(date);
   const day = d.getDay(); // 0=Sun, 1=Mon, ...
   const diff = (day === 0 ? -6 : 1 - day);
   d.setDate(d.getDate() + diff);
-  return d.toISOString().split("T")[0];
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 /**
@@ -86,9 +86,11 @@ export async function recordCommitmentOutcome(
   outcome: "yes" | "partially" | "no",
   reflection?: string
 ): Promise<void> {
-  const updates: Record<string, string> = { outcome };
-  if (outcome === "yes") updates.completed_at = new Date().toISOString();
-  if (reflection) updates.reflection = reflection;
+  const updates = {
+    outcome,
+    completed_at: outcome === "yes" ? new Date().toISOString() : null,
+    reflection: reflection?.trim() || null,
+  };
 
   const { error } = await supabase
     .from("weekly_commitments")
@@ -171,17 +173,18 @@ export async function getRecentCommitments(
  * outcome is "yes" or "partially". Stops at the first miss or null.
  * Excludes the current (in-progress) week which typically has no outcome yet.
  */
-export function computeFollowThroughStreak(commitments: WeeklyCommitment[]): number {
+export function computeFollowThroughStreak(commitments: WeeklyCommitment[], now = new Date()): number {
+  const currentWeek = getMondayOfWeek(now);
+  const byWeek = new Map(commitments.map(c => [c.week_start, c]));
+  const cursor = new Date(`${currentWeek}T12:00:00`);
+  // Only this week's pending/missing outcome gets a grace period.
+  if (!byWeek.get(currentWeek)?.outcome) cursor.setDate(cursor.getDate() - 7);
   let streak = 0;
-  for (let i = commitments.length - 1; i >= 0; i--) {
-    const o = commitments[i].outcome;
-    // Skip an in-progress (no-outcome) week at the very end without breaking the streak.
-    if (o === null) {
-      if (i === commitments.length - 1) continue;
-      break;
-    }
-    if (o === "yes" || o === "partially") streak += 1;
-    else break;
+  while (true) {
+    const row = byWeek.get(getMondayOfWeek(cursor));
+    if (!row || (row.outcome !== 'yes' && row.outcome !== 'partially')) break;
+    streak++;
+    cursor.setDate(cursor.getDate() - 7);
   }
   return streak;
 }

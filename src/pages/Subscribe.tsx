@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Capacitor } from '@capacitor/core';
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Check, Loader2, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { Purchases, type PurchasesPackage } from "@revenuecat/purchases-capacitor";
@@ -11,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { brandLogo as logo } from "@/lib/brand";
 import { getTierCapability, normalizePlanTier, type PlanTier } from "@/lib/tier-policy";
 import {
-  configureRevenueCat,
+  withRevenueCatIdentity,
   isNativeRevenueCatAvailable,
   REVENUECAT_PRODUCT_IDS,
   syncSupabasePlanTierFromCustomerInfo,
@@ -85,6 +86,10 @@ const Subscribe = () => {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [webCheckoutLoading, setWebCheckoutLoading] = useState(false);
   const nativeAvailable = isNativeRevenueCatAvailable();
+  const account = useRef(user?.id);
+  account.current = user?.id;
+  const busy = useRef(false);
+  useEffect(() => () => { account.current = undefined; }, []);
 
   const loadTier = async () => {
     if (!user) return;
@@ -93,7 +98,7 @@ const Subscribe = () => {
       .select("plan_tier")
       .eq("user_id", user.id)
       .single();
-    setCurrentTier(normalizePlanTier(data?.plan_tier));
+    if (account.current === user.id) setCurrentTier(normalizePlanTier(data?.plan_tier));
   };
 
   useEffect(() => {
@@ -104,9 +109,8 @@ const Subscribe = () => {
       try {
         await loadTier();
         if (nativeAvailable) {
-          await configureRevenueCat(user.id);
-          const offerings = await Purchases.getOfferings();
-          setPackages(offerings.current?.availablePackages ?? []);
+          const offerings = await withRevenueCatIdentity(user.id, () => Purchases.getOfferings());
+          if (account.current === user.id) setPackages(offerings.current?.availablePackages ?? []);
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to load subscription options.";
@@ -123,8 +127,8 @@ const Subscribe = () => {
   useEffect(() => {
     if (searchParams.get("payment") === "success") {
       toast({
-        title: "Payment received!",
-        description: "Your Coach account will be activated shortly.",
+        title: "Checkout returned",
+        description: "We are checking your plan. Access activates after payment verification.",
       });
       loadTier();
       searchParams.delete("payment");
@@ -138,7 +142,7 @@ const Subscribe = () => {
   }, [packages]);
 
   const handlePurchase = async (plan: Plan) => {
-    if (!user || !nativeAvailable) return;
+    if (!user || !nativeAvailable || busy.current) return;
 
     const selectedPackage = packageByProductId.get(plan.productId);
     if (!selectedPackage) {
@@ -150,16 +154,18 @@ const Subscribe = () => {
       return;
     }
 
+    busy.current = true;
     setActionProductId(plan.productId);
     try {
-      const result = await Purchases.purchasePackage({ aPackage: selectedPackage });
+      const result = await withRevenueCatIdentity(user.id, () => Purchases.purchasePackage({ aPackage: selectedPackage }));
       const newTier = await syncSupabasePlanTierFromCustomerInfo(user.id, result.customerInfo);
-      if (newTier) {
+      if (account.current !== user.id) return;
+      if (newTier === plan.tier) {
         setCurrentTier(newTier);
         toast({ title: "Subscription active", description: `${getTierCapability(newTier).label} is now active.` });
         navigate("/dashboard");
       } else {
-        toast({ title: "Purchase complete", description: "RevenueCat did not report an active entitlement yet. Try Restore Purchases in a moment." });
+        toast({ title: "Purchase complete", description: "Your plan is awaiting server verification. Try Restore Purchases in a moment." });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "The purchase could not be completed.";
@@ -167,12 +173,14 @@ const Subscribe = () => {
         toast({ title: "Purchase failed", description: message, variant: "destructive" });
       }
     } finally {
+      busy.current = false;
       setActionProductId(null);
     }
   };
 
   const handleWebCoachCheckout = async () => {
-    if (!user) return;
+    if (!user || busy.current) return;
+    busy.current = true;
     setWebCheckoutLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("create-square-checkout", {
@@ -181,10 +189,13 @@ const Subscribe = () => {
       if (error) throw error;
       const url = (data as { checkout_url?: string })?.checkout_url;
       if (!url) throw new Error("No checkout URL returned");
+      if (account.current !== user.id) return;
+      if (new URL(url).protocol !== "https:") throw new Error("Invalid checkout URL");
       window.location.href = url;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not start web checkout.";
       toast({ title: "Checkout failed", description: message, variant: "destructive" });
+      busy.current = false;
       setWebCheckoutLoading(false);
     }
   };
@@ -196,21 +207,24 @@ const Subscribe = () => {
       return;
     }
 
+    if (busy.current) return;
+    busy.current = true;
     setRestoreLoading(true);
     try {
-      await configureRevenueCat(user.id);
-      const { customerInfo } = await Purchases.restorePurchases();
+      const { customerInfo } = await withRevenueCatIdentity(user.id, () => Purchases.restorePurchases());
       const restoredTier = await syncSupabasePlanTierFromCustomerInfo(user.id, customerInfo);
+      if (account.current !== user.id) return;
       if (restoredTier) {
         setCurrentTier(restoredTier);
         toast({ title: "Purchases restored", description: `${getTierCapability(restoredTier).label} is now active.` });
       } else {
-        toast({ title: "No active subscription found", description: "We did not find an active Intentus subscription for this Apple ID." });
+        toast({ title: "No verified subscription yet", description: "Your plan may still be processing. Please try again shortly." });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Restore Purchases failed.";
       toast({ title: "Restore failed", description: message, variant: "destructive" });
     } finally {
+      busy.current = false;
       setRestoreLoading(false);
     }
   };
@@ -238,7 +252,7 @@ const Subscribe = () => {
         <Button
           variant={plan.featured ? "hero" : "hero-outline"}
           className="mt-6 w-full"
-          disabled={active || actionProductId !== null || loading}
+          disabled={active || actionProductId !== null || restoreLoading || loading || !rcPackage}
           onClick={() => handlePurchase(plan)}
         >
           {actionProductId === plan.productId ? (
@@ -274,7 +288,7 @@ const Subscribe = () => {
             </Link>
           </div>
           {nativeAvailable && (
-            <Button variant="ghost" size="sm" onClick={handleRestore} disabled={restoreLoading || loading}>
+            <Button variant="ghost" size="sm" onClick={handleRestore} disabled={restoreLoading || actionProductId !== null || loading}>
               {restoreLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               Restore
             </Button>
@@ -306,6 +320,8 @@ const Subscribe = () => {
           <div className="mx-auto mt-10 grid max-w-6xl gap-6 md:grid-cols-3">
             {plans.map(renderPlanCard)}
           </div>
+        ) : Capacitor.isNativePlatform() ? (
+          <p className="mt-10 text-center">Subscriptions are unavailable on this platform until its store is configured. No payment has been taken.</p>
         ) : (
           <div className="mx-auto mt-10 max-w-2xl space-y-6">
             {/* Executive + Premium: iOS-only */}
@@ -367,7 +383,7 @@ const Subscribe = () => {
                 ))}
               </ul>
               <p className="mt-4 text-xs text-muted-foreground">
-                Coach plan is billed through Square. Manage or cancel anytime by contacting support.
+                Coach renews at $299.99 USD every month until canceled. Billed through Square. Contact support to manage or cancel before your next billing date.
               </p>
             </article>
           </div>

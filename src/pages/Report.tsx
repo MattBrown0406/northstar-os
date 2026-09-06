@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +75,7 @@ const Report = () => {
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null);
 
+  const actionFlight = useRef(false);
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
   const [editedPlan, setEditedPlan] = useState<any[] | null>(null);
   const [editingPhase, setEditingPhase] = useState<number | null>(null);
@@ -236,25 +237,27 @@ const Report = () => {
   ] : null);
 
   const toggleActionComplete = async (phaseIdx: number, actionIdx: number) => {
-    if (!user || !report) return;
+    if (!user || !report || actionFlight.current) return;
+    actionFlight.current = true;
     const key = `${phaseIdx}-${actionIdx}`;
     const isDone = completions[key];
-    if (isDone) {
-      await supabase.from('plan_action_completions').delete()
-        .eq('user_id', user.id).eq('report_id', report.id)
-        .eq('phase_index', phaseIdx).eq('action_index', actionIdx);
-      setCompletions(prev => { const n = {...prev}; delete n[key]; return n; });
-    } else {
-      await supabase.from('plan_action_completions').insert({
-        user_id: user.id, report_id: report.id,
-        phase_index: phaseIdx, action_index: actionIdx,
-      });
-      setCompletions(prev => ({...prev, [key]: true}));
-    }
+    try {
+      const query = isDone
+        ? supabase.from('plan_action_completions').delete().eq('user_id', user.id).eq('report_id', report.id).eq('phase_index', phaseIdx).eq('action_index', actionIdx)
+        : supabase.from('plan_action_completions').insert({ user_id: user.id, report_id: report.id, phase_index: phaseIdx, action_index: actionIdx });
+      const { data, error } = await query.select('report_id, phase_index, action_index').single();
+      if (error) throw error;
+      if (!data || data.report_id !== report.id || data.phase_index !== phaseIdx || data.action_index !== actionIdx) throw new Error('Action update was not acknowledged. Reload before retrying.');
+      setCompletions(prev => { const next = {...prev}; if (isDone) delete next[key]; else next[key] = true; return next; });
+    } catch (error) {
+      toast({ title: 'Action not saved', description: error instanceof Error ? error.message : 'Please retry.', variant: 'destructive' });
+    } finally { actionFlight.current = false; }
   };
 
   const saveActionEdit = async (phaseIdx: number, actionIdx: number) => {
-    if (!report || !editActionText.trim()) return;
+    if (!user || !report || !editActionText.trim() || actionFlight.current) return;
+    actionFlight.current = true;
+    try {
     const base = (editedPlan || [
       { ...(report.ninety_day_plan as any).phase_1, phase_label: 'Days 1–30', _phaseIdx: 0 },
       { ...(report.ninety_day_plan as any).phase_2, phase_label: 'Days 31–60', _phaseIdx: 1 },
@@ -264,13 +267,20 @@ const Report = () => {
       ...phase,
       actions: phase.actions.map((a: string, ai: number) => ai !== actionIdx ? a : editActionText.trim()),
     });
-    setEditedPlan(updated);
-    await supabase.from('strategic_reports').update({
+    const { data, error } = await supabase.from('strategic_reports').update({
       edited_ninety_day_plan: updated, last_edited_at: new Date().toISOString(), last_edited_by: user?.id,
-    }).eq('id', report.id);
+    }).eq('id', report.id).eq('user_id', user.id).select('id, edited_ninety_day_plan').single();
+    if (error || data?.id !== report.id) {
+      toast({ title: 'Action not saved', description: error?.message || 'Update was not acknowledged', variant: 'destructive' });
+      return;
+    }
+    setEditedPlan(data.edited_ninety_day_plan as any[]);
     setEditingAction(null);
     setEditActionText('');
     toast({ title: 'Action updated' });
+    } catch (error) {
+      toast({ title: 'Action not saved', description: error instanceof Error ? error.message : 'Please retry.', variant: 'destructive' });
+    } finally { actionFlight.current = false; }
   };
 
   const handleRefreshPlan = async () => {

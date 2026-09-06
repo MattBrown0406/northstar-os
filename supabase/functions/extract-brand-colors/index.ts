@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+
+import { safeFetchHTML, SafeFetchError } from "../_shared/safe-fetch.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +12,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -46,35 +50,7 @@ serve(async (req) => {
       });
     }
 
-    // SSRF protections
-    let parsed: URL;
-    try {
-      parsed = new URL(url);
-    } catch {
-      return new Response(JSON.stringify({ error: "Invalid URL" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (!["http:", "https:"].includes(parsed.protocol)) {
-      return new Response(JSON.stringify({ error: "Only http/https URLs allowed" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const blocked = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/i;
-    if (blocked.test(parsed.hostname)) {
-      return new Response(JSON.stringify({ error: "Internal URLs not allowed" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Fetch the website HTML
-    const response = await fetch(parsed.toString(), {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; BrandExtractor/1.0)" },
-    });
-    const html = await response.text();
+    const { html, url: parsed } = await safeFetchHTML(url);
 
     // Extract colors from CSS, meta tags, and inline styles
     const colors: string[] = [];
@@ -145,7 +121,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Brand extraction error:", error);
     return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500,
+      status: error instanceof SafeFetchError ? error.status : 502,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

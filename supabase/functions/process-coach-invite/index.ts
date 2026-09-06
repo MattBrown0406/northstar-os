@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +12,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -41,79 +45,25 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const { invite_code, coach_user_id: directCoachId } = await req.json();
-    const client_user_id = user.id;
-
-    let coachUserId: string;
-    let assignedTier = "free";
-
-    if (invite_code && invite_code !== "__branded__") {
-      // Standard invite link flow
-      const { data: invite, error: inviteError } = await supabase
-        .from("coach_invite_links")
-        .select("*")
-        .eq("invite_code", invite_code)
-        .eq("is_active", true)
-        .single();
-
-      if (inviteError || !invite) {
-        return new Response(JSON.stringify({ error: "Invalid or expired invite link" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      coachUserId = invite.coach_user_id;
-      assignedTier = invite.assigned_tier;
-
-      // Increment uses count
-      await supabase
-        .from("coach_invite_links")
-        .update({ uses_count: invite.uses_count + 1 })
-        .eq("id", invite.id);
-    } else if (directCoachId) {
-      // Branded page flow — link directly to coach
-      coachUserId = directCoachId;
-    } else {
-      return new Response(JSON.stringify({ error: "invite_code or coach_user_id required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const { invite_code, coach_user_id } = await req.json();
+    if ((invite_code != null && (typeof invite_code !== "string" || invite_code.length > 200)) ||
+        (coach_user_id != null && (typeof coach_user_id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(coach_user_id)))) {
+      return new Response(JSON.stringify({ error: "Invalid invitation" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-
-    // Check if relationship already exists
-    const { data: existing } = await supabase
-      .from("coach_clients")
-      .select("id")
-      .eq("coach_user_id", coachUserId)
-      .eq("client_user_id", client_user_id)
-      .single();
-
-    if (existing) {
-      return new Response(JSON.stringify({ success: true, message: "Already linked" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Create coach-client relationship
-    const { error: linkError } = await supabase.from("coach_clients").insert({
-      coach_user_id: coachUserId,
-      client_user_id,
-      assigned_tier: assignedTier,
+    const { data, error } = await supabase.rpc("coach_accept_invite", {
+      p_client_user_id: user.id,
+      p_invite_code: invite_code ?? null,
+      p_coach_user_id: coach_user_id ?? null,
     });
-
-    if (linkError) throw linkError;
-
-    // Update client's plan tier
-    await supabase
-      .from("profiles")
-      .update({ plan_tier: assignedTier })
-      .eq("user_id", client_user_id);
-
-    return new Response(JSON.stringify({ success: true, coach_user_id: coachUserId }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (error) {
+      console.error("Invite redemption rejected", error.code);
+      return new Response(JSON.stringify({ error: "Invitation could not be accepted. It may be inactive, expired, or full." }), {
+        status: error.code === "42501" ? 403 : 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify(data), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Process invite error:", error);

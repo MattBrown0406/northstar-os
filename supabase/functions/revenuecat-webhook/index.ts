@@ -1,97 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { rcEventArgs } from '../_shared/rc-events.ts';
+type Result = {data: unknown; error: {code?:string} | null};
+type Dependencies = { env: (key:string)=>string|undefined; apply: (args:Record<string,unknown>)=>Promise<Result> };
+const production: Dependencies = {
+ env: (key) => Deno.env.get(key),
+ apply: async (args) => {
+  const url=Deno.env.get('SUPABASE_URL'), key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) throw new Error('Database not configured');
+  return await createClient(url,key,{auth:{persistSession:false}}).rpc('rc_apply_event',args);
+ },
 };
-
-const PRODUCT_TIER_MAP: Record<string, string> = {
-  intentus_premium_monthly: "premium",
-  intentus_coach_monthly: "coach",
-};
-
-const DOWNGRADE_EVENTS = new Set([
-  "CANCELLATION",
-  "EXPIRATION",
-  "BILLING_ISSUE",
-]);
-
-const UPGRADE_EVENTS = new Set([
-  "INITIAL_PURCHASE",
-  "RENEWAL",
-  "PRODUCT_CHANGE",
-  "UNCANCELLATION",
-]);
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+export function createHandler(deps: Dependencies) {
+ return async (req:Request):Promise<Response> => {
+  const reply=(status:number,body:unknown)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
+  if(req.method!=='POST') return reply(405,{error:'Method not allowed'});
+  const secret=deps.env('REVENUECAT_WEBHOOK_SECRET');
+  if(!secret) return reply(503,{error:'Webhook not configured'});
+  if(req.headers.get('Authorization')!==`Bearer ${secret}`) return reply(401,{error:'Unauthorized'});
+  let args;
   try {
-    // Optional shared-secret check (RevenueCat sends Authorization header you configure)
-    const expectedSecret = Deno.env.get("REVENUECAT_WEBHOOK_SECRET");
-    if (expectedSecret) {
-      const auth = req.headers.get("Authorization");
-      if (auth !== `Bearer ${expectedSecret}`) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const admin = createClient(supabaseUrl, serviceRoleKey);
-
-    const payload = await req.json();
-    const event = payload?.event ?? payload;
-    const eventType: string = event?.type ?? "UNKNOWN";
-    const appUserId: string | undefined = event?.app_user_id ?? event?.original_app_user_id;
-    const productId: string | undefined = event?.product_id;
-
-    // Always log the raw event
-    await admin.from("revenuecat_events").insert({
-      event_type: eventType,
-      app_user_id: appUserId ?? "unknown",
-      product_id: productId ?? null,
-      raw_payload: payload,
-    });
-
-    if (!appUserId) {
-      return new Response(JSON.stringify({ ok: true, note: "no app_user_id" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    let newTier: string | null = null;
-    if (DOWNGRADE_EVENTS.has(eventType)) {
-      newTier = "free";
-    } else if (UPGRADE_EVENTS.has(eventType) && productId) {
-      newTier = PRODUCT_TIER_MAP[productId] ?? null;
-    }
-
-    if (newTier) {
-      const { error } = await admin
-        .from("profiles")
-        .update({ plan_tier: newTier })
-        .eq("user_id", appUserId);
-      if (error) console.error("Failed to update plan_tier:", error);
-    }
-
-    return new Response(JSON.stringify({ ok: true, event_type: eventType, tier: newTier }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("revenuecat-webhook error:", error);
-    // Still return 200 so RevenueCat doesn't retry indefinitely on malformed events
-    return new Response(JSON.stringify({ ok: false, error: (error as Error).message }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+   const reader=req.body?.getReader(); if(!reader) return reply(400,{error:'Missing body'});
+   let size=0; const chunks:Uint8Array[]=[];
+   while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>65536){await reader.cancel();return reply(413,{error:'Body too large'});}chunks.push(value);}
+   const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length;}
+   args=rcEventArgs(JSON.parse(new TextDecoder().decode(bytes))?.event);
+  } catch {return reply(400,{error:'Invalid event'});}
+  try {
+   const {data,error}=await deps.apply(args);
+   if(error) return reply(error.code==='22023'?400:503,{error:'Event not applied'});
+   if(data==='unconfigured') return reply(503,{error:'App/store/environment/product not allowlisted'});
+   if(!['applied','duplicate','stale','ignored'].includes(String(data))) return reply(503,{error:'Unexpected fulfillment result'});
+   return reply(200,{ok:true,outcome:data});
+  } catch {return reply(503,{error:'Fulfillment temporarily unavailable'});}
+ };
+}
+export const handler=createHandler(production);
+if(import.meta.main) serve(handler);

@@ -1,3 +1,4 @@
+import { readBoundedJson, fetchWithDeadline, limitErrorResponse } from "../_shared/request-limits.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { boundedArray, parseToolArguments, safeJsonStringify, truncate } from "../_shared/ai-guardrails.ts";
@@ -90,6 +91,8 @@ function extractStringList(value: unknown, maxItems: number): string[] {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
+
   try {
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     if (!GOOGLE_AI_API_KEY) throw new Error("GOOGLE_AI_API_KEY not configured");
@@ -117,6 +120,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    await readBoundedJson(req, { allowEmpty: true });
 
     // ── Tier check (premium or coach only) ────────────────────────────────
     const { data: profileRow } = await anonClient
@@ -254,7 +259,7 @@ ${cyclesText}`;
     const userPrompt = `Analyze the ${reports.length} audit cycles above and identify my longitudinal behavioral patterns.`;
 
     // ── Call AI ───────────────────────────────────────────────────────────
-    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const aiResponse = await fetchWithDeadline("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
@@ -387,8 +392,7 @@ ${cyclesText}`;
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
-      const errText = await aiResponse.text();
-      console.error("AI gateway error:", aiResponse.status, errText);
+      console.error("AI gateway error:", aiResponse.status);
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
@@ -409,7 +413,9 @@ ${cyclesText}`;
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("pattern-intelligence error:", e);
+    const limited = limitErrorResponse(e, corsHeaders);
+    if (limited) return limited;
+    console.error("pattern-intelligence request failed");
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

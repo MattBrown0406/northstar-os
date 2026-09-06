@@ -1,64 +1,62 @@
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, registerSignOutCleanup, bounded } from "@/contexts/AuthContext";
 
-/**
- * Registers the device for push notifications on native iOS/Android and
- * upserts the resulting token to `push_tokens` for the signed-in user.
- * Safe no-op in the browser / web build.
- */
 export function usePushNotifications() {
   const { user } = useAuth();
-
   useEffect(() => {
-    if (!user) return;
-    if (!Capacitor.isNativePlatform()) return;
-
-    let registrationListener: { remove: () => Promise<void> } | undefined;
-    let errorListener: { remove: () => Promise<void> } | undefined;
-
-    const register = async () => {
+    if (!user || !Capacitor.isNativePlatform()) return;
+    let active = true;
+    const listeners: { remove: () => Promise<void> }[] = [];
+    const writes = new Set<Promise<void>>();
+    const tokens = new Set<string>();
+    const storageKey = `intentus:push-token:${user.id}`;
+    try { const token = localStorage.getItem(storageKey); if (token) tokens.add(token); } catch { /* memory fallback */ }
+    const stopListeners = async () => { await Promise.all(listeners.splice(0).map(l => l.remove())); };
+    const removeCleanup = registerSignOutCleanup(async id => {
+      if (id !== user.id) return;
+      active = false;
+      await setup;
+      await stopListeners();
+      await Promise.all([...writes]);
+      for (const token of tokens) {
+        const { error } = await bounded(supabase.from("push_tokens").delete().eq("user_id", id).eq("token", token));
+        if (error) throw error;
+      }
+      tokens.clear();
+      try { localStorage.removeItem(storageKey); } catch { /* already revoked */ }
+    });
+    const setup = (async () => {
       try {
         const { PushNotifications } = await import("@capacitor/push-notifications");
-
-        const perm = await PushNotifications.checkPermissions();
-        let status = perm.receive;
-        if (status === "prompt" || status === "prompt-with-rationale") {
-          const req = await PushNotifications.requestPermissions();
-          status = req.receive;
-        }
-        if (status !== "granted") return;
-
-        registrationListener = await PushNotifications.addListener("registration", async (token) => {
-          try {
-            const platform = Capacitor.getPlatform(); // 'ios' | 'android' | 'web'
-            await supabase
-              .from("push_tokens")
-              .upsert(
-                { user_id: user.id, token: token.value, platform },
-                { onConflict: "user_id,token" },
-              );
-          } catch (e) {
-            console.error("Failed to save push token:", e);
-          }
+        if (!active) return;
+        let { receive } = await PushNotifications.checkPermissions();
+        if (receive === "prompt" || receive === "prompt-with-rationale") ({ receive } = await PushNotifications.requestPermissions());
+        if (!active || receive !== "granted") return;
+        const listener = await PushNotifications.addListener("registration", token => {
+          if (!active) return;
+          tokens.add(token.value);
+          try { localStorage.setItem(storageKey, token.value); } catch { /* memory fallback */ }
+          const write = (async () => {
+            const { error } = await bounded(supabase.from("push_tokens").upsert({ user_id: user.id, token: token.value, platform: Capacitor.getPlatform() }, { onConflict: "user_id,token" }));
+            if (error) console.error("Push token persistence failed");
+          })().catch(() => { console.error("Push token persistence failed"); });
+          writes.add(write); void write.finally(() => writes.delete(write));
         });
-
-        errorListener = await PushNotifications.addListener("registrationError", (err) => {
-          console.error("Push registration error:", err);
-        });
-
+        if (!active) { await listener.remove(); return; }
+        listeners.push(listener);
+        const errors = await PushNotifications.addListener("registrationError", () => console.error("Push registration failed"));
+        if (!active) { await errors.remove(); return; }
+        listeners.push(errors);
         await PushNotifications.register();
-      } catch (e) {
-        console.error("usePushNotifications error:", e);
-      }
-    };
-
-    register();
-
+      } catch { console.error("Push initialization failed"); }
+    })();
     return () => {
-      registrationListener?.remove().catch(() => undefined);
-      errorListener?.remove().catch(() => undefined);
+      active = false;
+      // Keep cleanup registered until outstanding callbacks settle. The
+      // pre-signout path above is authoritative; this is listener teardown.
+      void setup.then(stopListeners).finally(removeCleanup).catch(() => undefined);
     };
-  }, [user]);
+  }, [user?.id]);
 }

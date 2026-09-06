@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, bounded, safeDestination } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 
 interface Branding {
@@ -25,6 +26,7 @@ const BrandedAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const location = useLocation();
 
   const [branding, setBranding] = useState<Branding | null>(null);
   const [coachName, setCoachName] = useState("");
@@ -66,11 +68,11 @@ const BrandedAuth = () => {
       setCoachName(row.coach_display_name || "");
       setLoadingBranding(false);
     };
-    load();
+    void load().catch(() => { setNotFound(true); setLoadingBranding(false); });
   }, [slug]);
 
 
-  if (user) return <Navigate to="/onboarding" replace />;
+  if (user) return <Navigate to={safeDestination(location.state?.from)} replace />;
 
   if (loadingBranding) {
     return (
@@ -100,63 +102,27 @@ const BrandedAuth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-
-    if (showReset) {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
+    try {
+      if (showReset) {
+        const { error } = await bounded(supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` }));
+        if (error) throw error;
         toast({ title: "Check your email", description: "We sent you a password reset link." });
         setShowReset(false);
-      }
-      return;
-    }
-
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      } else if (isLogin) {
+        const { error } = await bounded(supabase.auth.signInWithPassword({ email, password }));
+        if (error) throw error;
       } else {
-        navigate("/dashboard");
+        const { data, error } = await bounded(supabase.auth.signUp({ email, password, options: {
+          data: { display_name: displayName, coach_slug: slug }, emailRedirectTo: `${window.location.origin}/auth`,
+        } }));
+        if (error) throw error;
+        if (!data.session) toast({ title: "Check your email", description: "Confirm your email, then sign in to finish linking your coach." });
       }
-    } else {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { display_name: displayName, coach_slug: slug },
-          emailRedirectTo: window.location.origin,
-        },
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-      } else {
-        // Link client to coach
-        if (data.user) {
-          try {
-            await supabase.functions.invoke("process-coach-invite", {
-              body: {
-                invite_code: "__branded__",
-                client_user_id: data.user.id,
-                coach_user_id: branding.coach_user_id,
-              },
-            });
-          } catch (e) {
-            console.error("Failed to link to coach:", e);
-          }
-        }
-        toast({
-          title: "Check your email",
-          description: "We sent you a confirmation link. Please verify your email to continue.",
-        });
-      }
-    }
+    } catch (error) {
+      toast({ title: "Authentication failed", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    } finally { setLoading(false); }
   };
 
   return (

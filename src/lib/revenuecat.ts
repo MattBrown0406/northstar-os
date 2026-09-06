@@ -16,25 +16,65 @@ export const REVENUECAT_ENTITLEMENTS = {
 } as const;
 
 let configuredUserId: string | null = null;
-
-export function isNativeRevenueCatAvailable() {
-  return Capacitor.isNativePlatform();
+let sdkConfigured = false;
+let identityEpoch = 0;
+let configurationQueue: Promise<unknown> = Promise.resolve();
+function apiKeyForPlatform() {
+  if (Capacitor.getPlatform() === 'ios') return import.meta.env.VITE_REVENUECAT_IOS_API_KEY;
+  if (Capacitor.getPlatform() === 'android') return import.meta.env.VITE_REVENUECAT_ANDROID_API_KEY;
+  return undefined;
 }
-
-export async function configureRevenueCat(userId: string) {
+export function isNativeRevenueCatAvailable() {
+  return Capacitor.isNativePlatform() && !!apiKeyForPlatform();
+}
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const result = configurationQueue.then(work);
+  configurationQueue = result.catch(() => undefined);
+  return result;
+}
+async function configureIdentity(userId: string) {
   if (!isNativeRevenueCatAvailable()) return false;
   if (configuredUserId === userId) return true;
-
-  const apiKey = import.meta.env.VITE_REVENUECAT_IOS_API_KEY as string | undefined;
-  if (!apiKey) {
-    throw new Error("RevenueCat iOS API key is not configured.");
+  if (sdkConfigured) await Purchases.logIn({ appUserID: userId });
+  else {
+    await Purchases.setLogLevel({ level: import.meta.env.DEV ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO });
+    await Purchases.configure({ apiKey: apiKeyForPlatform()!, appUserID: userId });
+    sdkConfigured = true;
   }
-
-  await Purchases.setLogLevel({ level: import.meta.env.DEV ? LOG_LEVEL.DEBUG : LOG_LEVEL.INFO });
-  await Purchases.configure({ apiKey, appUserID: userId });
   configuredUserId = userId;
   return true;
 }
+export function configureRevenueCat(userId: string): Promise<boolean> {
+  return enqueue(() => configureIdentity(userId));
+}
+export function resetRevenueCatIdentity() {
+  identityEpoch++;
+  return enqueue(async () => {
+    if (sdkConfigured && configuredUserId) {
+      await Purchases.logOut();
+      configuredUserId = null;
+    }
+  });
+}
+// Identity changes cannot interleave with a purchase/restore. Never cancel the
+// store sheet; fence its completion instead, so an accepted receipt is retained.
+export function withRevenueCatIdentity<T>(userId: string, work: () => Promise<T>): Promise<T> {
+  const epoch = identityEpoch;
+  return enqueue(async () => {
+    const before = await supabase.auth.getUser();
+    if (epoch !== identityEpoch || before.data.user?.id !== userId) throw new Error('Account changed');
+    if (!await configureIdentity(userId)) throw new Error('Store unavailable on this platform');
+    const result = await work();
+    const after = await supabase.auth.getUser();
+    if (epoch !== identityEpoch || after.data.user?.id !== userId) throw new Error('Account changed; any completed purchase is awaiting verification on the purchasing account.');
+    return result;
+  });
+}
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (!session || (configuredUserId && session.user.id !== configuredUserId)) {
+    void resetRevenueCatIdentity().catch(() => { /* Future operations still verify identity. */ });
+  }
+});
 
 export function getPlanTierFromCustomerInfo(customerInfo: CustomerInfo): PlanTier | null {
   const active = customerInfo.entitlements.active;
@@ -45,15 +85,16 @@ export function getPlanTierFromCustomerInfo(customerInfo: CustomerInfo): PlanTie
   return null;
 }
 
-export async function syncSupabasePlanTierFromCustomerInfo(userId: string, customerInfo: CustomerInfo) {
-  const planTier = getPlanTierFromCustomerInfo(customerInfo);
-  if (!planTier) return null;
-
-  const { error } = await supabase
+export async function syncSupabasePlanTierFromCustomerInfo(userId: string, _customerInfo: CustomerInfo) {
+  // Only the verified billing webhook may grant access. Client SDK state is not authority.
+  const { data, error } = await supabase
     .from("profiles")
-    .update({ plan_tier: planTier })
-    .eq("user_id", userId);
-
+    .select("plan_tier")
+    .eq("user_id", userId)
+    .single();
   if (error) throw error;
-  return planTier;
+  const tier = data?.plan_tier;
+  if (tier === "coach" || tier === "premium" || tier === "exec") return tier;
+  if (tier === "pro") return "exec";
+  return null;
 }

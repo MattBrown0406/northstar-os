@@ -1,122 +1,36 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const PLAN_CONFIG: Record<string, { amountCents: number; name: string; description: string }> = {
-  coach_monthly: {
-    amountCents: 29999,
-    name: "Intentus Coach — Monthly",
-    description: "Intentus Coach — Monthly ($299.99/mo)",
-  },
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { squareConfig, squareRequest, validCatalog, recurringCheckout } from '../_shared/square.ts';
+const headers = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Content-Type': 'application/json' };
+serve(async req => {
+  const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers });
+  if (req.method === 'OPTIONS') return reply(null);
+  if (req.method !== 'POST') return reply(null,405);
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const body = await req.json().catch(() => ({}));
-    const plan: string = body?.plan ?? "coach_monthly";
-    const config = PLAN_CONFIG[plan];
-    if (!config) {
-      return new Response(JSON.stringify({ error: "Invalid plan" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const squareToken = Deno.env.get("SQUARE_ACCESS_TOKEN");
-    if (!squareToken) {
-      return new Response(JSON.stringify({ error: "Square not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const idempotencyKey = crypto.randomUUID();
-    const squareBody = {
-      idempotency_key: idempotencyKey,
-      quick_pay: {
-        name: config.name,
-        price_money: { amount: config.amountCents, currency: "USD" },
-        location_id: Deno.env.get("SQUARE_LOCATION_ID") ?? undefined,
-      },
-      description: config.description,
-      checkout_options: {
-        redirect_url: "https://intentus.app/subscribe?payment=success",
-        ask_for_shipping_address: false,
-        merchant_support_email: "support@intentus.app",
-      },
-      pre_populated_data: {
-        buyer_email: user.email ?? undefined,
-      },
-    };
-
-    // Omit location_id if missing — Square will use default location
-    if (!squareBody.quick_pay.location_id) delete (squareBody.quick_pay as Record<string, unknown>).location_id;
-
-    const squareRes = await fetch("https://connect.squareup.com/v2/online-checkout/payment-links", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${squareToken}`,
-        "Content-Type": "application/json",
-        "Square-Version": "2024-10-17",
-      },
-      body: JSON.stringify(squareBody),
-    });
-
-    const squareData = await squareRes.json();
-    if (!squareRes.ok) {
-      console.error("Square checkout error:", squareData);
-      return new Response(JSON.stringify({ error: "Square checkout failed", details: squareData }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const checkoutUrl: string | undefined = squareData?.payment_link?.url;
-    if (!checkoutUrl) {
-      return new Response(JSON.stringify({ error: "Square did not return a checkout URL" }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ checkout_url: checkoutUrl }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("create-square-checkout error:", error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+    const auth = req.headers.get('Authorization');
+    if (!auth?.startsWith('Bearer ')) return reply({error:'Unauthorized'},401);
+    const client = createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_ANON_KEY')!,{global:{headers:{Authorization:auth}}});
+    const {data:{user},error} = await client.auth.getUser();
+    if (error || !user) return reply({error:'Unauthorized'},401);
+    if ((await req.json()).plan !== 'coach_monthly') return reply({error:'Unsupported plan'},400);
+    const c = squareConfig(k => Deno.env.get(k));
+    const [catalog,location] = await Promise.all([squareRequest(c,`/catalog/object/${encodeURIComponent(c.variation)}`),squareRequest(c,`/locations/${encodeURIComponent(c.location)}`)]);
+    if (!validCatalog(c,catalog.object,location.location)) return reply({error:'Square recurring catalog configuration invalid'},503);
+    const admin = createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const key = `${c.merchant}:${c.location}:${c.variation}:${user.id}`;
+    const digest = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));
+    const id = Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,40);
+    const {error:insertError} = await admin.from('square_checkouts').upsert({id,user_id:user.id,merchant_id:c.merchant,location_id:c.location,variation_id:c.variation},{onConflict:'id',ignoreDuplicates:true});
+    if (insertError) throw insertError;
+    const {data:binding,error:readError} = await admin.from('square_checkouts').select('*').eq('id',id).single();
+    if (readError) throw readError;
+    if (binding.subscription_id) return reply({error:'An existing subscription must be managed before starting another'},409);
+    if (binding.checkout_url) return reply({checkout_url:binding.checkout_url});
+    const result = await squareRequest(c,'/online-checkout/payment-links',recurringCheckout(c,id));
+    const link = result.payment_link;
+    if (!link?.order_id || !link?.url || !link?.id || new URL(link.url).protocol !== 'https:') throw new Error('Invalid Square payment link');
+    const {data:saved,error:saveError} = await admin.from('square_checkouts').update({order_id:link.order_id,checkout_url:link.url,payment_link_id:link.id}).eq('id',id).select('order_id').single();
+    if (saveError || saved?.order_id !== link.order_id) throw new Error('Checkout binding not persisted');
+    return reply({checkout_url:link.url});
+  } catch { return reply({error:'Recurring checkout temporarily unavailable; configuration and database must be verified'},503); }
 });

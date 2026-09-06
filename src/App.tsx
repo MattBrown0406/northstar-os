@@ -7,35 +7,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import { loadRoute } from "@/routing/loadRoute";
 import NativeBindings from "@/components/NativeBindings";
 
 type RouteComponent = ComponentType<Record<string, never>>;
 
 const lazyWithRecovery = (importPage: () => Promise<{ default: RouteComponent }>, key: string) =>
-  lazy(async () => {
-    try {
-      const module = await importPage();
-
-      if (typeof window !== "undefined") {
-        window.sessionStorage.removeItem(`route-retry:${key}`);
-      }
-
-      return module;
-    } catch (error) {
-      if (typeof window !== "undefined") {
-        const storageKey = `route-retry:${key}`;
-        const hasRetried = window.sessionStorage.getItem(storageKey) === "true";
-
-        if (!hasRetried) {
-          window.sessionStorage.setItem(storageKey, "true");
-          window.location.reload();
-          return new Promise<never>(() => undefined);
-        }
-      }
-
-      throw error;
-    }
-  });
+  lazy(() => loadRoute(importPage, key));
 
 const Index = lazyWithRecovery(() => import("./pages/Index"), "Index");
 const Auth = lazyWithRecovery(() => import("./pages/Auth"), "Auth");

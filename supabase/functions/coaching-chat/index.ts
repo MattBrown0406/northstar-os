@@ -1,8 +1,10 @@
+import { readBoundedJson, validateAiInput, fetchWithDeadline, limitErrorResponse } from "../_shared/request-limits.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
 import { COACHING_SAFETY_BOUNDARY, boundedArray, safeJsonStringify, truncate } from "../_shared/ai-guardrails.ts";
 import { buildTierPolicyPrompt, canUseAiChat, canUseAiDebrief, normalizePlanTier } from "../_shared/tier-policy.ts";
+import { chatMode } from "../_shared/payment-security.ts";
 import { buildPronounDirective } from "../_shared/pronouns.ts";
 
 const corsHeaders = {
@@ -38,12 +40,14 @@ function getPlanPhases(plan: NinetyDayPlan) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
+
   try {
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     if (!GOOGLE_AI_API_KEY) throw new Error("GOOGLE_AI_API_KEY not configured");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -62,7 +66,13 @@ serve(async (req) => {
       });
     }
 
-    const { messages, mode } = await req.json();
+    const requestBody = await readBoundedJson(req);
+    validateAiInput("coaching-chat", requestBody);
+    const { messages, mode: requestedMode } = requestBody;
+    const mode = chatMode(requestedMode);
+    if (!mode) return new Response(JSON.stringify({ error: "Invalid mode" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
     // mode: "check-in-debrief" or "chat"
 
     // Gather user context
@@ -343,7 +353,7 @@ Keep responses focused and conversational. Do not lecture. Do not be permissive.
       aiMessages.push({ role: "user", content: "I just completed my check-in. Give me your coaching debrief." });
     }
 
-    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const aiResponse = await fetchWithDeadline("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
@@ -368,8 +378,7 @@ Keep responses focused and conversational. Do not lecture. Do not be permissive.
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await aiResponse.text();
-      console.error("AI gateway error:", aiResponse.status, t);
+      console.error("AI gateway error:", aiResponse.status);
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
@@ -377,7 +386,9 @@ Keep responses focused and conversational. Do not lecture. Do not be permissive.
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
-    console.error("coaching-chat error:", e);
+    const limited = limitErrorResponse(e, corsHeaders);
+    if (limited) return limited;
+    console.error("coaching-chat request failed");
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

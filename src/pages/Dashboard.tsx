@@ -67,13 +67,9 @@ const OneThingStreak = ({ history }: { history: WeeklyCommitment[] }) => {
   };
   useEffect(() => {
     // Confetti when 3+ consecutive "yes" outcomes (most recent runs)
-    let consecutiveYes = 0;
-    for (let i = history.length - 1; i >= 0; i--) {
-      const o = history[i].outcome;
-      if (o === null && i === history.length - 1) continue;
-      if (o === "yes") consecutiveYes += 1;
-      else break;
-    }
+    const consecutiveYes = computeFollowThroughStreak(history.map(c => ({
+      ...c, outcome: c.outcome === 'partially' ? 'no' : c.outcome,
+    })));
     if (consecutiveYes >= 3) {
       const key = `intentus_streak_confetti_${history[history.length - 1]?.week_start}`;
       if (typeof window !== "undefined" && !window.sessionStorage.getItem(key)) {
@@ -354,7 +350,7 @@ const Dashboard = () => {
                 <Shield className="h-4 w-4 mr-1" /> Admin
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => { void signOut().catch(() => toast({ title: "Sign out failed", description: "You are still signed in. Please try again.", variant: "destructive" })); }}><LogOut className="h-4 w-4" /></Button>
           </div>
 
           {/* Mobile nav */}
@@ -431,7 +427,7 @@ const Dashboard = () => {
                     )}
                   </nav>
                   <div className="mt-auto border-t border-border px-4 py-4">
-                    <Button variant="ghost" className="w-full justify-start text-destructive" onClick={signOut}>
+                    <Button variant="ghost" className="w-full justify-start text-destructive" onClick={() => { void signOut().catch(() => toast({ title: "Sign out failed", description: "You are still signed in. Please try again.", variant: "destructive" })); }}>
                       <LogOut className="h-4 w-4 mr-2" /> Sign out
                     </Button>
                   </div>

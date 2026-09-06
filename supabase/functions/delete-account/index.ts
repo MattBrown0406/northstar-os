@@ -1,13 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import {
+  AccountDeletionError,
+  deleteAccountWithAssets,
+} from "../_shared/delete-assets.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -31,7 +38,8 @@ serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    const { data: { user }, error: authError } = await userClient.auth
+      .getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -41,59 +49,32 @@ serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    // Tables keyed by user_id — delete in a loop with error handling so we don't
-    // end up with a partially-deleted account that's hard to recover from.
-    const tables = [
-      "coach_clients",
-      "coach_invite_links",
-      "coach_annotations",
-      "coaching_messages",
-      "check_ins",
-      "weekly_commitments",
-      "commitment_callbacks",
-      "plan_action_completions",
-      "north_star_goals",
-      "baseline_audits",
-      "strategic_reports",
-      "audit_history",
-    ];
-
-    // coach_clients references the user via two columns — handle separately.
-    {
-      const { error } = await admin
-        .from("coach_clients")
-        .delete()
-        .or(`coach_user_id.eq.${user.id},client_user_id.eq.${user.id}`);
-      if (error) throw new Error(`Failed to delete from coach_clients: ${error.message}`);
-    }
-
-    for (const table of tables.filter((t) => t !== "coach_clients")) {
-      const column = table === "coach_invite_links" ? "coach_user_id" : "user_id";
-      const { error } = await admin.from(table).delete().eq(column, user.id);
-      if (error) throw new Error(`Failed to delete from ${table}: ${error.message}`);
-    }
-
-    {
-      const { error } = await admin.from("coach_branding").delete().eq("coach_user_id", user.id);
-      if (error) throw new Error(`Failed to delete from coach_branding: ${error.message}`);
-    }
-    {
-      const { error } = await admin.from("profiles").delete().eq("user_id", user.id);
-      if (error) throw new Error(`Failed to delete from profiles: ${error.message}`);
-    }
-
-    const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
-    if (deleteError) throw deleteError;
-
+    // Nontransactional Storage first; only Auth/public cleanup can roll back.
+    // Concurrent uploads remain possible until a durable job + write fence exists.
+    await deleteAccountWithAssets(
+      admin.storage.from("coach-assets"),
+      user.id,
+      (id, softDelete) => admin.auth.admin.deleteUser(id, softDelete),
+    );
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("delete-account error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: error instanceof AccountDeletionError
+          ? error.message
+          : "Account deletion failed",
+        ...(error instanceof AccountDeletionError
+          ? { phase: error.phase, retryable: true }
+          : {}),
+      }),
+      {
+        status: error instanceof AccountDeletionError ? 503 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 });

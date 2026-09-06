@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Purchases } from "@revenuecat/purchases-capacitor";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, bounded, cleanupBeforeSignOut } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,6 +74,15 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const owner = useRef(user?.id);
+  owner.current = user?.id;
+  useEffect(() => {
+    owner.current = user?.id;
+    return () => { owner.current = undefined; };
+  }, [user?.id]);
+  const [hydrated, setHydrated] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -87,13 +96,17 @@ const Settings = () => {
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
+    setLoading(true); setHydrated(null); setLoadError(false); setConfirmDelete(false);
     const load = async () => {
-      const { data, error } = await supabase
+      try {
+      const { data, error } = await bounded(supabase
         .from("profiles")
         .select("display_name, coaching_tone, check_in_cadence, timezone, gender")
         .eq("user_id", user.id)
-        .single();
-
+        .single());
+      if (!active) return;
+      if (error || !data) throw error || new Error("Missing profile");
       if (!error && data) {
         const profile = data as ProfileData;
         setDisplayName(profile.display_name ?? "");
@@ -102,13 +115,17 @@ const Settings = () => {
         setTimezone(profile.timezone ?? "America/New_York");
         setGender(profile.gender ?? "prefer_not_to_say");
       }
-      setLoading(false);
+      setHydrated(user.id);
+      } catch { if (active) setLoadError(true); }
+      finally { if (active) setLoading(false); }
     };
-    load();
-  }, [user]);
+    void load();
+    return () => { active = false; };
+  }, [user?.id, retry]);
 
   useEffect(() => {
-    if (!user || loading) return;
+    if (!user || loading || hydrated !== user.id) return;
+    let active = true;
     const checkReminder = async () => {
       const { data: lastCheckin } = await supabase
         .from('check_ins')
@@ -117,7 +134,7 @@ const Settings = () => {
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-      if (!lastCheckin) return;
+      if (!active || !lastCheckin) return;
       const lastDate = new Date(lastCheckin.created_at);
       const now = new Date();
       const daysDiff = Math.floor((now.getTime() - lastDate.getTime()) / 86400000);
@@ -129,13 +146,16 @@ const Settings = () => {
         });
       }
     };
-    checkReminder();
+    void checkReminder().catch(() => undefined);
+    return () => { active = false; };
   }, [user, loading, cadence, toast]);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || hydrated !== user.id || saving || deleting) return;
+    const id = user.id;
     setSaving(true);
-    const { error } = await supabase
+    try {
+    const { error } = await bounded(supabase
       .from("profiles")
       .update({
         display_name: displayName.trim() || null,
@@ -144,7 +164,8 @@ const Settings = () => {
         timezone,
         gender,
       })
-      .eq("user_id", user.id);
+      .eq("user_id", user.id));
+    if (owner.current !== id) return;
 
     setSaving(false);
 
@@ -153,6 +174,8 @@ const Settings = () => {
     } else {
       toast({ title: "Settings saved", description: "Your profile has been updated." });
     }
+    } catch (error) { if (owner.current === id) toast({ title: "Error saving settings", description: error instanceof Error ? error.message : "Please retry.", variant: "destructive" }); }
+    finally { if (owner.current === id) setSaving(false); }
   };
 
   const handleManageSubscription = async () => {
@@ -172,23 +195,30 @@ const Settings = () => {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user || !confirmDelete) return;
+    if (!user || hydrated !== user.id || !confirmDelete || deleting || saving) return;
+    const id = user.id;
     setDeleting(true);
     try {
-      const { error } = await supabase.functions.invoke("delete-account", { body: {} });
-      if (error) throw error;
+      await cleanupBeforeSignOut(id);
+      if (owner.current !== id) return;
+      const { data, error } = await bounded(supabase.functions.invoke("delete-account", { body: {} }));
+      if (owner.current !== id) return;
+      if (error || data?.error) throw error || new Error(data.error);
       await signOut();
       toast({ title: "Account deleted", description: "Your Intentus account has been deleted." });
       navigate("/", { replace: true });
     } catch (error) {
+      if (owner.current !== id) return;
       const message = error instanceof Error ? error.message : "We could not delete your account. Please try again.";
       toast({ title: "Account deletion failed", description: message, variant: "destructive" });
     } finally {
-      setDeleting(false);
+      if (owner.current === id) setDeleting(false);
     }
   };
 
-  if (loading) {
+  if (loadError) return <div role="alert">Unable to load settings. <Button onClick={() => setRetry(n => n + 1)}>Retry</Button></div>;
+
+  if (loading || hydrated !== user?.id) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

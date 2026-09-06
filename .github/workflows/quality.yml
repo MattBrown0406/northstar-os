@@ -1,0 +1,31 @@
+name: Intentus quality
+on:
+  pull_request:
+  push:
+    branches: [main, fix/intentus-audit]
+permissions:
+  contents: read
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-fund
+      - run: npm run lint
+      - run: npx --no-install tsc --noEmit -p tsconfig.app.json
+      - run: npm test
+      - run: npm run build
+      - run: npm audit
+  edge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm exec --yes --package=deno@2.9.6 -- deno check --no-lock supabase/functions/*/index.ts supabase/functions/_shared/*.ts
+      - run: npm exec --yes --package=deno@2.9.6 -- deno test --no-lock --allow-env --allow-read supabase/tests/*_test.ts

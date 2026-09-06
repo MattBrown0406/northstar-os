@@ -6,6 +6,8 @@ import { Menu, X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
+  SheetDescription,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
@@ -69,6 +71,8 @@ const Navbar = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-72 bg-background p-0">
+              <SheetTitle className="sr-only">Intentus navigation</SheetTitle>
+              <SheetDescription className="sr-only">Explore Intentus, get support, or sign in to your account.</SheetDescription>
               <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">

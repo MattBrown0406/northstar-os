@@ -1,3 +1,4 @@
+import { readBoundedJson, validateAiInput, fetchWithDeadline, limitErrorResponse } from "../_shared/request-limits.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentModelInstructions, buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
@@ -90,9 +91,13 @@ function sanitizeStrategicReport(input: Record<string, unknown>) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
+
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
+    if (!authHeader?.startsWith("Bearer ")) return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -104,9 +109,13 @@ serve(async (req) => {
       supabaseUrl,
       Deno.env.get("SUPABASE_ANON_KEY")!,
     ).auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
-    const { audit_id } = await req.json();
+    const requestBody = await readBoundedJson(req);
+    validateAiInput("generate-report", requestBody);
+    const { audit_id } = requestBody;
     if (!audit_id) throw new Error("audit_id is required");
 
     // Get audit data
@@ -212,7 +221,7 @@ ${intentModelInstructions}`;
 
     const userPrompt = `Here are the baseline audit responses:\n${auditSummary}\n\nGenerate the strategic report.`;
 
-    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const aiResponse = await fetchWithDeadline("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
@@ -374,7 +383,9 @@ ${intentModelInstructions}`;
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("generate-report error:", e);
+    const limited = limitErrorResponse(e, corsHeaders);
+    if (limited) return limited;
+    console.error("generate-report request failed");
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

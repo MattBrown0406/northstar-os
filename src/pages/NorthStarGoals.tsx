@@ -184,7 +184,7 @@ const NorthStarGoals = () => {
     setForm(emptyForm());
   };
 
-  const GoalFormFields = ({ horizon }: { horizon: Horizon }) => (
+  const renderGoalFormFields = (horizon: Horizon) => (
     <div className="space-y-3">
       <Input
         placeholder="Goal title (required)"
@@ -346,7 +346,7 @@ const NorthStarGoals = () => {
                   <Card key={goal.id} className="bg-card border-border">
                     {editingId === goal.id ? (
                       <CardContent className="pt-5">
-                        <GoalFormFields horizon={horizon} />
+                        {renderGoalFormFields(horizon)}
                       </CardContent>
                     ) : (
                       <>
@@ -429,7 +429,7 @@ const NorthStarGoals = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <GoalFormFields horizon={horizon} />
+                      {renderGoalFormFields(horizon)}
                     </CardContent>
                   </Card>
                 )}

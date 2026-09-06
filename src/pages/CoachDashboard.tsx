@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CoachBrandingSettings from "@/components/coach/CoachBrandingSettings";
 import { CoachSessionPrep } from '@/components/coach/CoachSessionPrep';
 import { useNavigate } from "react-router-dom";
@@ -63,21 +63,35 @@ const CoachDashboard = () => {
   const [newLinkTier, setNewLinkTier] = useState("free");
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
 
+  const scope = useRef(0);
+  const currentUser = useRef(user?.id);
+  currentUser.current = user?.id;
+  const pending = useRef(false);
+  const [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (!user) return;
-    loadData();
+    scope.current++;
+    pending.current = false; setBusy(false);
+    setClients([]); setInviteLinks([]); setProfile(null); setLoading(!!user);
+    if (user) void loadData();
+    return () => { scope.current++; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]);
 
   const loadData = useCallback(async () => {
     if (!user) return;
 
+    const generation = ++scope.current;
+    const owner = user.id;
+    const live = () => generation === scope.current && currentUser.current === owner;
+    try {
     const [profileRes, clientsRes, linksRes] = await Promise.all([
       supabase.from("profiles").select("display_name").eq("user_id", user.id).single(),
       supabase.from("coach_clients").select("*").eq("coach_user_id", user.id),
       supabase.from("coach_invite_links").select("*").eq("coach_user_id", user.id).order("created_at", { ascending: false }),
     ]);
 
+    if (!live()) return;
+    for (const result of [profileRes, clientsRes, linksRes]) if (result.error) throw result.error;
     if (profileRes.data) setProfile(profileRes.data as any);
     if (linksRes.data) setInviteLinks(linksRes.data as any);
 
@@ -91,6 +105,8 @@ const CoachDashboard = () => {
         supabase.from("check_ins").select("user_id, created_at").in("user_id", clientIds).order("created_at", { ascending: false }),
       ]);
 
+      if (!live()) return;
+      for (const result of [profilesRes, auditsRes, reportsRes, checkInsRes]) if (result.error) throw result.error;
       const enriched: Client[] = clientsRes.data.map((c: any) => {
         const prof = profilesRes.data?.find((p: any) => p.user_id === c.client_user_id);
         const audit = auditsRes.data?.find((a: any) => a.user_id === c.client_user_id);
@@ -112,45 +128,38 @@ const CoachDashboard = () => {
       setClients([]);
     }
 
-    setLoading(false);
-  }, [user]);
+    } catch (error) {
+      if (live()) toast({ title: "Unable to load coach dashboard", description: (error as { message?: string }).message || "Please retry", variant: "destructive" });
+    } finally { if (live()) setLoading(false); }
+  }, [user, toast]);
 
-  const createInviteLink = async () => {
-    if (!user) return;
-    const { error } = await supabase.from("coach_invite_links").insert({
-      coach_user_id: user.id,
-      assigned_tier: newLinkTier,
-      label: newLinkLabel || null,
-    } as any);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Invite link created" });
-      setNewLinkLabel("");
-      loadData();
+  const runAction = async (action: () => PromiseLike<{ error?: { message: string } | null } | void>, title: string, refresh = true) => {
+    if (!user || pending.current) return;
+    const generation = scope.current;
+    const owner = user.id;
+    const live = () => generation === scope.current && currentUser.current === owner;
+    pending.current = true; setBusy(true);
+    try {
+      const result = await action();
+      if (result && result.error) throw result.error;
+      if (!live()) return;
+      toast({ title });
+      if (title === "Invite link created") setNewLinkLabel("");
+      if (refresh) void loadData();
+    } catch (error) {
+      if (live()) toast({ title: "Action failed", description: (error as { message?: string }).message || "Please retry", variant: "destructive" });
+    } finally {
+      if (currentUser.current === owner) { pending.current = false; setBusy(false); }
     }
   };
-
-  const copyLink = (code: string) => {
-    const url = `${window.location.origin}/auth?invite=${code}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: "Copied!", description: "Invite link copied to clipboard" });
-  };
-
-  const deleteLink = async (id: string) => {
-    await supabase.from("coach_invite_links").delete().eq("id", id);
-    loadData();
-  };
-
-  const updateClientTier = async (clientId: string, clientUserId: string, tier: string) => {
-    await Promise.all([
-      supabase.from("coach_clients").update({ assigned_tier: tier } as any).eq("id", clientId),
-      supabase.from("profiles").update({ plan_tier: tier } as any).eq("user_id", clientUserId),
-    ]);
-    toast({ title: "Tier updated" });
-    loadData();
-  };
+  // Narrow RPCs derive ownership in PostgreSQL, not from browser identity arguments.
+  const coachRpc = supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }>;
+  const createInviteLink = () => runAction(() => coachRpc("coach_create_invite", { p_tier: newLinkTier, p_label: newLinkLabel || null }), "Invite link created");
+  const deleteLink = (id: string) => runAction(() => coachRpc("coach_delete_invite", { p_link_id: id }), "Invite link deleted");
+  const updateClientTier = (id: string, tier: string) => runAction(() => coachRpc("coach_update_client_tier", { p_relationship_id: id, p_tier: tier }), "Tier updated");
+  const copyLink = (code: string) => runAction(async () => {
+    await navigator.clipboard.writeText(`${window.location.origin}/auth?invite=${encodeURIComponent(code)}`);
+  }, "Invite link copied to clipboard", false);
 
   const tierDistribution = [
     { name: "Free", value: clients.filter((client) => client.assigned_tier === "free").length },
@@ -189,7 +198,7 @@ const CoachDashboard = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="px-2 sm:px-3">
               <ArrowLeft className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">My Dashboard</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={signOut}><LogOut className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => { void signOut().catch(() => toast({ title: "Sign out failed", description: "You are still signed in. Please try again.", variant: "destructive" })); }}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
       </nav>
@@ -343,7 +352,7 @@ const CoachDashboard = () => {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={createInviteLink} variant="hero" size="sm">
+                  <Button disabled={busy} onClick={createInviteLink} variant="hero" size="sm">
                     <Plus className="h-4 w-4 mr-1" /> Create Link
                   </Button>
                 </div>
@@ -361,10 +370,10 @@ const CoachDashboard = () => {
                         <span className={`text-xs px-2 py-0.5 rounded-full ${link.is_active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                           {link.is_active ? "Active" : "Inactive"}
                         </span>
-                        <Button variant="ghost" size="icon" onClick={() => copyLink(link.invite_code)}>
+                        <Button variant="ghost" size="icon" disabled={busy} aria-label="Copy invite link" onClick={() => copyLink(link.invite_code)}>
                           <Copy className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => deleteLink(link.id)}>
+                        <Button variant="ghost" size="icon" disabled={busy} aria-label="Delete invite link" onClick={() => deleteLink(link.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -410,7 +419,7 @@ const CoachDashboard = () => {
                     <div className="flex items-center gap-2">
                       <Select
                         value={client.assigned_tier}
-                        onValueChange={(tier) => updateClientTier(client.id, client.client_user_id, tier)}
+                        onValueChange={(tier) => updateClientTier(client.id, tier)}
                       >
                         <SelectTrigger className="w-28 h-8 text-xs">
                           <SelectValue />

@@ -1,131 +1,77 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-square-hmacsha256-signature",
-};
-
-async function verifySquareSignature(
-  signatureKey: string,
-  notificationUrl: string,
-  rawBody: string,
-  providedSignature: string,
-): Promise<boolean> {
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { verifySquareSignature } from '../_shared/payment-security.ts';
+import { squareConfig, squareRequest, paidSubscription, moneyMatches } from '../_shared/square.ts';
+serve(async (req: Request) => {
+  const reply = (status: number, outcome: string) => new Response(JSON.stringify({outcome}),{status,headers:{'Content-Type':'application/json'}});
+  if (req.method !== 'POST') return reply(405,'method');
   try {
-    const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(signatureKey),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-    const sig = await crypto.subtle.sign("HMAC", key, enc.encode(notificationUrl + rawBody));
-    const computed = btoa(String.fromCharCode(...new Uint8Array(sig)));
-    return computed === providedSignature;
-  } catch (e) {
-    console.error("Signature verification error:", e);
-    return false;
-  }
-}
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const rawBody = await req.text();
-
-  try {
-    const intentusKey = Deno.env.get("SQUARE_INTENTUS_WEBHOOK_SIGNATURE_KEY");
-    const fallbackKey = Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY");
-    const providedSignature = req.headers.get("x-square-hmacsha256-signature");
-    const notificationUrl = `${Deno.env.get("SUPABASE_URL")!.replace(/\/$/, "")}/functions/v1/square-webhook`;
-
-    if ((!intentusKey && !fallbackKey) || !providedSignature) {
-      return new Response(JSON.stringify({ error: "Missing signature" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    let valid = false;
-    if (intentusKey) {
-      valid = await verifySquareSignature(intentusKey, notificationUrl, rawBody, providedSignature);
-    }
-    if (!valid && fallbackKey && fallbackKey !== intentusKey) {
-      valid = await verifySquareSignature(fallbackKey, notificationUrl, rawBody, providedSignature);
-    }
-    if (!valid) {
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const admin = createClient(supabaseUrl, serviceRoleKey);
-
-    const payload = JSON.parse(rawBody);
-    const eventType: string = payload?.type ?? "unknown";
-    const data = payload?.data?.object ?? {};
-
-    // Find buyer email from payload (varies by event type)
-    const buyerEmail: string | undefined =
-      data?.payment?.buyer_email_address ??
-      data?.order?.buyer_email_address ??
-      data?.subscription?.buyer_email_address ??
-      payload?.data?.object?.buyer_email_address;
-
-    // Log raw event
-    await admin.from("revenuecat_events").insert({
-      event_type: eventType,
-      app_user_id: buyerEmail ?? "unknown",
-      product_id: data?.payment?.id ?? data?.subscription?.id ?? null,
-      raw_payload: payload,
-      source: "web",
-    });
-
-    // Determine plan_tier change
-    let newTier: string | null = null;
-    if (eventType === "payment.completed" || eventType === "payment.updated") {
-      const status = data?.payment?.status;
-      if (status === "COMPLETED" || status === "APPROVED") newTier = "coach";
-    } else if (eventType === "subscription.updated") {
-      const status = data?.subscription?.status;
-      if (status === "CANCELED" || status === "DEACTIVATED") newTier = "free";
-    }
-
-    if (newTier && buyerEmail) {
-      // Look up user by email via auth.admin
-      const { data: usersData, error: listError } = await admin.auth.admin.listUsers();
-      if (listError) {
-        console.error("Failed to list users:", listError);
-      } else {
-        const matched = usersData?.users?.find((u) => u.email?.toLowerCase() === buyerEmail.toLowerCase());
-        if (matched) {
-          const { error } = await admin
-            .from("profiles")
-            .update({ plan_tier: newTier })
-            .eq("user_id", matched.id);
-          if (error) console.error("Failed to update plan_tier:", error);
-        } else {
-          console.warn(`square-webhook: no user found for email ${buyerEmail}`);
-        }
+    const raw = await req.text();
+    const key = Deno.env.get('SQUARE_INTENTUS_WEBHOOK_SIGNATURE_KEY');
+    const url = Deno.env.get('SQUARE_WEBHOOK_NOTIFICATION_URL');
+    if (!key || !url) return reply(503,'unconfigured');
+    if (!await verifySquareSignature(key,url,raw,req.headers.get('x-square-hmacsha256-signature') ?? '')) return reply(401,'signature');
+    const event = JSON.parse(raw), c = squareConfig(k=>Deno.env.get(k));
+    if (event.merchant_id !== c.merchant) return reply(200,'unrelated merchant');
+    if (!event.event_id || !Number.isFinite(Date.parse(event.created_at))) return reply(400,'invalid event');
+    const admin = createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    let sub: any, binding: any;
+    const lookup = async (column: string,id: string) => {
+      const {data,error} = await admin.from('square_checkouts').select('*').eq(column,id).maybeSingle();
+      if (error) throw error;
+      return data;
+    };
+    const object = event.data?.object;
+    if (event.type === 'payment.created' || event.type === 'payment.updated') {
+      const p = (await squareRequest(c,`/payments/${encodeURIComponent(object?.payment?.id)}`)).payment;
+      if (!p?.order_id) return reply(200,'unrelated');
+      binding = await lookup('order_id',p.order_id);
+      if (!binding) return reply(200,'unrelated');
+      if (binding.subscription_id) sub = (await squareRequest(c,`/subscriptions/${encodeURIComponent(binding.subscription_id)}`)).subscription;
+      else {
+        if (p.status !== 'COMPLETED' || p.location_id !== c.location || !moneyMatches(p.amount_money) || !p.customer_id || p.refunded_money?.amount > 0) return reply(200,'unpaid');
+        const order = (await squareRequest(c,`/orders/${encodeURIComponent(p.order_id)}`)).order;
+        if (order.customer_id !== p.customer_id || order.location_id !== c.location || !moneyMatches(order.total_money)) throw new Error('Order mismatch');
+        const result = await squareRequest(c,'/subscriptions/search',{query:{filter:{customer_ids:[p.customer_id],location_ids:[c.location]}}});
+        const candidates = (result.subscriptions ?? []).filter((s:any)=>s.plan_variation_id === c.variation);
+        // Never guess between subscriptions or accept incomplete pagination.
+        if (result.cursor || candidates.length !== 1) return reply(503,'subscription binding unresolved');
+        sub = candidates[0];
+        if (Date.parse(sub.created_at) < Date.parse(binding.created_at) - 60000) throw new Error('Preexisting subscription');
       }
+    } else if (event.type?.startsWith('subscription.')) {
+      const id = object?.subscription?.id;
+      if (!id) return reply(400,'missing subscription');
+      binding = await lookup('subscription_id',id);
+      if (!binding) return reply(503,'subscription binding pending');
+      sub = (await squareRequest(c,`/subscriptions/${encodeURIComponent(id)}`)).subscription;
+    } else if (event.type?.startsWith('invoice.')) {
+      const invoice = (await squareRequest(c,`/invoices/${encodeURIComponent(object?.invoice?.id)}`)).invoice;
+      if (!invoice?.subscription_id) return reply(200,'unrelated');
+      binding = await lookup('subscription_id',invoice.subscription_id);
+      if (!binding) return reply(503,'subscription binding pending');
+      sub = (await squareRequest(c,`/subscriptions/${encodeURIComponent(invoice.subscription_id)}`)).subscription;
+    } else if (event.type?.startsWith('refund.') || event.type?.startsWith('dispute.')) {
+      // Never acknowledge financial reversals until their payment-to-subscription
+      // reconciliation has been implemented and applied. Provider retries retain them.
+      return reply(503,'financial reversal requires reconciliation');
+    } else return reply(200,'ignored');
+    if (!binding || binding.merchant_id !== c.merchant || binding.location_id !== c.location || binding.variation_id !== c.variation || sub?.plan_variation_id !== c.variation || sub.location_id !== c.location) throw new Error('Binding mismatch');
+    let active = false;
+    let expires: string | null = null;
+    if (sub.invoice_ids?.length) {
+      const invoice = (await squareRequest(c,`/invoices/${encodeURIComponent(sub.invoice_ids[0])}`)).invoice;
+      const order = (await squareRequest(c,`/orders/${encodeURIComponent(invoice.order_id)}`)).order;
+      const tenders = order?.tenders ?? [];
+      if (tenders.length === 1 && tenders[0].payment_id) {
+        const payment = (await squareRequest(c,`/payments/${encodeURIComponent(tenders[0].payment_id)}`)).payment;
+        active = paidSubscription(c,sub,invoice,order,payment);
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(sub.charged_through_date ?? '')) expires = new Date(Date.parse(sub.charged_through_date+'T00:00:00Z')+86400000).toISOString();
+      active = active && !!expires && Date.parse(expires) > Date.now();
     }
-
-    return new Response(JSON.stringify({ ok: true, event_type: eventType, tier: newTier }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("square-webhook error:", error);
-    return new Response(JSON.stringify({ ok: false, error: (error as Error).message }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+    const {data,error} = await admin.rpc('square_apply_state',{p_checkout_id:binding.id,p_subscription_id:sub.id,p_event_id:event.event_id,p_event_at:event.created_at,p_active:active,p_expires_at:expires});
+    if (error) throw error;
+    return reply(200,data);
+  } catch { return reply(503,'verification or persistence failed'); }
 });

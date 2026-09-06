@@ -179,7 +179,7 @@ const AppReviewDemo = () => {
           </div>
           <h1 className="font-heading text-3xl font-bold text-foreground md:text-5xl">Intentus App Review Demo Mode</h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            This read-only mode gives App Review access to the app's core functionality without depending on production account state. It also starts from an unsubscribed / expired-subscription state so reviewers can inspect the Apple in-app purchase and restore flow.
+            This page summarizes the app’s features and provides purchase-review controls without a signed-in account. It does not contain an interactive audit, report, or coaching session. Use a reviewer account to test those workflows; use the iOS build to inspect in-app purchase and restore sheets.
           </p>
         </section>
 
@@ -209,7 +209,7 @@ const AppReviewDemo = () => {
           </article>
         </section>
 
-        <section className="mx-auto mt-8 max-w-5xl rounded-2xl border border-primary/20 bg-primary/5 p-6">
+        <section className="mx-auto mt-8 min-w-0 max-w-5xl rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="font-heading text-2xl font-bold text-foreground">Subscription purchase flow</h2>
@@ -238,13 +238,13 @@ const AppReviewDemo = () => {
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {reviewPlans.map((plan) => {
               const rcPackage = packageByProductId.get(plan.productId);
-              const price = rcPackage?.product.priceString ?? plan.fallbackPrice;
+              const price = rcPackage?.product.priceString ?? "Price available in the App Store";
               return (
-                <article key={plan.productId} className="rounded-2xl border border-border bg-card p-5">
+                <article key={plan.productId} className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
                   <h3 className="font-heading text-xl font-bold text-foreground">{plan.name}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
                   <p className="mt-5 font-heading text-3xl font-bold text-foreground">{price}</p>
-                  <Button className="mt-5 w-full" variant="hero" onClick={() => handlePurchase(plan)} disabled={actionProductId !== null}>
+                  <Button className="mt-5 h-auto min-h-11 w-full whitespace-normal px-3 py-2" variant="hero" onClick={() => handlePurchase(plan)} disabled={actionProductId !== null}>
                     {actionProductId === plan.productId ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening Apple…</> : `Review ${plan.name} Purchase`}
                   </Button>
                 </article>

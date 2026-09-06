@@ -1,3 +1,4 @@
+import { readBoundedJson, fetchWithDeadline, limitErrorResponse } from "../_shared/request-limits.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { boundedArray, parseToolArguments, safeJsonStringify, truncate } from "../_shared/ai-guardrails.ts";
@@ -47,6 +48,8 @@ function sanitizeRefreshedPhases(phases: unknown): RefreshedPhase[] {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
+
   try {
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
     if (!GOOGLE_AI_API_KEY) throw new Error("GOOGLE_AI_API_KEY not configured");
@@ -76,6 +79,8 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    await readBoundedJson(req, { allowEmpty: true });
 
     // Service-role client for the UPDATE write
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -124,7 +129,7 @@ serve(async (req) => {
 
       anonClient
         .from("weekly_commitments")
-        .select("commitment_text, outcome")
+        .select("commitment, outcome")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(8),
@@ -232,7 +237,7 @@ Rules:
       "Refresh my 90-day plan based on my check-in history and the phase I'm currently in.";
 
     // ── Call AI ───────────────────────────────────────────────────────────
-    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const aiResponse = await fetchWithDeadline("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
@@ -307,8 +312,7 @@ Rules:
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errText = await aiResponse.text();
-      console.error("AI gateway error:", aiResponse.status, errText);
+      console.error("AI gateway error:", aiResponse.status);
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
@@ -335,7 +339,7 @@ Rules:
       .eq("user_id", user.id);
 
     if (updateError) {
-      console.error("DB update error:", updateError);
+      console.error("DB update failed");
       throw new Error("Failed to save refreshed plan");
     }
 
@@ -349,7 +353,9 @@ Rules:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("refresh-plan error:", e);
+    const limited = limitErrorResponse(e, corsHeaders);
+    if (limited) return limited;
+    console.error("refresh-plan request failed");
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },

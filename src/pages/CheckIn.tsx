@@ -15,8 +15,7 @@ import { getTierCapability, normalizePlanTier } from "@/lib/tier-policy";
 import {
   type WeeklyCommitment,
   getPreviousWeekCommitment,
-  setWeeklyCommitment,
-  recordCommitmentOutcome,
+  getMondayOfWeek,
 } from "@/lib/commitments";
 import {
   type CoachingQuestion,
@@ -200,6 +199,7 @@ const DRAFT_KEY = "intentus_checkin_draft";
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
 type CheckInDraft = {
+  operationId?: string;
   step: number;
   mood: number;
   energy: number;
@@ -213,13 +213,20 @@ type CheckInDraft = {
   savedAt: number;
 };
 
-const loadDraft = (): CheckInDraft | null => {
+const loadDraft = (userId: string): CheckInDraft | null => {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    const raw = localStorage.getItem(`${DRAFT_KEY}:${userId}`);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CheckInDraft;
-    if (!parsed?.savedAt || Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
-      localStorage.removeItem(DRAFT_KEY);
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt > DRAFT_TTL_MS || parsed.savedAt > Date.now()
+      || (parsed.operationId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parsed.operationId))
+      || !Number.isInteger(parsed.step) || parsed.step < 0 || parsed.step > 7
+      || ![parsed.mood, parsed.energy].every(v => Number.isInteger(v) && v >= 1 && v <= 10)
+      || ![parsed.wins, parsed.blockers, parsed.commitments].every(v => Array.isArray(v) && v.every(x => typeof x === "string"))
+      || typeof parsed.oneThing !== "string" || typeof parsed.callbackReflection !== "string"
+      || ![null, "yes", "partially", "no"].includes(parsed.callbackOutcome)
+      || !parsed.extras || typeof parsed.extras !== "object" || Array.isArray(parsed.extras)) {
+      localStorage.removeItem(`${DRAFT_KEY}:${userId}`);
       return null;
     }
     return parsed;
@@ -229,8 +236,11 @@ const loadDraft = (): CheckInDraft | null => {
 };
 
 // ── Main Component ───────────────────────────────────────────────────────────
-const CheckIn = () => {
-  const initialDraft = (typeof window !== "undefined") ? loadDraft() : null;
+const CheckInForm = () => {
+  const { user } = useAuth();
+  const draftKey = `${DRAFT_KEY}:${user?.id}`;
+  const [initialDraft] = useState(() => user ? loadDraft(user.id) : null);
+  const [operationId, setOperationId] = useState(() => initialDraft?.operationId ?? crypto.randomUUID());
 
   // Mode picker: 'full' (existing flow) or 'quick' (3-step mood/energy + one thing).
   // null means we still need to ask the user.
@@ -246,6 +256,7 @@ const CheckIn = () => {
   const [inputVal, setInputVal] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [saveWarning, setSaveWarning] = useState("");
   const [intentProfile, setIntentProfile] = useState<IntentProfile | null>(null);
   const [aiDebrief, setAiDebrief] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -270,7 +281,6 @@ const CheckIn = () => {
   const [extraQuestions, setExtraQuestions] = useState<CoachingQuestion[]>([]);
   const [extraValues, setExtraValues] = useState<Record<string, string | number>>(initialDraft?.extras ?? {});
 
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -323,23 +333,24 @@ const CheckIn = () => {
 
   // Auto-save draft on any change
   useEffect(() => {
-    if (done) return;
+    if (done || !user) return;
     const draft: CheckInDraft = {
-      step, mood, energy, wins, blockers, commitments,
+      operationId, step, mood, energy, wins, blockers, commitments,
       oneThing, callbackOutcome, callbackReflection,
       extras: extraValues,
       savedAt: Date.now(),
     };
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      localStorage.setItem(draftKey, JSON.stringify(draft));
     } catch {
       // ignore quota errors
     }
-  }, [step, mood, energy, wins, blockers, commitments, oneThing, callbackOutcome, callbackReflection, extraValues, done]);
+  }, [operationId, draftKey, user, step, mood, energy, wins, blockers, commitments, oneThing, callbackOutcome, callbackReflection, extraValues, done]);
 
   const dismissResumeBanner = () => {
-    localStorage.removeItem(DRAFT_KEY);
+    try { localStorage.removeItem(draftKey); } catch { /* Storage may be unavailable. */ }
     setShowResumeBanner(false);
+    setOperationId(crypto.randomUUID());
     setMood(5);
     setEnergy(5);
     setWins([]);
@@ -432,7 +443,7 @@ const CheckIn = () => {
   };
 
   const handleSubmit = async (options?: { quick?: boolean }) => {
-    if (!user) return;
+    if (!user || loading) return;
     const isQuick = options?.quick === true;
     // Thin-check-in guard only applies to the full flow.
     if (!isQuick && hasThinCheckIn() && !showThinPrompt) {
@@ -449,52 +460,30 @@ const CheckIn = () => {
       else if (typeof v === "number" && v > 0) cleanedExtras[k] = v;
     }
 
-    // 1. Insert check-in
-    const { data: checkInData, error } = await supabase.from("check_ins").insert({
-      user_id: user.id,
-      mood_score: mood,
-      energy_score: energy,
-      wins: isQuick ? [] : wins,
-      blockers: isQuick ? [] : blockers,
-      commitments: isQuick ? [] : commitments,
-      drift_detected: mood <= 4 || energy <= 4,
-      extras: isQuick ? ({} as Json) : (cleanedExtras as Json),
-      is_quick: isQuick,
-    }).select().single();
-
-    if (error) {
+    try {
+      const rpc = supabase.rpc.bind(supabase) as unknown as (
+        name: "save_check_in", args: { p_operation_id: string; p_payload: Json }
+      ) => PromiseLike<{ data: string | null; error: { message: string } | null }>;
+      const { data, error } = await rpc("save_check_in", {
+        p_operation_id: operationId,
+        p_payload: {
+          mood, energy, wins: isQuick ? [] : wins, blockers: isQuick ? [] : blockers,
+          commitments: isQuick ? [] : commitments, extras: isQuick ? {} : cleanedExtras,
+          quick: isQuick, oneThing: oneThing.trim(), weekStart: getMondayOfWeek(new Date()),
+          previousCommitmentId: !isQuick && callbackOutcome ? previousCommitment?.id ?? null : null,
+          outcome: !isQuick && previousCommitment ? callbackOutcome : null,
+          reflection: callbackReflection,
+        },
+      });
+      if (error || !data) throw new Error(error?.message ?? "No save acknowledgement received.");
+    } catch (error) {
       setLoading(false);
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Not saved — retry safely", description: error instanceof Error ? error.message : "Save failed. Your draft is retained.", variant: "destructive" });
       return;
     }
-
-    // 2. Record commitment callback if we had a previous commitment + outcome (full flow only)
-    if (!isQuick && previousCommitment && callbackOutcome && checkInData) {
-      try {
-        await recordCommitmentOutcome(previousCommitment.id, callbackOutcome, callbackReflection || undefined);
-        await supabase.from("commitment_callbacks").insert({
-          user_id: user.id,
-          check_in_id: checkInData.id,
-          previous_commitment_id: previousCommitment.id,
-          previous_commitment_text: previousCommitment.commitment,
-          outcome: callbackOutcome,
-        });
-      } catch (cbErr) {
-        console.error("Commitment callback error:", cbErr);
-      }
-    }
-
-    // 3. Save "one thing" commitment for this week (both flows)
-    if (oneThing.trim()) {
-      try {
-        await setWeeklyCommitment(user.id, oneThing.trim());
-      } catch (otErr) {
-        console.error("One thing save error:", otErr);
-      }
-    }
-
     setLoading(false);
-    try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+    setSaveWarning("");
+    try { localStorage.removeItem(draftKey); } catch { /* ignore */ }
     setDone(true);
     // Quick check-ins skip the AI debrief.
     if (!isQuick && getTierCapability(tier).canUseAiDebrief) streamDebrief();
@@ -767,6 +756,7 @@ const CheckIn = () => {
               <CheckCircle className="h-12 w-12 text-primary" />
             </div>
             <h2 className="font-heading text-2xl font-bold text-foreground">Check-in complete</h2>
+            {saveWarning && <p role="alert" className="text-sm text-destructive">Your check-in was saved, but {saveWarning}</p>}
             <p className="text-sm text-muted-foreground">Clear signal in, clear coaching back.</p>
             {intentProfile?.primaryLens && (
               <p className="text-xs text-muted-foreground">Adaptive lens: {formatLensLabel(intentProfile.primaryLens)}</p>
@@ -981,6 +971,11 @@ const CheckIn = () => {
       </div>
     </div>
   );
+};
+
+const CheckIn = () => {
+  const { user } = useAuth();
+  return user ? <CheckInForm key={user.id} /> : null;
 };
 
 export default CheckIn;

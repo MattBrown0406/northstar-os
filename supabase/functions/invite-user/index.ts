@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+
+import { inviteTier } from "../_shared/payment-security.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +12,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -54,7 +58,14 @@ serve(async (req) => {
       });
     }
 
-    const { email, display_name, plan_tier, coach_user_id, coach_name } = await req.json();
+    const { email, display_name, plan_tier: requestedTier, coach_user_id: requestedCoach, coach_name } = await req.json();
+    const plan_tier = inviteTier(requestedTier);
+    const coach_user_id = user.id;
+    if (!plan_tier || (requestedCoach && requestedCoach !== user.id)) {
+      return new Response(JSON.stringify({ error: "Invalid coach or client tier" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!email || !display_name) {
       return new Response(JSON.stringify({ error: "email and display_name are required" }), {
@@ -70,7 +81,7 @@ serve(async (req) => {
         ...(coach_user_id ? { coach_user_id } : {}),
         ...(coach_name ? { invited_by: coach_name } : {}),
       },
-      redirectTo: `${req.headers.get("origin") || "https://intentus.app"}/onboarding`,
+      redirectTo: "https://intentus.app/onboarding",
     });
 
 
@@ -89,7 +100,7 @@ serve(async (req) => {
     }, { onConflict: "user_id" });
 
     if (profileError) {
-      console.error("Profile creation error:", profileError);
+      throw profileError;
     }
 
     // If this is a coach invite, create the coach-client relationship
@@ -100,7 +111,7 @@ serve(async (req) => {
         assigned_tier: plan_tier || "free",
       });
       if (linkError) {
-        console.error("Coach-client link error:", linkError);
+        throw linkError;
       }
     }
 

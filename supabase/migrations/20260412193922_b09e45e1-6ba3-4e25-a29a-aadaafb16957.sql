@@ -84,4 +84,6 @@ USING (public.has_role(auth.uid(), 'admin'));
 
 -- Assign Matt Brown as admin
 INSERT INTO public.user_roles (user_id, role)
-VALUES ('90ee49fd-f390-4ab1-9f16-0bd793aafb95', 'admin');
+SELECT id, 'admin'::public.app_role FROM auth.users
+WHERE id = '90ee49fd-f390-4ab1-9f16-0bd793aafb95';
+-- Clean databases do not contain this production account; do not invent it.

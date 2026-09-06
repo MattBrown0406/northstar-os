@@ -26,11 +26,17 @@ import {
 import { formatLensLabel, type AdaptiveLens } from "@/lib/intentus-architecture";
 
 interface Message {
+  id?: string;
+  saveState?: "saving" | "unsaved" | "saved";
   role: "user" | "assistant";
   content: string;
   session_date?: string;
   created_at?: string;
   client_ts?: number;
+}
+
+export function localSessionDate(date = new Date()): string {
+  return format(date, 'yyyy-MM-dd');
 }
 
 const quickPrompts = [
@@ -41,6 +47,12 @@ const quickPrompts = [
 ];
 
 const Coaching = () => {
+  const historyGeneration = useRef(0);
+  const sendFlight = useRef(false);
+  const saveFlights = useRef(new Set<string>());
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(false);
+  const [historyAttempt, setHistoryAttempt] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -55,7 +67,7 @@ const Coaching = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localSessionDate();
 
   const formatDateLabel = (dateStr: string) => {
     const d = parseISO(dateStr);
@@ -97,26 +109,54 @@ const Coaching = () => {
 
   useEffect(() => {
     if (!user) return;
+    const generation = ++historyGeneration.current;
     const loadHistory = async () => {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const { data } = await supabase
-        .from('coaching_messages')
-        .select('role, content, created_at, session_date')
-        .eq('user_id', user.id)
-        .gte('session_date', sevenDaysAgo.toISOString().split('T')[0])
-        .order('created_at', { ascending: true });
-      if (data && data.length > 0) {
-        setMessages(data.map(m => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-          session_date: m.session_date as string,
-          created_at: m.created_at as string,
-        })));
+      setHistoryLoading(true);
+      setHistoryError(false);
+      try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const { data, error } = await supabase.from('coaching_messages')
+          .select('id, role, content, created_at, session_date').eq('user_id', user.id)
+          .gte('session_date', localSessionDate(sevenDaysAgo)).order('created_at', { ascending: true });
+        if (generation !== historyGeneration.current) return;
+        if (error) throw error;
+        // Preserve in-memory pending messages if history is explicitly retried.
+        setMessages(prev => {
+          const merged = new Map((data || []).map(m => [m.id, { ...m, role: m.role as Message['role'], saveState: 'saved' as const }]));
+          for (const m of prev) if (m.id && m.saveState !== 'saved') merged.set(m.id, m as never);
+          return [...merged.values()];
+        });
+      } catch {
+        if (generation === historyGeneration.current) setHistoryError(true);
+      } finally {
+        if (generation === historyGeneration.current) setHistoryLoading(false);
       }
     };
     loadHistory();
-  }, [user]);
+    return () => { historyGeneration.current++; };
+  }, [user?.id, historyAttempt]);
+
+  const persistMessage = async (message: Message) => {
+    if (!user || !message.id || saveFlights.current.has(message.id)) return;
+    saveFlights.current.add(message.id);
+    setMessages(prev => prev.map(m => m.id === message.id ? {...m, saveState: 'saving'} : m));
+    try {
+      const { error } = await supabase.from('coaching_messages').insert({
+        id: message.id, user_id: user.id, role: message.role,
+        content: message.content, session_date: message.session_date,
+      });
+      // Retrying an ambiguous write uses the SAME id; a conflict is read back,
+      // never a second AI generation or a second history row.
+      if (error && error.code !== '23505') throw error;
+      const { data, error: readError } = await supabase.from('coaching_messages')
+        .select('id, role, content, session_date').eq('id', message.id).eq('user_id', user.id).single();
+      if (readError || !data || data.content !== message.content || data.role !== message.role || data.session_date !== message.session_date) throw new Error('History save not confirmed');
+      setMessages(prev => prev.map(m => m.id === message.id ? {...m, saveState: 'saved'} : m));
+    } catch {
+      setMessages(prev => prev.map(m => m.id === message.id ? {...m, saveState: 'unsaved'} : m));
+    } finally { saveFlights.current.delete(message.id); }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -124,12 +164,14 @@ const Coaching = () => {
 
   const sendMessage = async (text: string) => {
     const tierCapability = getTierCapability(planTier);
-    if (!text.trim() || isStreaming || !tierCapability.canUseAiChat) return;
+    if (!user || !text.trim() || isStreaming || sendFlight.current || historyLoading || historyError || !tierCapability.canUseAiChat) return;
+    sendFlight.current = true;
 
     const trimmedInput = text.trim();
-    const today = new Date().toISOString().split('T')[0];
+    const today = localSessionDate();
+    const assistantId = crypto.randomUUID();
     const nowTs = Date.now();
-    const userMsg: Message = { role: "user", content: trimmedInput, session_date: today, client_ts: nowTs };
+    const userMsg: Message = { id: crypto.randomUUID(), saveState: "saving", role: "user", content: trimmedInput, session_date: today, client_ts: nowTs };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput("");
@@ -153,18 +195,7 @@ const Coaching = () => {
       : [];
     const outboundMessages = [...priorContextMsgs, ...currentSessionMsgs].map(m => ({ role: m.role, content: m.content }));
 
-    // Persist user message immediately so it isn't lost if the stream fails.
-    if (user) {
-      const { error: userPersistError } = await supabase.from('coaching_messages').insert({
-        user_id: user.id,
-        role: 'user',
-        content: trimmedInput,
-        session_date: today,
-      });
-      if (userPersistError) {
-        console.error("Failed to persist user message:", userPersistError);
-      }
-    }
+    await persistMessage(userMsg);
 
     let assistantText = "";
 
@@ -193,6 +224,7 @@ const Coaching = () => {
           session_date: today,
         }]);
         setIsStreaming(false);
+        sendFlight.current = false;
         return;
       }
 
@@ -220,10 +252,10 @@ const Coaching = () => {
               assistantText += content;
               setMessages(prev => {
                 const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
+                if (last?.id === assistantId) {
                   return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantText, client_ts: m.client_ts ?? Date.now() } : m);
                 }
-                return [...prev, { role: "assistant", content: assistantText, session_date: today, client_ts: Date.now() }];
+                return [...prev, { id: assistantId, saveState: "saving", role: "assistant", content: assistantText, session_date: today, client_ts: Date.now() }];
               });
             }
           } catch {
@@ -241,19 +273,9 @@ const Coaching = () => {
         }]);
       }
     }
-    // Persist assistant reply after stream completes
-    if (user && assistantText) {
-      const { error: asstPersistError } = await supabase.from('coaching_messages').insert({
-        user_id: user.id,
-        role: 'assistant',
-        content: assistantText,
-        session_date: today,
-      });
-      if (asstPersistError) {
-        console.error("Failed to persist assistant message:", asstPersistError);
-      }
-    }
+    if (assistantText) await persistMessage({ id: assistantId, role: 'assistant', content: assistantText, session_date: today });
     setIsStreaming(false);
+    sendFlight.current = false;
     inputRef.current?.focus();
   };
 
@@ -306,6 +328,9 @@ const Coaching = () => {
       </nav>
 
       <AppBreadcrumb />
+      <p className="px-4 text-xs text-muted-foreground">New sessions use your device’s local calendar. Older session dates are shown as recorded and may have been grouped in UTC.</p>
+      {historyLoading && <p role="status">Loading history…</p>}
+      {historyError && <div role="alert">History could not be loaded. <Button onClick={() => setHistoryAttempt(n => n + 1)}>Retry history</Button></div>}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
@@ -369,7 +394,7 @@ const Coaching = () => {
             const showDivider = msg.session_date && msg.session_date !== prev?.session_date;
             const isFirstOfDate = showDivider && msg.session_date;
             return (
-              <div key={i}>
+              <div key={msg.id || i}>
                 {showDivider && (
                   <div
                     ref={(el) => { if (isFirstOfDate) dateRefs.current[msg.session_date!] = el; }}
@@ -387,6 +412,8 @@ const Coaching = () => {
                       : "bg-card border border-border text-foreground"
                   }`}>
                     <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {msg.saveState === 'unsaved' && <div role="alert">Not saved to history. Keep this page open. <Button variant="outline" size="sm" onClick={() => persistMessage(msg)}>Retry save</Button></div>}
+                    {msg.saveState === 'saving' && <p role="status" className="text-xs">Saving history…</p>}
                     {msg.role === "assistant" && i === messages.length - 1 && isStreaming && (
                       <span className="inline-block w-1.5 h-4 bg-primary/60 animate-pulse ml-0.5 align-middle" />
                     )}
@@ -420,10 +447,10 @@ const Coaching = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={tierCapability.canUseAiChat ? "Ask for clarity, challenge, or the next priority..." : "Upgrade to Executive to use the AI coach"}
-              disabled={isStreaming || profileLoading || !tierCapability.canUseAiChat}
+              disabled={isStreaming || historyLoading || historyError || profileLoading || !tierCapability.canUseAiChat}
               className="flex-1"
             />
-            <Button type="submit" variant="hero" size="icon" disabled={isStreaming || !input.trim() || profileLoading || !tierCapability.canUseAiChat}>
+            <Button type="submit" variant="hero" size="icon" disabled={isStreaming || historyLoading || historyError || !input.trim() || profileLoading || !tierCapability.canUseAiChat}>
               <Send className="h-4 w-4" />
             </Button>
           </form>

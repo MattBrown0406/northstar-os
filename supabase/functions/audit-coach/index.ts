@@ -1,3 +1,4 @@
+import { readBoundedJson, validateAiInput, fetchWithDeadline, limitErrorResponse } from "../_shared/request-limits.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildIntentProfileSummary } from "../_shared/intentus-knowledge.ts";
@@ -18,6 +19,8 @@ type AuditQuestion = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
 
   try {
     const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
@@ -40,7 +43,9 @@ serve(async (req) => {
       });
     }
 
-    const { responses, current_question, current_section, all_questions, mode, clarification_request, current_question_text } = await req.json();
+    const requestBody = await readBoundedJson(req);
+    validateAiInput("audit-coach", requestBody);
+    const { responses, current_question, current_section, all_questions, mode, clarification_request, current_question_text } = requestBody;
 
     if (!responses || !current_question) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -138,7 +143,7 @@ The user said:
 Your job: explain this question to them in plain, grounded language. Cover (1) what the question is really getting at and why it matters in an operating audit, (2) one short example of the kind of thing a thoughtful answer might touch on — without putting words in their mouth or steering toward a specific answer. Keep it to 3-5 sentences. Do not give feedback on an answer (they haven't given one). Do not advance to the next question. End by inviting them to take their time and answer when ready.`
       : `Here is the full conversation so far:\n\n${conversationContext}\nThe most recent answer was to the question in the "${truncate(current_section, 120)}" section. Give your brief coaching response.`;
 
-    const aiResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+    const aiResponse = await fetchWithDeadline("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GOOGLE_AI_API_KEY}`,
@@ -174,7 +179,9 @@ Your job: explain this question to them in plain, grounded language. Cover (1) w
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
-    console.error("audit-coach error:", e);
+    const limited = limitErrorResponse(e, corsHeaders);
+    if (limited) return limited;
+    console.error("audit-coach request failed");
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
