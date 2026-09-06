@@ -16,6 +16,7 @@ const lazyWithRecovery = (importPage: () => Promise<{ default: RouteComponent }>
   lazy(() => loadRoute(importPage, key));
 
 const Index = lazyWithRecovery(() => import("./pages/Index"), "Index");
+const Sample = lazyWithRecovery(() => import("./pages/Sample"), "Sample");
 const Auth = lazyWithRecovery(() => import("./pages/Auth"), "Auth");
 const ResetPassword = lazyWithRecovery(() => import("./pages/ResetPassword"), "ResetPassword");
 const Onboarding = lazyWithRecovery(() => import("./pages/Onboarding"), "Onboarding");
@@ -39,6 +40,7 @@ const FaqPage = lazyWithRecovery(() => import("./pages/marketing/FaqPage"), "Faq
 const SupportPage = lazyWithRecovery(() => import("./pages/marketing/SupportPage"), "SupportPage");
 const PrivacyPage = lazyWithRecovery(() => import("./pages/marketing/PrivacyPage"), "PrivacyPage");
 const TermsPage = lazyWithRecovery(() => import("./pages/marketing/TermsPage"), "TermsPage");
+const Sharing = lazyWithRecovery(() => import("./pages/Sharing"), "Sharing");
 const Settings = lazyWithRecovery(() => import("./pages/Settings"), "Settings");
 const NorthStarGoals = lazyWithRecovery(() => import('./pages/NorthStarGoals'), 'NorthStarGoals');
 const Admin = lazyWithRecovery(() => import("./pages/Admin"), "Admin");
@@ -77,6 +79,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/review-demo" element={<AppReviewDemo />} />
+                <Route path="/sample" element={<Sample />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
                 <Route path="/audit" element={<ProtectedRoute><Audit /></ProtectedRoute>} />
@@ -84,6 +87,7 @@ const App = () => (
                 <Route path="/check-in" element={<ProtectedRoute><CheckIn /></ProtectedRoute>} />
                 <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/sharing" element={<ProtectedRoute><Sharing /></ProtectedRoute>} />
                 <Route path="/coaching" element={<ProtectedRoute><Coaching /></ProtectedRoute>} />
                 <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
                 <Route path="/goals" element={<ProtectedRoute><NorthStarGoals /></ProtectedRoute>} />

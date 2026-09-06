@@ -1,0 +1,13 @@
+Intentus deployment handoff — HOLD; not authorization to deploy now.
+
+The five approved product improvements are implemented in the audit branch and authorized for a GitHub main push by Matt. PR #2 records the audit work. Read docs/product-improvements.md and docs/audit-status.md.
+
+Before any production publication, reconcile the original duplicate 20260412 migration versions against authoritative production applied-history. Do not rename applied migrations or apply pending billing changes blindly. Resolve the remaining release blockers recorded in the audit report.
+
+Once Matt separately approves deployment and those prerequisites are complete, apply the consent change represented by supabase/migrations/20260906014009_sharing_preferences.sql through the project's normal migration workflow, after its prerequisites. Do not create a second timestamped duplicate without reconciling source/applied history.
+
+Verify get_coach_sharing and set_coach_sharing as actual authenticated users; verify no client can modify another user's preference. Test eligible linked coach content reads and report edits before revocation, denial after revocation, owner-only audit events, and re-enabling. Confirm NULL/anonymous requests fail and coach annotation enforcement matches the consent setting. Existing legacy sharing is enabled until explicitly changed; this is one global sharing switch, not individual category controls. Preserve the disclosed admin/backend/AI/relationship-metadata exceptions.
+
+Deploy the frontend only after the RPC migration is verified. Check /sample without login, /auth?mode=signup, the dashboard next-action/guide/progress panels and /sharing load/save/error behavior. A missing or failed RPC must show unknown access, not private/saved success. Native bundles require a separately approved native build; GitHub source synchronization is not a native release.
+
+No SQL Editor action or production deployment is authorized by this handoff file.

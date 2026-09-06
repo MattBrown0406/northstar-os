@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { brandLogo as logo } from "@/lib/brand";
 import { configureRevenueCat, REVENUECAT_PRODUCT_IDS } from "@/lib/revenuecat";
+import InteractiveSample from "@/components/InteractiveSample";
 import Seo from "@/components/seo/Seo";
 
 type ReviewPlan = {
@@ -179,9 +180,11 @@ const AppReviewDemo = () => {
           </div>
           <h1 className="font-heading text-3xl font-bold text-foreground md:text-5xl">Intentus App Review Demo Mode</h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            This page summarizes the app’s features and provides purchase-review controls without a signed-in account. It does not contain an interactive audit, report, or coaching session. Use a reviewer account to test those workflows; use the iOS build to inspect in-app purchase and restore sheets.
+            This page summarizes the app’s features and provides purchase-review controls without a signed-in account. The short interactive sample below is illustrative and does not create account records or run a live AI coaching session. Use a reviewer account to test those workflows; use the iOS build to inspect in-app purchase and restore sheets.
           </p>
         </section>
+
+        <div className="mx-auto mt-8 max-w-3xl"><InteractiveSample /></div>
 
         <section className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2">
           <article className="rounded-2xl border border-border bg-card p-6 shadow-soft">

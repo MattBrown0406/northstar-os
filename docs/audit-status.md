@@ -26,7 +26,9 @@
 5. Local all-SQL verification required current auth helper definitions from another isolated Intentus schema because interrupted CLI startup left outdated Auth helpers. Initial ownership-transfer migration failure was repaired with temporary, restored schema privileges. A direct authenticated call to a non-executable coach RPC crashed this local PostgreSQL runtime; the catalog correctly denies EXECUTE, but an expected permission-error runtime result was NOT verified. Investigate platform/runtime before claiming release acceptance. Catalog pgTAP checks do not replace this missing negative runtime gate.
 6. Physical-device purchase/restore, push delivery, native recovery and authenticated browser workflows remain unverified. No production migrations, functions, app builds or deployments performed.
 
-## Five product improvements recommended, not implemented
+## Five product improvements — subsequently implemented
+
+See `docs/product-improvements.md` for the implemented scope, verification and deployment prerequisites. The original recommendations were:
 1. Interactive sample audit and report before signup: demonstrate the actual reasoning and next action rather than only listing features in review-demo.
 2. A single prioritized next-action card connecting North Star goal, plan commitment and next check-in; reduce choosing between separate dashboards/tools.
 3. A first-week guided path with transparent time estimates and resumable steps from audit to first completed action.

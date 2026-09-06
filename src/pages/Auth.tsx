@@ -12,7 +12,8 @@ import { useLocation } from "react-router-dom";
 import Seo from "@/components/seo/Seo";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(() => searchParams.get("mode") !== "signup" && !searchParams.has("invite"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -22,7 +23,6 @@ const Auth = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite");
   const showAppReviewDemo = Capacitor.isNativePlatform() || searchParams.get("review") === "1";
 

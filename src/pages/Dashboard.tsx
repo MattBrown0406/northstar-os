@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import GettingStarted from "@/components/dashboard/GettingStarted";
+import ProgressStory from "@/components/dashboard/ProgressStory";
 import AppBreadcrumb from "@/components/AppBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -490,59 +492,18 @@ const Dashboard = () => {
               </div>
             )}
 
-          {/* Audit / Report CTA Banner — inside the card */}
-          {!auditCompleted ? (
-            <div className="mx-4 mt-4 md:mx-6 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-background to-background p-4">
-              <div>
-                <h3 className="font-heading font-bold text-foreground">Complete your Operating Audit</h3>
-                <p className="text-sm text-muted-foreground">Get clarity on your strengths, weaknesses, blind spots, and your 90-day plan</p>
-              </div>
-              <Button variant="hero" size="sm" onClick={() => navigate("/audit")}>
-                Start audit <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="mx-4 mt-4 md:mx-6 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-background to-background p-4">
-              <div>
-                <h3 className="font-heading font-bold text-foreground">Your Operating Report is ready</h3>
-                <p className="text-sm text-muted-foreground">Review your patterns, blind spots, forced choice, and 90-day plan</p>
-                {(planTier === "premium" || planTier === "coach") && (
-                  <button
-                    className="mt-1 flex items-center gap-1.5 text-xs text-primary hover:underline"
-                    onClick={() => navigate("/report")}
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    {reauditEligible
-                      ? "Re-audit available"
-                      : reauditNextDate
-                      ? `Re-audit available ${format(reauditNextDate, "MMM d")}`
-                      : null}
-                  </button>
-                )}
-              </div>
-              <Button variant="hero" size="sm" onClick={() => navigate("/report")}>
-                View report <FileText className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Check-in CTA */}
-          <div className="mx-4 mt-4 md:mx-6">
-            <Button
-              variant="hero"
-              className="w-full sm:w-auto"
-              onClick={() => navigate("/check-in")}
-            >
-              <CheckCircle className="h-5 w-5 mr-2" /> Start Check-in
-            </Button>
-          </div>
+          {user && <div className="mx-4 mt-4 space-y-4 md:mx-6">
+            <GettingStarted key={`start:${user.id}`} userId={user.id} />
+            <ProgressStory key={`progress:${user.id}`} userId={user.id} />
+            <Link className="inline-block text-sm text-primary underline" to="/sharing">Review human-coach sharing and feedback</Link>
+          </div>}
 
           {/* Main grid — matches hero mock layout */}
-          <div className="grid gap-4 p-4 md:grid-cols-[1.6fr_0.95fr] md:p-6">
+          <div className="grid min-w-0 grid-cols-1 gap-4 p-4 md:grid-cols-[minmax(0,1.6fr)_minmax(0,0.95fr)] md:p-6 [&>*]:min-w-0">
             {/* Left column */}
             <div className="space-y-4">
               {/* Top row: Momentum trend + Operating scorecard */}
-              <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] [&>*]:min-w-0">
                 {/* Momentum trend chart */}
                 <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
                   <div className="mb-4 flex items-start justify-between gap-3">
@@ -612,7 +573,7 @@ const Dashboard = () => {
               )}
 
               {/* Bottom row: 90-day plan / This Week + Coach summary */}
-              <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] [&>*]:min-w-0">
                 {/* This Week / Commitments */}
                 <div className="rounded-2xl border border-border/70 bg-card/90 p-4">
                   <div className="mb-4 flex items-start justify-between gap-3">

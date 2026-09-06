@@ -25,12 +25,12 @@ const HeroSection = () => {
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row animate-fade-up" style={{ animationDelay: "0.3s" }}>
             <Button asChild variant="hero" size="lg" className="px-8 py-6 text-base">
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 Start audit <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="hero-outline" size="lg" className="hidden px-8 py-6 text-base sm:inline-flex">
-              <Link to="/for-leaders">See how leaders use it</Link>
+            <Button asChild variant="hero-outline" size="lg" className="px-8 py-6 text-base">
+              <Link to="/sample">Try a short sample</Link>
             </Button>
           </div>
           <div className="mt-6 hidden flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground animate-fade-up sm:flex" style={{ animationDelay: "0.4s" }}>

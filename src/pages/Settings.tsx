@@ -404,6 +404,12 @@ const Settings = () => {
 
 
 
+          <section className="rounded-xl border border-border bg-card p-5">
+            <h2 className="font-heading font-bold">Human-coach sharing</h2>
+            <p className="my-2 text-sm text-muted-foreground">Review who can see your information and manage access separately from AI coaching.</p>
+            <Button variant="outline" onClick={() => navigate("/sharing")}>Manage coach sharing</Button>
+          </section>
+
           {/* Subscription */}
           <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
             <div>
